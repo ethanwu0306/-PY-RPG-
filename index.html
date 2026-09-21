@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - v1.4 全需求累積整合與卡片刷新版</title>
+    <title>Py RPG - v1.4 全需求累積整合極限版</title>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0c1d; color: #f1c40f; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; position: relative; }
         #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; transition: all 0.3s ease; }
@@ -120,7 +120,7 @@
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回主畫面</button>
     </div>
 
-    <!-- 職業選擇畫面（已補齊初始 HP 與 MP 顯示） -->
+    <!-- 職業選擇畫面（顯示初始 HP 與 MP） -->
     <div id="class-select" class="hidden">
         <h2 id="class-title">請選擇你的職業</h2>
         <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (特性: 高血量 | 初始 HP: 220 | 初始 MP: 60)</button>
@@ -129,7 +129,7 @@
         <button class="btn btn-secondary" onclick="showMainMenu()" id="btn-class-back">⬅️ 返回主畫面</button>
     </div>
 
-    <!-- 神秘商人卡片選擇畫面（新增附魔石刷新機制） -->
+    <!-- 神秘商人卡片選擇畫面（15 種卡片 + 附魔石重刷機制） -->
     <div id="card-screen" class="hidden">
         <h2 id="card-title">🔮 遇見神秘商人！</h2>
         <p style="color:#ccc; text-align:center; font-size: 13px;" id="card-sub">打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：</p>
@@ -371,7 +371,7 @@ function drawMonsterVisual(mapId, isBoss) {
     ctx.restore();
 }
 
-// BGM 與職業打擊音效
+// Web Audio API 熱血戰鬥音樂與職業打擊聲
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let isBgmPlaying = false;
 let bgmInterval = null;
@@ -606,7 +606,6 @@ const SKILLS = {
     "終極貫星天箭": { nameEn: "Ultimate Star Bow", type: "Archer", cost: 540, mp: 40, mult: 5.9, descZh: "射手：5.9倍終極天箭打擊", descEn: "5.9x Damage" }
 };
 
-// 初始職業屬性
 const CLASSES = {
     "Warrior": { nameZh: "戰士", nameEn: "Warrior", hp: 220, mp: 60, min: 22, max: 30, weaponZh: "鐵劍", weaponEn: "Iron Sword", critRate: 5, critDmg: 150, evasion: 5 },
     "Mage": { nameZh: "法師", nameEn: "Mage", hp: 110, mp: 220, min: 28, max: 40, weaponZh: "木製法杖", weaponEn: "Wooden Staff", critRate: 10, critDmg: 160, evasion: 5 },
@@ -638,7 +637,6 @@ const MAPS = {
     10: { nameZh: "👑 魔王城城堡", nameEn: "Demon King Castle", villageZh: "終極前線", villageEn: "Final Front", monstersZh: ["煉獄夜魔", "漆黑騎士", "亡靈巨龍"], bossZh: "滅世魔王·路西法" }
 };
 
-// 15 種全效祝福卡片資料庫
 const CARDS_DATABASE = [
     { id: "vampire", nameZh: "🩸 吸血鬼之吻", nameEn: "🩸 Vampire's Kiss", descZh: "攻擊時恢復傷害 15% HP", descEn: "15% Life Steal on Attack" },
     { id: "berserk", nameZh: "🔥 狂暴之怒", nameEn: "🔥 Berserker Rage", descZh: "基礎攻擊力提升 25%", descEn: "Base Atk +25%" },
@@ -711,7 +709,7 @@ let currentForgeTab = 'warrior';
 let currentAchieveTab = 'stage';
 let pendingSkillToLearn = null;
 let villageNpcMsg = "";
-let cardRefreshCount = 3; // BOSS 關卡卡片重置剩餘次數
+let cardRefreshCount = 3;
 
 function getSkillName(sKey) { return curLang === "zh" ? sKey : (SKILLS[sKey] ? SKILLS[sKey].nameEn : sKey); }
 function getItemName(item) { return curLang === "zh" ? item.nameZh : item.nameEn; }
@@ -952,7 +950,7 @@ function executeTurn(skillKey) {
         alert(t.victoryMsg.replace('{m}', monster.name).replace('{r}', monster.reward) + stoneMsg);
         player.gold += monster.reward;
         if (defeatedCount % 10 === 0) {
-            cardRefreshCount = 3; // 重置 BOSS 關卡卡片刷新次數
+            cardRefreshCount = 3;
             showCardSelect();
         } else enterVillage();
         return;
@@ -1306,10 +1304,11 @@ function updateEnchantHouseUI() {
     });
 }
 
+// 進入裝備商店時明確隱藏「換一批技能」按鈕
 function showEquipShop() { 
     hideAll(); 
     document.getElementById('shop-screen').classList.remove('hidden'); 
-    document.getElementById('btn-refresh').style.display = "none"; // 隱藏刷新按鈕
+    document.getElementById('btn-refresh').style.display = "none";
     updateEquipShopUI(); 
 }
 
