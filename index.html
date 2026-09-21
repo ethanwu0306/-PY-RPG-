@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - v1.3 熱血音效與戰鬥BGM版</title>
+    <title>Py RPG - v1.4 全需求累積整合與卡片刷新版</title>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0c1d; color: #f1c40f; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; position: relative; }
         #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; transition: all 0.3s ease; }
@@ -68,7 +68,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v1.3</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v1.4</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
@@ -120,18 +120,21 @@
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回主畫面</button>
     </div>
 
+    <!-- 職業選擇畫面（已補齊初始 HP 與 MP 顯示） -->
     <div id="class-select" class="hidden">
         <h2 id="class-title">請選擇你的職業</h2>
-        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (特性: 高血量 | 初始 MP: 60)</button>
-        <button class="btn" onclick="initGame('Mage')" id="btn-mage">🔮 法師 (特性: 高魔力 | 初始 MP: 220)</button>
-        <button class="btn" onclick="initGame('Archer')" id="btn-archer">🏹 射手 (特性: 高敏捷 | 初始 MP: 90)</button>
+        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (特性: 高血量 | 初始 HP: 220 | 初始 MP: 60)</button>
+        <button class="btn" onclick="initGame('Mage')" id="btn-mage">🔮 法師 (特性: 高魔力 | 初始 HP: 110 | 初始 MP: 220)</button>
+        <button class="btn" onclick="initGame('Archer')" id="btn-archer">🏹 射手 (特性: 高敏捷 | 初始 HP: 130 | 初始 MP: 90)</button>
         <button class="btn btn-secondary" onclick="showMainMenu()" id="btn-class-back">⬅️ 返回主畫面</button>
     </div>
 
+    <!-- 神秘商人卡片選擇畫面（新增附魔石刷新機制） -->
     <div id="card-screen" class="hidden">
         <h2 id="card-title">🔮 遇見神秘商人！</h2>
         <p style="color:#ccc; text-align:center; font-size: 13px;" id="card-sub">打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：</p>
         <div id="card-list"></div>
+        <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-top:10px;" id="btn-refresh-card" onclick="refreshCardSelection()">🔄 刷新卡片 (消耗 1 顆附魔石 | 剩餘 3 次)</button>
     </div>
 
     <div id="battle-screen" class="hidden">
@@ -260,7 +263,7 @@
 </div>
 
 <script>
-const SAVE_KEY = "pyrpg_save_github_v1.3_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v1.4_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 function showGameGuide() { hideAll(); document.getElementById('guide-screen').classList.remove('hidden'); }
 function hideGameGuide() { showMainMenu(); }
@@ -368,7 +371,7 @@ function drawMonsterVisual(mapId, isBoss) {
     ctx.restore();
 }
 
-// Web Audio API 熱血BGM與職業音效生成
+// BGM 與職業打擊音效
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let isBgmPlaying = false;
 let bgmInterval = null;
@@ -426,7 +429,6 @@ function toggleBGM() {
     }
 }
 
-// 職業專屬攻擊與技能音效
 function playSound(type, jobCode) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
@@ -436,7 +438,6 @@ function playSound(type, jobCode) {
 
     if (type === 'hit' || type === 'skill') {
         if (jobCode === 'Warrior') {
-            // ⚔️ 戰士：金屬揮砍與重擊撕裂聲
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(type === 'skill' ? 220 : 160, now);
             osc.frequency.exponentialRampToValueAtTime(35, now + (type === 'skill' ? 0.18 : 0.1));
@@ -444,7 +445,6 @@ function playSound(type, jobCode) {
             gain.gain.linearRampToValueAtTime(0.01, now + (type === 'skill' ? 0.18 : 0.1));
             osc.start(now); osc.stop(now + (type === 'skill' ? 0.18 : 0.1));
         } else if (jobCode === 'Mage') {
-            // 🔮 法師：魔法波凝聚爆發聲
             osc.type = 'sine';
             osc.frequency.setValueAtTime(type === 'skill' ? 300 : 200, now);
             osc.frequency.exponentialRampToValueAtTime(type === 'skill' ? 850 : 500, now + (type === 'skill' ? 0.22 : 0.12));
@@ -452,7 +452,6 @@ function playSound(type, jobCode) {
             gain.gain.linearRampToValueAtTime(0.01, now + (type === 'skill' ? 0.22 : 0.12));
             osc.start(now); osc.stop(now + (type === 'skill' ? 0.22 : 0.12));
         } else if (jobCode === 'Archer') {
-            // 🏹 射手：破空呼嘯與箭矢穿透聲
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(type === 'skill' ? 600 : 450, now);
             osc.frequency.exponentialRampToValueAtTime(80, now + (type === 'skill' ? 0.15 : 0.08));
@@ -460,7 +459,6 @@ function playSound(type, jobCode) {
             gain.gain.linearRampToValueAtTime(0.01, now + (type === 'skill' ? 0.15 : 0.08));
             osc.start(now); osc.stop(now + (type === 'skill' ? 0.15 : 0.08));
         } else {
-            // 通用平擊音效
             osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
             osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
             gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
@@ -484,8 +482,8 @@ let curLang = "zh";
 
 const I18N = {
     zh: {
-        langName: "中文", subTitle: "版本 v1.3", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
-        classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 初始 MP: 60)", magB: "🔮 法師 (特性: 高魔力 | 初始 MP: 220)", arcB: "🏹 射手 (特性: 高敏捷 | 初始 MP: 90)",
+        langName: "中文", subTitle: "版本 v1.4", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
+        classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 初始 HP: 220 | MP: 60)", magB: "🔮 法師 (特性: 高魔力 | 初始 HP: 110 | MP: 220)", arcB: "🏹 射手 (特性: 高敏捷 | 初始 HP: 130 | MP: 90)",
         backMain: "⬅️ 返回主畫面", back: "⬅️ 返回村莊", cardT: "🔮 遇見神秘商人！", cardSub: "打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：",
         atkB: "⚔️ 普通攻擊", skillGridT: "✨ 技能快捷格 (最多4招)：",
         vStats: "📊 查看角色詳細面板", vRest: "⛪ 旅館休息 - 30 G",
@@ -493,7 +491,7 @@ const I18N = {
         vNext: "⚔️ 踏上征途 (下一戰)", craftT: "⚒️ 礦石打造職業專屬神裝", encT: "💎 武器魔法附魔 (消耗 10 顆附魔石 + 1 行動力)",
         refreshB: "🔄 換一批技能 (100 G)", noMP: "❌ MP 不足！", noGold: "❌ 金幣不足！",
         actionDone: "⚡ 村莊行動力耗盡", mineBtnTxt: "⚡ 礦坑採礦", stage: "區域", job: "職業", gold: "金幣", weapon: "武器", noEnc: "無附魔", noCard: "無卡片",
-        defeatT: "💀 戰鬥失敗！", defeatSub: "你不幸倒下了，請選擇下一步行動：", retryB: "⚔️ 繼續挑戰當前關卡", fallbackB: "⬅️ 退回上一關並回到村莊",
+        defeatT: "💀 戰鬥失敗！", defeatSub: "你不幸倒下的，請選擇下一步行動：", retryB: "⚔️ 繼續挑戰當前關卡", fallbackB: "⬅️ 退回上一關並回到村莊",
         replaceT: "⚠️ 技能欄位已滿 (最多4招)", replaceSub: "請選擇要被取代掉的舊技能：", cancelReplace: "❌ 取消學習",
         statsT: "📊 角色詳細面板", shopT: "🏪 商店", forgeT: "🔨 鐵匠鋪", magicT: "🔮 魔法屋", stones: "附魔石", ores: "礦石", copper: "銅", iron: "鐵", goldOre: "金", diamond: "鑽石",
         slotEmpty: "空格", alreadyCrafted: "已打造", wrongJob: "職業不符", alreadyEquipped: "已裝備", learned: "已學會",
@@ -505,8 +503,8 @@ const I18N = {
         saveSuccess: "💾 存檔成功！", loadSuccess: "📂 成功載入進度！", hpPotLabel: "生命藥水", mpPotLabel: "魔力藥水", noActions: "❌ 村莊行動力不足！"
     },
     en: {
-        langName: "English", subTitle: "Version v1.3", startG: "🎮 New Game", loadG: "📂 Load Game",
-        classT: "Choose Your Class", warB: "🛡️ Warrior (Trait: High HP | MP: 60)", magB: "🔮 Mage (Trait: High MP | MP: 220)", arcB: "🏹 Archer (Trait: High Evasion | MP: 90)",
+        langName: "English", subTitle: "Version v1.4", startG: "🎮 New Game", loadG: "📂 Load Game",
+        classT: "Choose Your Class", warB: "🛡️ Warrior (Trait: High HP | HP:220 | MP: 60)", magB: "🔮 Mage (Trait: High MP | HP:110 | MP: 220)", arcB: "🏹 Archer (Trait: High Evasion | HP:130 | MP: 90)",
         backMain: "⬅️ Return to Main Menu", back: "⬅️ Return to Village", cardT: "🔮 Mysterious Merchant!", cardSub: "Defeated Area Boss! Choose a card blessing:",
         atkB: "⚔️ Basic Attack", skillGridT: "✨ Skill Hotbars (Max 4):",
         vStats: "📊 View Character Stats", vRest: "⛪ Rest at Inn - 30 G",
@@ -608,7 +606,7 @@ const SKILLS = {
     "終極貫星天箭": { nameEn: "Ultimate Star Bow", type: "Archer", cost: 540, mp: 40, mult: 5.9, descZh: "射手：5.9倍終極天箭打擊", descEn: "5.9x Damage" }
 };
 
-// 初始職業屬性（初始魔力提升：戰士 60 MP、法師 220 MP、射手 90 MP）
+// 初始職業屬性
 const CLASSES = {
     "Warrior": { nameZh: "戰士", nameEn: "Warrior", hp: 220, mp: 60, min: 22, max: 30, weaponZh: "鐵劍", weaponEn: "Iron Sword", critRate: 5, critDmg: 150, evasion: 5 },
     "Mage": { nameZh: "法師", nameEn: "Mage", hp: 110, mp: 220, min: 28, max: 40, weaponZh: "木製法杖", weaponEn: "Wooden Staff", critRate: 10, critDmg: 160, evasion: 5 },
@@ -640,10 +638,23 @@ const MAPS = {
     10: { nameZh: "👑 魔王城城堡", nameEn: "Demon King Castle", villageZh: "終極前線", villageEn: "Final Front", monstersZh: ["煉獄夜魔", "漆黑騎士", "亡靈巨龍"], bossZh: "滅世魔王·路西法" }
 };
 
-const CARDS = [
+// 15 種全效祝福卡片資料庫
+const CARDS_DATABASE = [
     { id: "vampire", nameZh: "🩸 吸血鬼之吻", nameEn: "🩸 Vampire's Kiss", descZh: "攻擊時恢復傷害 15% HP", descEn: "15% Life Steal on Attack" },
     { id: "berserk", nameZh: "🔥 狂暴之怒", nameEn: "🔥 Berserker Rage", descZh: "基礎攻擊力提升 25%", descEn: "Base Atk +25%" },
-    { id: "shield", nameZh: "🛡️ 鋼鐵意志", nameEn: "🛡️ Iron Will", descZh: "最大血量提升 80 點", descEn: "Max HP +80" }
+    { id: "shield", nameZh: "🛡️ 鋼鐵意志", nameEn: "🛡️ Iron Will", descZh: "最大血量提升 80 點", descEn: "Max HP +80" },
+    { id: "holy_shield", nameZh: "✨ 神聖護身", nameEn: "✨ Divine Aura", descZh: "進入戰鬥獲得 60 護盾", descEn: "Gain 60 Shield in Battle" },
+    { id: "wind_step", nameZh: "🌀 疾風之步", nameEn: "🌀 Swift Step", descZh: "閃避率提升 15%", descEn: "Evasion +15%" },
+    { id: "mana_flow", nameZh: "💧 魔力源泉", nameEn: "💧 Mana Surge", descZh: "最大魔力提升 60 點", descEn: "Max MP +60" },
+    { id: "poison_blade", nameZh: "☠️ 劇毒之刃", nameEn: "☠️ Venom Blade", descZh: "攻擊附加 20% 中毒率", descEn: "+20% Poison Rate" },
+    { id: "crit_fury", nameZh: "💥 暴怒火花", nameEn: "💥 Critical Spark", descZh: "暴擊率提升 15%", descEn: "Crit Rate +15%" },
+    { id: "gold_bless", nameZh: "🌟 黃金祝福", nameEn: "🌟 Wealth Blessing", descZh: "戰鬥金幣收益提升 30%", descEn: "+30% Gold Drop" },
+    { id: "exp_master", nameZh: "📖 冒險天賦", nameEn: "📖 Adv Talent", descZh: "基礎傷害提升 15 點", descEn: "Base Dmg +15" },
+    { id: "titan_guard", nameZh: "🗿 金剛不壞", nameEn: "🗿 Titan Guard", descZh: "最大血量提升 120 點", descEn: "Max HP +120" },
+    { id: "shadow_revenge", nameZh: "🌑 暗影復仇", nameEn: "🌑 Shadow Vengeance", descZh: "暴擊傷害提升 30%", descEn: "Crit Dmg +30%" },
+    { id: "element_burst", nameZh: "🔮 元素爆發", nameEn: "🔮 Element Burst", descZh: "技能傷害效果提升 20%", descEn: "Skill Dmg +20%" },
+    { id: "hawkeye", nameZh: "🏹 鷹眼專注", nameEn: "🏹 Hawkeye Focus", descZh: "暴擊率 +10% | 閃避率 +8%", descEn: "Crit +10% | Evasion +8%" },
+    { id: "holy_revive", nameZh: "👼 聖光復甦", nameEn: "👼 Holy Light", descZh: "戰鬥獲勝自動恢復 30 HP", descEn: "Heal 30 HP on Victory" }
 ];
 
 const FORGE_RECIPES_DATABASE = [
@@ -700,6 +711,7 @@ let currentForgeTab = 'warrior';
 let currentAchieveTab = 'stage';
 let pendingSkillToLearn = null;
 let villageNpcMsg = "";
+let cardRefreshCount = 3; // BOSS 關卡卡片重置剩餘次數
 
 function getSkillName(sKey) { return curLang === "zh" ? sKey : (SKILLS[sKey] ? SKILLS[sKey].nameEn : sKey); }
 function getItemName(item) { return curLang === "zh" ? item.nameZh : item.nameEn; }
@@ -939,8 +951,10 @@ function executeTurn(skillKey) {
 
         alert(t.victoryMsg.replace('{m}', monster.name).replace('{r}', monster.reward) + stoneMsg);
         player.gold += monster.reward;
-        if (defeatedCount % 10 === 0) showCardSelect();
-        else enterVillage();
+        if (defeatedCount % 10 === 0) {
+            cardRefreshCount = 3; // 重置 BOSS 關卡卡片刷新次數
+            showCardSelect();
+        } else enterVillage();
         return;
     }
 
@@ -984,8 +998,15 @@ function randomAtk() { return Math.floor(Math.random() * (player.atkMax - player
 function showCardSelect() {
     hideAll(); 
     setBattleBgm(false);
-    document.getElementById('card-screen').classList.remove('hidden'); let container = document.getElementById('card-list'); container.innerHTML = "";
-    let available = CARDS.filter(c => !player.cards.includes(c.id)); let shuffled = available.sort(() => 0.5 - Math.random()).slice(0, 3);
+    document.getElementById('card-screen').classList.remove('hidden'); 
+    renderCardOptions();
+}
+
+function renderCardOptions() {
+    let container = document.getElementById('card-list'); container.innerHTML = "";
+    let available = CARDS_DATABASE.filter(c => !player.cards.includes(c.id)); 
+    let shuffled = available.sort(() => 0.5 - Math.random()).slice(0, 3);
+    
     shuffled.forEach(card => {
         let btn = document.createElement('button'); btn.className = "btn btn-card";
         let cName = curLang === "zh" ? card.nameZh : card.nameEn;
@@ -994,6 +1015,21 @@ function showCardSelect() {
         btn.onclick = () => { player.cards.push(cName); enterVillage(); };
         container.appendChild(btn);
     });
+
+    let refBtn = document.getElementById('btn-refresh-card');
+    refBtn.innerText = `🔄 刷新卡片 (消耗 1 顆附魔石 | 剩餘 ${cardRefreshCount}/3 次)`;
+    refBtn.disabled = (player.enchantStones < 1 || cardRefreshCount <= 0);
+}
+
+function refreshCardSelection() {
+    if (player.enchantStones >= 1 && cardRefreshCount > 0) {
+        player.enchantStones--;
+        cardRefreshCount--;
+        renderCardOptions();
+        alert(`🔮 已消耗 1 顆附魔石刷新卡片！剩餘刷新次數: ${cardRefreshCount}/3`);
+    } else {
+        alert("❌ 附魔石不足或刷新次數已用盡！");
+    }
 }
 
 function rollRandomSkills() {
@@ -1270,11 +1306,10 @@ function updateEnchantHouseUI() {
     });
 }
 
-// 修正：進入裝備商店時明確隱藏「換一批技能」按鈕
 function showEquipShop() { 
     hideAll(); 
     document.getElementById('shop-screen').classList.remove('hidden'); 
-    document.getElementById('btn-refresh').style.display = "none";
+    document.getElementById('btn-refresh').style.display = "none"; // 隱藏刷新按鈕
     updateEquipShopUI(); 
 }
 
