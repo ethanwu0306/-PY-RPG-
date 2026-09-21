@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - v1.3 商店BUG修復與技能裝備擴充版</title>
+    <title>Py RPG - v1.3 熱血音效與戰鬥BGM版</title>
     <style>
         body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0c1d; color: #f1c40f; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 10px; position: relative; }
-        #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; }
+        #game-container { background: #1a162b; border: 3px solid #b38728; border-radius: 12px; width: 100%; max-width: 680px; padding: 22px; box-shadow: 0 0 25px rgba(212, 175, 55, 0.25), inset 0 0 15px rgba(0, 0, 0, 0.8); box-sizing: border-box; position: relative; transition: all 0.3s ease; }
+        
+        /* 低血量血色閃爍外框 (10% HP Warning) */
+        #game-container.blood-danger { border-color: #e74c3c !important; box-shadow: 0 0 35px rgba(231, 76, 60, 0.9), inset 0 0 25px rgba(231, 76, 60, 0.6) !important; animation: bloodPulse 1s infinite alternate; }
+        @keyframes bloodPulse {
+            0% { box-shadow: 0 0 20px rgba(231, 76, 60, 0.5), inset 0 0 15px rgba(231, 76, 60, 0.4); }
+            100% { box-shadow: 0 0 45px rgba(231, 76, 60, 1), inset 0 0 35px rgba(231, 76, 60, 0.8); }
+        }
+
         h1 { text-align: center; color: #f39c12; text-shadow: 2px 2px 8px #000; font-size: 28px; margin-top: 5px; letter-spacing: 2px; }
         h2 { text-align: center; color: #e67e22; border-bottom: 1px solid #b38728; padding-bottom: 8px; font-size: 20px; }
         h3 { color: #f1c40f; font-size: 15px; margin: 8px 0; }
@@ -114,9 +122,9 @@
 
     <div id="class-select" class="hidden">
         <h2 id="class-title">請選擇你的職業</h2>
-        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (特性: 高血量 | 武器: 近戰)</button>
-        <button class="btn" onclick="initGame('Mage')" id="btn-mage">🔮 法師 (特性: 高魔力 | 武器: 法杖)</button>
-        <button class="btn" onclick="initGame('Archer')" id="btn-archer">🏹 射手 (特性: 高敏捷 | 武器: 弓)</button>
+        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (特性: 高血量 | 初始 MP: 60)</button>
+        <button class="btn" onclick="initGame('Mage')" id="btn-mage">🔮 法師 (特性: 高魔力 | 初始 MP: 220)</button>
+        <button class="btn" onclick="initGame('Archer')" id="btn-archer">🏹 射手 (特性: 高敏捷 | 初始 MP: 90)</button>
         <button class="btn btn-secondary" onclick="showMainMenu()" id="btn-class-back">⬅️ 返回主畫面</button>
     </div>
 
@@ -360,10 +368,13 @@ function drawMonsterVisual(mapId, isBoss) {
     ctx.restore();
 }
 
+// Web Audio API 熱血BGM與職業音效生成
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 let isBgmPlaying = false;
 let bgmInterval = null;
-const bgmNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23, 440.00, 587.33, 440.00, 349.23];
+let isBattleBgm = false;
+const villageNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23];
+const battleNotes = [329.63, 392.00, 440.00, 587.33, 523.25, 440.00, 392.00, 659.25];
 let noteIdx = 0;
 
 function playBGMStep() {
@@ -372,19 +383,34 @@ function playBGMStep() {
     const gain = audioCtx.createGain();
     osc.connect(gain); gain.connect(audioCtx.destination);
     const now = audioCtx.currentTime;
-    const freq = bgmNotes[noteIdx];
-    noteIdx = (noteIdx + 1) % bgmNotes.length;
+    
+    let notes = isBattleBgm ? battleNotes : villageNotes;
+    const freq = notes[noteIdx];
+    noteIdx = (noteIdx + 1) % notes.length;
 
-    osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now);
-    gain.gain.setValueAtTime(0.04, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-    osc.start(now); osc.stop(now + 0.25);
+    osc.type = isBattleBgm ? 'sawtooth' : 'sine'; 
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(isBattleBgm ? 0.05 : 0.03, now); 
+    gain.gain.exponentialRampToValueAtTime(0.001, now + (isBattleBgm ? 0.18 : 0.25));
+    osc.start(now); 
+    osc.stop(now + (isBattleBgm ? 0.18 : 0.25));
 }
 
 function startBGM() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     if (!isBgmPlaying) {
         isBgmPlaying = true;
-        bgmInterval = setInterval(playBGMStep, 280);
+        bgmInterval = setInterval(playBGMStep, isBattleBgm ? 200 : 280);
+    }
+}
+
+function setBattleBgm(inBattle) {
+    if (isBattleBgm !== inBattle) {
+        isBattleBgm = inBattle;
+        if (isBgmPlaying) {
+            clearInterval(bgmInterval);
+            bgmInterval = setInterval(playBGMStep, isBattleBgm ? 200 : 280);
+        }
     }
 }
 
@@ -400,23 +426,46 @@ function toggleBGM() {
     }
 }
 
-function playSound(type) {
+// 職業專屬攻擊與技能音效
+function playSound(type, jobCode) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain); gain.connect(audioCtx.destination);
     const now = audioCtx.currentTime;
 
-    if (type === 'hit') {
-        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
-        osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
-        gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
-        osc.start(now); osc.stop(now + 0.1);
-    } else if (type === 'skill') {
-        osc.type = 'sine'; osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
-        gain.gain.setValueAtTime(0.25, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
+    if (type === 'hit' || type === 'skill') {
+        if (jobCode === 'Warrior') {
+            // ⚔️ 戰士：金屬揮砍與重擊撕裂聲
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(type === 'skill' ? 220 : 160, now);
+            osc.frequency.exponentialRampToValueAtTime(35, now + (type === 'skill' ? 0.18 : 0.1));
+            gain.gain.setValueAtTime(0.35, now); 
+            gain.gain.linearRampToValueAtTime(0.01, now + (type === 'skill' ? 0.18 : 0.1));
+            osc.start(now); osc.stop(now + (type === 'skill' ? 0.18 : 0.1));
+        } else if (jobCode === 'Mage') {
+            // 🔮 法師：魔法波凝聚爆發聲
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(type === 'skill' ? 300 : 200, now);
+            osc.frequency.exponentialRampToValueAtTime(type === 'skill' ? 850 : 500, now + (type === 'skill' ? 0.22 : 0.12));
+            gain.gain.setValueAtTime(0.25, now); 
+            gain.gain.linearRampToValueAtTime(0.01, now + (type === 'skill' ? 0.22 : 0.12));
+            osc.start(now); osc.stop(now + (type === 'skill' ? 0.22 : 0.12));
+        } else if (jobCode === 'Archer') {
+            // 🏹 射手：破空呼嘯與箭矢穿透聲
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(type === 'skill' ? 600 : 450, now);
+            osc.frequency.exponentialRampToValueAtTime(80, now + (type === 'skill' ? 0.15 : 0.08));
+            gain.gain.setValueAtTime(0.25, now); 
+            gain.gain.linearRampToValueAtTime(0.01, now + (type === 'skill' ? 0.15 : 0.08));
+            osc.start(now); osc.stop(now + (type === 'skill' ? 0.15 : 0.08));
+        } else {
+            // 通用平擊音效
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        }
     } else if (type === 'heal') {
         osc.type = 'triangle'; osc.frequency.setValueAtTime(400, now);
         osc.frequency.linearRampToValueAtTime(600, now + 0.25);
@@ -436,7 +485,7 @@ let curLang = "zh";
 const I18N = {
     zh: {
         langName: "中文", subTitle: "版本 v1.3", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
-        classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 武器: 近戰)", magB: "🔮 法師 (特性: 高魔力 | 武器: 法杖)", arcB: "🏹 射手 (特性: 高敏捷 | 武器: 弓)",
+        classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 初始 MP: 60)", magB: "🔮 法師 (特性: 高魔力 | 初始 MP: 220)", arcB: "🏹 射手 (特性: 高敏捷 | 初始 MP: 90)",
         backMain: "⬅️ 返回主畫面", back: "⬅️ 返回村莊", cardT: "🔮 遇見神秘商人！", cardSub: "打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：",
         atkB: "⚔️ 普通攻擊", skillGridT: "✨ 技能快捷格 (最多4招)：",
         vStats: "📊 查看角色詳細面板", vRest: "⛪ 旅館休息 - 30 G",
@@ -457,7 +506,7 @@ const I18N = {
     },
     en: {
         langName: "English", subTitle: "Version v1.3", startG: "🎮 New Game", loadG: "📂 Load Game",
-        classT: "Choose Your Class", warB: "🛡️ Warrior (Trait: High HP | Weapon: Melee)", magB: "🔮 Mage (Trait: High MP | Weapon: Staff)", arcB: "🏹 Archer (Trait: High Evasion | Weapon: Bow)",
+        classT: "Choose Your Class", warB: "🛡️ Warrior (Trait: High HP | MP: 60)", magB: "🔮 Mage (Trait: High MP | MP: 220)", arcB: "🏹 Archer (Trait: High Evasion | MP: 90)",
         backMain: "⬅️ Return to Main Menu", back: "⬅️ Return to Village", cardT: "🔮 Mysterious Merchant!", cardSub: "Defeated Area Boss! Choose a card blessing:",
         atkB: "⚔️ Basic Attack", skillGridT: "✨ Skill Hotbars (Max 4):",
         vStats: "📊 View Character Stats", vRest: "⛪ Rest at Inn - 30 G",
@@ -485,29 +534,29 @@ const SKILLS = {
     "神聖護盾": { nameEn: "Holy Shield", type: "universal", cost: 90, mp: 12, shield: 40, descZh: "通用：獲得 40 護盾", descEn: "Gain 40 Shield" },
     "強擊": { nameEn: "Power Strike", type: "universal", cost: 110, mp: 10, mult: 1.8, descZh: "通用：1.8倍物理傷害", descEn: "1.8x Damage" },
     "高級治癒": { nameEn: "Greater Heal", type: "universal", cost: 150, mp: 20, heal: 120, descZh: "通用：恢復 120 HP", descEn: "Restore 120 HP" },
-    "聖光庇護": { nameEn: "Divine Shield", type: "universal", cost: 180, mp: 22, shield: 100, descZh: "通用：獲得 100 護盾", descEn: "Gain 100 Shield" },
-    "護甲破壞": { nameEn: "Armor Break", type: "universal", cost: 130, mp: 12, mult: 1.6, descZh: "通用：1.6倍無視防禦傷害", descEn: "1.6x Dmg Ignore Armor" },
-    "狂暴突襲": { nameEn: "Frenzy Assault", type: "universal", cost: 170, mp: 15, mult: 2.1, descZh: "通用：2.1倍猛烈連擊", descEn: "2.1x Dmg" },
-    "聖光復甦": { nameEn: "Holy Revival", type: "universal", cost: 220, mp: 28, heal: 200, descZh: "通用：恢復 200 HP", descEn: "Restore 200 HP" },
+    "戰意高昂": { nameEn: "Battle Intent", type: "universal", cost: 140, mp: 15, mult: 2.0, buffZh: "[BUFF] 增強自身攻擊", descZh: "通用：2.0倍強打並提升戰意", descEn: "2.0x Dmg Buff Self" },
+    "破甲一擊": { nameEn: "Shatter Strike", type: "universal", cost: 160, mp: 18, mult: 1.7, debuffZh: "[DEBUFF] 無視敵人防禦", descZh: "通用：1.7倍打擊降敵防護", descEn: "1.7x Dmg Debuff Armor" },
     "精靈賜福": { nameEn: "Elven Blessing", type: "universal", cost: 200, mp: 25, shield: 150, descZh: "通用：獲得 150 護盾", descEn: "Gain 150 Shield" },
+    "虛弱詛咒": { nameEn: "Weakness Curse", type: "universal", cost: 170, mp: 16, mult: 1.9, debuffZh: "[DEBUFF] 降低敵人攻擊", descZh: "通用：1.9倍傷害並衰弱對手", descEn: "1.9x Dmg Debuff Atk" },
+    "聖光復甦": { nameEn: "Holy Revival", type: "universal", cost: 220, mp: 28, heal: 200, descZh: "通用：高額恢復 200 HP", descEn: "Restore 200 HP" },
     "生命分流": { nameEn: "Life Tap", type: "universal", cost: 160, mp: 5, mult: 2.3, descZh: "通用：2.3倍高傷害打擊", descEn: "2.3x High Damage" },
 
     // 戰士專屬 (20)
     "旋風斬": { nameEn: "Whirlwind", type: "Warrior", cost: 150, mp: 8, mult: 2.0, descZh: "戰士：2.0倍橫掃傷害", descEn: "2.0x Dmg" },
+    "怒火狂暴": { nameEn: "Fury Rage", type: "Warrior", cost: 190, mp: 12, mult: 2.4, buffZh: "[BUFF] 提升自身力量", descZh: "戰士：2.4倍猛打並觸發狂暴", descEn: "2.4x Dmg Buff Power" },
+    "威壓咆哮": { nameEn: "Intimidate Roar", type: "Warrior", cost: 210, mp: 15, mult: 2.2, debuffZh: "[DEBUFF] 降低敵人傷害", descZh: "戰士：2.2倍打擊並威壓對手", descEn: "2.2x Dmg Debuff Atk" },
     "狂暴打擊": { nameEn: "Berserk Strike", type: "Warrior", cost: 220, mp: 14, mult: 2.8, descZh: "戰士：2.8倍致命強打", descEn: "2.8x Dmg" },
     "裂地重斬": { nameEn: "Earthquake Slam", type: "Warrior", cost: 280, mp: 18, mult: 3.3, descZh: "戰士：3.3倍崩裂打擊", descEn: "3.3x Dmg" },
     "泰坦重踏": { nameEn: "Titan Stomp", type: "Warrior", cost: 350, mp: 24, mult: 4.0, descZh: "戰士：4.0倍泰坦重擊", descEn: "4.0x Dmg" },
-    "不屈怒吼": { nameEn: "Indomitable Roar", type: "Warrior", cost: 200, mp: 15, shield: 120, descZh: "戰士：獲得 120 點護盾", descEn: "Gain 120 Shield" },
-    "盾牆壁壘": { nameEn: "Shield Wall", type: "Warrior", cost: 260, mp: 20, shield: 220, descZh: "戰士：獲得 220 點護盾", descEn: "Gain 220 Shield" },
+    "不屈怒吼": { nameEn: "Indomitable Roar", type: "Warrior", cost: 200, mp: 15, shield: 120, buffZh: "[BUFF] 護盾加成", descZh: "戰士：獲得 120 點護盾", descEn: "Gain 120 Shield" },
+    "盾牆壁壘": { nameEn: "Shield Wall", type: "Warrior", cost: 260, mp: 20, shield: 220, buffZh: "[BUFF] 重防禦護盾", descZh: "戰士：獲得 220 點護盾", descEn: "Gain 220 Shield" },
+    "重傷揮砍": { nameEn: "Grievous Slash", type: "Warrior", cost: 270, mp: 19, mult: 3.1, debuffZh: "[DEBUFF] 造成持續流血", descZh: "戰士：3.1倍撕裂性打擊", descEn: "3.1x Dmg Bleed" },
     "血氣爆發": { nameEn: "Blood Burst", type: "Warrior", cost: 300, mp: 20, mult: 3.6, descZh: "戰士：3.6倍血氣傷害", descEn: "3.6x Dmg" },
     "衝鋒撞擊": { nameEn: "Charge Rush", type: "Warrior", cost: 180, mp: 12, mult: 2.4, descZh: "戰士：2.4倍衝鋒打擊", descEn: "2.4x Dmg" },
     "獅子斬": { nameEn: "Lion Slash", type: "Warrior", cost: 320, mp: 22, mult: 3.8, descZh: "戰士：3.8倍霸王斬擊", descEn: "3.8x Dmg" },
     "龍捲斬": { nameEn: "Tornado Blade", type: "Warrior", cost: 380, mp: 26, mult: 4.3, descZh: "戰士：4.3倍旋風狂斬", descEn: "4.3x Dmg" },
-    "鋼鐵意念": { nameEn: "Iron Will Skill", type: "Warrior", cost: 240, mp: 18, shield: 180, descZh: "戰士：獲得 180 點護盾", descEn: "Gain 180 Shield" },
     "破軍衝鋒": { nameEn: "Army Breaker", type: "Warrior", cost: 420, mp: 30, mult: 4.8, descZh: "戰士：4.8倍破陣重擊", descEn: "4.8x Dmg" },
     "終極毀滅斬": { nameEn: "Ultimate Oblivion Slash", type: "Warrior", cost: 500, mp: 35, mult: 5.5, descZh: "戰士：5.5倍終極斬擊", descEn: "5.5x Dmg" },
-    "狂戰咆哮": { nameEn: "War Cry", type: "Warrior", cost: 210, mp: 16, mult: 2.6, descZh: "戰士：2.6倍咆哮打擊", descEn: "2.6x Dmg" },
-    "鋼鐵反擊": { nameEn: "Iron Counter", type: "Warrior", cost: 250, mp: 19, mult: 3.0, descZh: "戰士：3.0倍鋼鐵反擊", descEn: "3.0x Dmg" },
     "無畏重斬": { nameEn: "Fearless Slash", type: "Warrior", cost: 290, mp: 21, mult: 3.4, descZh: "戰士：3.4倍無畏砍劈", descEn: "3.4x Dmg" },
     "斷鋼斬": { nameEn: "Steel Sever", type: "Warrior", cost: 340, mp: 25, mult: 3.9, descZh: "戰士：3.9倍斷鋼強打", descEn: "3.9x Dmg" },
     "霸王衝鋒": { nameEn: "Overlord Charge", type: "Warrior", cost: 400, mp: 28, mult: 4.5, descZh: "戰士：4.5倍霸王衝鋒", descEn: "4.5x Dmg" },
@@ -516,21 +565,21 @@ const SKILLS = {
 
     // 法師專屬 (20)
     "火球術": { nameEn: "Fireball", type: "Mage", cost: 180, mp: 15, mult: 2.5, descZh: "法師：2.5倍高額魔攻", descEn: "2.5x Magic Dmg" },
+    "魔力激流": { nameEn: "Mana Surge", type: "Mage", cost: 210, mp: 16, mult: 2.7, buffZh: "[BUFF] 增強魔法威力", descZh: "法師：2.7倍魔攻並活化魔力", descEn: "2.7x Dmg Buff Magic" },
+    "凍結星塵": { nameEn: "Freezing Dust", type: "Mage", cost: 230, mp: 18, mult: 2.6, debuffZh: "[DEBUFF] 降低敵人行動速", descZh: "法師：2.6倍冰極凍結打擊", descEn: "2.6x Dmg Debuff Speed" },
     "雷霆一擊": { nameEn: "Thunder Bolt", type: "Mage", cost: 250, mp: 20, mult: 3.2, descZh: "法師：3.2倍毀滅電擊", descEn: "3.2x Magic Dmg" },
     "冰霜星爆": { nameEn: "Frost Nova", type: "Mage", cost: 260, mp: 22, mult: 2.3, descZh: "法師：2.3倍冰霜爆破", descEn: "2.3x Magic Dmg" },
-    "星爆氣流": { nameEn: "Star Burst", type: "Mage", cost: 380, mp: 30, mult: 4.2, descZh: "法師：4.2倍星爆魔攻", descEn: "4.2x Magic Dmg" },
     "秘銀奧術": { nameEn: "Arcane Blast", type: "Mage", cost: 210, mp: 18, mult: 2.9, descZh: "法師：2.9倍奧術衝擊", descEn: "2.9x Magic Dmg" },
-    "末日審判": { nameEn: "Doomsday Judgment", type: "Mage", cost: 450, mp: 35, mult: 4.9, descZh: "法師：4.9倍末日魔攻", descEn: "4.9x Magic Dmg" },
-    "超新星爆發": { nameEn: "Supernova", type: "Mage", cost: 520, mp: 40, mult: 5.6, descZh: "法師：5.6倍極限爆破", descEn: "5.6x Magic Dmg" },
+    "虛空衰弱": { nameEn: "Void Enfeeble", type: "Mage", cost: 280, mp: 21, mult: 3.1, debuffZh: "[DEBUFF] 削減敵人抗性", descZh: "法師：3.1倍虛空侵蝕打擊", descEn: "3.1x Dmg Debuff Res" },
     "閃電鏈": { nameEn: "Chain Lightning", type: "Mage", cost: 290, mp: 24, mult: 3.5, descZh: "法師：3.5倍連環閃電", descEn: "3.5x Magic Dmg" },
-    "絕對零度": { nameEn: "Absolute Zero", type: "Mage", cost: 330, mp: 28, mult: 3.9, descZh: "法師：3.9倍極寒凍結", descEn: "3.9x Magic Dmg" },
-    "流星雨": { nameEn: "Meteor Shower", type: "Mage", cost: 400, mp: 32, mult: 4.5, descZh: "法師：4.5倍流星打擊", descEn: "4.5x Magic Dmg" },
     "烈焰風暴": { nameEn: "Flame Storm", type: "Mage", cost: 310, mp: 25, mult: 3.7, descZh: "法師：3.7倍火焰風暴", descEn: "3.7x Magic Dmg" },
+    "絕對零度": { nameEn: "Absolute Zero", type: "Mage", cost: 330, mp: 28, mult: 3.9, descZh: "法師：3.9倍極寒凍結", descEn: "3.9x Magic Dmg" },
+    "神聖光輝": { nameEn: "Holy Radiance", type: "Mage", cost: 360, mp: 30, heal: 280, buffZh: "[BUFF] 高額治療加成", descZh: "法師：高額恢復 280 HP", descEn: "Restore 280 HP" },
+    "星爆氣流": { nameEn: "Star Burst", type: "Mage", cost: 380, mp: 30, mult: 4.2, descZh: "法師：4.2倍星爆魔攻", descEn: "4.2x Magic Dmg" },
+    "流星雨": { nameEn: "Meteor Shower", type: "Mage", cost: 400, mp: 32, mult: 4.5, descZh: "法師：4.5倍流星打擊", descEn: "4.5x Magic Dmg" },
+    "末日審判": { nameEn: "Doomsday Judgment", type: "Mage", cost: 450, mp: 35, mult: 4.9, descZh: "法師：4.9倍末日魔攻", descEn: "4.9x Magic Dmg" },
     "虛空風暴": { nameEn: "Void Storm", type: "Mage", cost: 480, mp: 38, mult: 5.2, descZh: "法師：5.2倍虛空打擊", descEn: "5.2x Magic Dmg" },
-    "神聖光輝": { nameEn: "Holy Radiance", type: "Mage", cost: 360, mp: 30, heal: 280, descZh: "法師：高額恢復 280 HP", descEn: "Restore 280 HP" },
-    "水流破擊": { nameEn: "Water Torrent", type: "Mage", cost: 200, mp: 16, mult: 2.7, descZh: "法師：2.7倍水流攻擊", descEn: "2.7x Magic Dmg" },
-    "風暴怒吼": { nameEn: "Gale Roar", type: "Mage", cost: 230, mp: 19, mult: 3.0, descZh: "法師：3.0倍疾風魔攻", descEn: "3.0x Magic Dmg" },
-    "大地震擊": { nameEn: "Earth Shock", type: "Mage", cost: 270, mp: 22, mult: 3.3, descZh: "法師：3.3倍地震魔法", descEn: "3.3x Magic Dmg" },
+    "超新星爆發": { nameEn: "Supernova", type: "Mage", cost: 520, mp: 40, mult: 5.6, descZh: "法師：5.6倍極限爆破", descEn: "5.6x Magic Dmg" },
     "太陽耀斑": { nameEn: "Solar Flare", type: "Mage", cost: 350, mp: 27, mult: 4.1, descZh: "法師：4.1倍強光打擊", descEn: "4.1x Magic Dmg" },
     "黑洞吞噬": { nameEn: "Black Hole", type: "Mage", cost: 430, mp: 33, mult: 4.7, descZh: "法師：4.7倍黑洞魔法", descEn: "4.7x Magic Dmg" },
     "混沌滅世破": { nameEn: "Chaos Devastation", type: "Mage", cost: 490, mp: 37, mult: 5.4, descZh: "法師：5.4倍混沌毀滅魔攻", descEn: "5.4x Magic Dmg" },
@@ -538,16 +587,16 @@ const SKILLS = {
 
     // 射手專屬 (20)
     "狙擊": { nameEn: "Snipe", type: "Archer", cost: 160, mp: 12, mult: 2.2, descZh: "射手：2.2倍精準打擊", descEn: "2.2x Damage" },
+    "鷹眼專注": { nameEn: "Hawkeye Focus", type: "Archer", cost: 190, mp: 14, mult: 2.5, buffZh: "[BUFF] 提高暴擊率", descZh: "射手：2.5倍射擊並提升命中", descEn: "2.5x Dmg Buff Crit" },
+    "影縫箭": { nameEn: "Shadow Stitch", type: "Archer", cost: 210, mp: 16, mult: 2.6, debuffZh: "[DEBUFF] 降低敵人閃避", descZh: "射手：2.6倍打擊封鎖閃避", descEn: "2.6x Dmg Debuff Evasion" },
+    "致命毒箭": { nameEn: "Poison Arrow", type: "Archer", cost: 210, mp: 15, mult: 2.4, debuffZh: "[DEBUFF] 中毒效果", descZh: "射手：2.4倍劇毒穿透", descEn: "2.4x Dmg Poison" },
+    "疾風步": { nameEn: "Wind Step", type: "Archer", cost: 220, mp: 15, mult: 2.8, buffZh: "[BUFF] 提高閃避率", descZh: "射手：2.8倍疾風步發射", descEn: "2.8x Dmg Buff Evasion" },
     "萬箭齊發": { nameEn: "Arrow Rain", type: "Archer", cost: 240, mp: 18, mult: 2.7, descZh: "射手：2.7倍高暴擊", descEn: "2.7x Damage" },
-    "致命毒箭": { nameEn: "Poison Arrow", type: "Archer", cost: 210, mp: 15, mult: 2.4, descZh: "射手：2.4倍劇毒穿透", descEn: "2.4x Damage" },
-    "貫星神箭": { nameEn: "Star Piercer", type: "Archer", cost: 360, mp: 26, mult: 4.1, descZh: "射手：4.1倍貫星致命打擊", descEn: "4.1x Damage" },
     "幻影連射": { nameEn: "Phantom Barrage", type: "Archer", cost: 270, mp: 20, mult: 3.1, descZh: "射手：3.1倍連發射擊", descEn: "3.1x Damage" },
     "鷹眼重弩": { nameEn: "Hawkeye Bow", type: "Archer", cost: 310, mp: 22, mult: 3.6, descZh: "射手：3.6倍精準狙殺", descEn: "3.6x Damage" },
-    "穿雲箭": { nameEn: "Cloud Piercer", type: "Archer", cost: 190, mp: 14, mult: 2.5, descZh: "射手：2.5倍高空穿透", descEn: "2.5x Damage" },
     "爆裂矢": { nameEn: "Explosive Arrow", type: "Archer", cost: 330, mp: 24, mult: 3.8, descZh: "射手：3.8倍爆破傷害", descEn: "3.8x Damage" },
-    "風行術": { nameEn: "Windwalk", type: "Archer", cost: 220, mp: 16, mult: 2.8, descZh: "射手：2.8倍疾風射擊", descEn: "2.8x Damage" },
+    "貫星神箭": { nameEn: "Star Piercer", type: "Archer", cost: 360, mp: 26, mult: 4.1, descZh: "射手：4.1倍貫星致命打擊", descEn: "4.1x Damage" },
     "追魂箭": { nameEn: "Soul Chaser Arrow", type: "Archer", cost: 410, mp: 28, mult: 4.6, descZh: "射手：4.6倍追魂致命打擊", descEn: "4.6x Damage" },
-    "影縫射擊": { nameEn: "Shadow Stitch Shot", type: "Archer", cost: 290, mp: 21, mult: 3.3, descZh: "射手：3.3倍影縫打擊", descEn: "3.3x Damage" },
     "疾風連射": { nameEn: "Gale Burst", type: "Archer", cost: 440, mp: 32, mult: 5.0, descZh: "射手：5.0倍疾風連射", descEn: "5.0x Damage" },
     "神怒天罰箭": { nameEn: "Divine Wrath Arrow", type: "Archer", cost: 510, mp: 38, mult: 5.7, descZh: "射手：5.7倍天罰毀滅打擊", descEn: "5.7x Damage" },
     "雙重狙擊": { nameEn: "Double Shot", type: "Archer", cost: 180, mp: 13, mult: 2.3, descZh: "射手：2.3倍雙發打擊", descEn: "2.3x Damage" },
@@ -559,10 +608,11 @@ const SKILLS = {
     "終極貫星天箭": { nameEn: "Ultimate Star Bow", type: "Archer", cost: 540, mp: 40, mult: 5.9, descZh: "射手：5.9倍終極天箭打擊", descEn: "5.9x Damage" }
 };
 
+// 初始職業屬性（初始魔力提升：戰士 60 MP、法師 220 MP、射手 90 MP）
 const CLASSES = {
-    "Warrior": { nameZh: "戰士", nameEn: "Warrior", hp: 220, mp: 30, min: 22, max: 30, weaponZh: "鐵劍", weaponEn: "Iron Sword", critRate: 5, critDmg: 150, evasion: 5 },
-    "Mage": { nameZh: "法師", nameEn: "Mage", hp: 110, mp: 160, min: 28, max: 40, weaponZh: "木製法杖", weaponEn: "Wooden Staff", critRate: 10, critDmg: 160, evasion: 5 },
-    "Archer": { nameZh: "射手", nameEn: "Archer", hp: 130, mp: 60, min: 25, max: 35, weaponZh: "獵人長弓", weaponEn: "Hunter Bow", critRate: 15, critDmg: 150, evasion: 20 }
+    "Warrior": { nameZh: "戰士", nameEn: "Warrior", hp: 220, mp: 60, min: 22, max: 30, weaponZh: "鐵劍", weaponEn: "Iron Sword", critRate: 5, critDmg: 150, evasion: 5 },
+    "Mage": { nameZh: "法師", nameEn: "Mage", hp: 110, mp: 220, min: 28, max: 40, weaponZh: "木製法杖", weaponEn: "Wooden Staff", critRate: 10, critDmg: 160, evasion: 5 },
+    "Archer": { nameZh: "射手", nameEn: "Archer", hp: 130, mp: 90, min: 25, max: 35, weaponZh: "獵人長弓", weaponEn: "Hunter Bow", critRate: 15, critDmg: 150, evasion: 20 }
 };
 
 const ALL_EQUIPS_POOL = [
@@ -597,121 +647,27 @@ const CARDS = [
 ];
 
 const FORGE_RECIPES_DATABASE = [
-    // ⚔️ 戰士武器 (初級 10 種)
+    // ⚔️ 戰士武器 (初級/中級/高級)
     { category: "warrior", nameZh: "初級·青銅劍 (+15 攻擊)", nameEn: "Basic Bronze Sword (+15 Atk)", req: { copper: 5 }, job: "Warrior", tier: "basic", atk: 15 },
-    { category: "warrior", nameZh: "初級·粗鐵長刀 (+18 攻擊)", nameEn: "Basic Iron Saber (+18 Atk)", req: { copper: 6 }, job: "Warrior", tier: "basic", atk: 18 },
-    { category: "warrior", nameZh: "初級·鋼製戰斧 (+20 攻擊)", nameEn: "Basic Steel Axe (+20 Atk)", req: { copper: 7 }, job: "Warrior", tier: "basic", atk: 20 },
-    { category: "warrior", nameZh: "初級·騎士短劍 (+22 攻擊)", nameEn: "Basic Knight Dagger (+22 Atk)", req: { copper: 8 }, job: "Warrior", tier: "basic", atk: 22 },
-    { category: "warrior", nameZh: "初級·重型鐵錘 (+24 攻擊)", nameEn: "Basic Heavy Hammer (+24 Atk)", req: { copper: 9 }, job: "Warrior", tier: "basic", atk: 24 },
-    { category: "warrior", nameZh: "初級·雙刃戰斧 (+25 攻擊)", nameEn: "Basic Double Axe (+25 Atk)", req: { copper: 10 }, job: "Warrior", tier: "basic", atk: 25 },
-    { category: "warrior", nameZh: "初級·精鋼長槍 (+26 攻擊)", nameEn: "Basic Steel Spear (+26 Atk)", req: { copper: 10, iron: 2 }, job: "Warrior", tier: "basic", atk: 26 },
-    { category: "warrior", nameZh: "初級·開山大刀 (+28 攻擊)", nameEn: "Basic Mountain Cleaver (+28 Atk)", req: { copper: 10, iron: 3 }, job: "Warrior", tier: "basic", atk: 28 },
-    { category: "warrior", nameZh: "初級·獵魔長劍 (+29 攻擊)", nameEn: "Basic Demon Sword (+29 Atk)", req: { copper: 10, iron: 4 }, job: "Warrior", tier: "basic", atk: 29 },
-    { category: "warrior", nameZh: "初級·破甲巨劍 (+30 攻擊)", nameEn: "Basic Buster Sword (+30 Atk)", req: { copper: 10, iron: 5 }, job: "Warrior", tier: "basic", atk: 30 },
-
-    // ⚔️ 戰士武器 (中級 10 種)
     { category: "warrior", nameZh: "中級·刺客毒刃 (+35 攻擊 | +20% 中毒率)", nameEn: "Mid Poison Dagger (+35 Atk | +20% Poison)", req: { copper: 12, iron: 8 }, job: "Warrior", tier: "mid", atk: 35, poisonRate: 20 },
-    { category: "warrior", nameZh: "中級·騎士長劍 (+38 攻擊 | +5% 暴擊率)", nameEn: "Mid Knight Sword (+38 Atk | +5% Crit)", req: { copper: 13, iron: 9 }, job: "Warrior", tier: "mid", atk: 38, critRate: 5 },
-    { category: "warrior", nameZh: "中級·狂暴重斧 (+40 攻擊 | +10% 暴傷)", nameEn: "Mid Berserk Axe (+40 Atk | +10% CritDmg)", req: { copper: 14, iron: 10 }, job: "Warrior", tier: "mid", atk: 40, critDmg: 10 },
-    { category: "warrior", nameZh: "中級·破軍長槍 (+42 攻擊 | +6% 暴擊率)", nameEn: "Mid Breaker Spear (+42 Atk | +6% Crit)", req: { copper: 15, iron: 11 }, job: "Warrior", tier: "mid", atk: 42, critRate: 6 },
-    { category: "warrior", nameZh: "中級·雙手斬馬刀 (+45 攻擊 | +12% 暴傷)", nameEn: "Mid Katana (+45 Atk | +12% CritDmg)", req: { copper: 16, iron: 12 }, job: "Warrior", tier: "mid", atk: 45, critDmg: 12 },
-    { category: "warrior", nameZh: "中級·寒鐵巨劍 (+48 攻擊 | +5% 閃避)", nameEn: "Mid Coldsword (+48 Atk | +5% Evasion)", req: { copper: 17, iron: 13 }, job: "Warrior", tier: "mid", atk: 48, evasion: 5 },
-    { category: "warrior", nameZh: "中級·烈焰戰斧 (+50 攻擊 | +15% 燃燒率)", nameEn: "Mid Flame Axe (+50 Atk | +15% Burn)", req: { copper: 18, iron: 14 }, job: "Warrior", tier: "mid", atk: 50, burnRate: 15 },
-    { category: "warrior", nameZh: "中級·碎骨重錘 (+52 攻擊 | +8% 暴擊率)", nameEn: "Mid Bone Hammer (+52 Atk | +8% Crit)", req: { copper: 19, iron: 15 }, job: "Warrior", tier: "mid", atk: 52, critRate: 8 },
-    { category: "warrior", nameZh: "中級·血氣巨刀 (+55 攻擊 | +15% 暴傷)", nameEn: "Mid Blood Blade (+55 Atk | +15% CritDmg)", req: { copper: 20, iron: 16 }, job: "Warrior", tier: "mid", atk: 55, critDmg: 15 },
-    { category: "warrior", nameZh: "中級·黑曜石戰刃 (+58 攻擊 | +8% 閃避)", nameEn: "Mid Obsidian Blade (+58 Atk | +8% Evasion)", req: { copper: 22, iron: 18 }, job: "Warrior", tier: "mid", atk: 58, evasion: 8 },
-
-    // ⚔️ 戰士武器 (高級 10 種)
     { category: "warrior", nameZh: "高級·狂暴屠魔巨斧 (+70 攻擊 | +15% 暴擊率 | +30% 暴傷)", nameEn: "Adv Berserk Axe (+70 Atk | +15% Crit | +30% CritDmg)", req: { copper: 25, iron: 20, gold: 3 }, job: "Warrior", tier: "adv", atk: 70, critRate: 15, critDmg: 30 },
     { category: "warrior", nameZh: "高級·龍怒屠龍寶刀 (+140 攻擊 | +30% 暴擊率 | +40% 暴傷)", nameEn: "Adv Dragon Saber (+140 Atk | +30% Crit | +40% CritDmg)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Warrior", tier: "adv", atk: 140, critRate: 30, critDmg: 40 },
-    { category: "warrior", nameZh: "高級·泰坦破天巨錘 (+180 攻擊 | +40% 暴傷 | +10% 閃避)", nameEn: "Adv Titan Hammer (+180 Atk | +40% CritDmg | +10% Evasion)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Warrior", tier: "adv", atk: 180, critDmg: 40, evasion: 10 },
-    { category: "warrior", nameZh: "高級·霸王毀滅重劍 (+200 攻擊 | +25% 暴擊率 | +20% 中毒)", nameEn: "Adv Overlord Sword (+200 Atk | +25% Crit | +20% Poison)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Warrior", tier: "adv", atk: 200, critRate: 25, poisonRate: 20 },
-    { category: "warrior", nameZh: "高級·雷霆破陣巨長槍 (+220 攻擊 | +35% 暴擊率 | +15% 閃避)", nameEn: "Adv Thunder Spear (+220 Atk | +35% Crit | +15% Evasion)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Warrior", tier: "adv", atk: 220, critRate: 35, evasion: 15 },
-    { category: "warrior", nameZh: "高級·滅世死神巨鐮 (+240 攻擊 | +50% 暴傷 | +25% 燃燒)", nameEn: "Adv Scythe (+240 Atk | +50% CritDmg | +25% Burn)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Warrior", tier: "adv", atk: 240, critDmg: 50, burnRate: 25 },
-    { category: "warrior", nameZh: "高級·聖光開山寶劍 (+260 攻擊 | +40% 暴擊率 | +20% 閃避)", nameEn: "Adv Holy Cleaver (+260 Atk | +40% Crit | +20% Evasion)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Warrior", tier: "adv", atk: 260, critRate: 40, evasion: 20 },
-    { category: "warrior", nameZh: "高級·阿修羅雙刃刀 (+280 攻擊 | +60% 暴傷 | +30% 中毒)", nameEn: "Adv Asura Dual Blade (+280 Atk | +60% CritDmg | +30% Poison)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Warrior", tier: "adv", atk: 280, critDmg: 60, poisonRate: 30 },
-    { category: "warrior", nameZh: "高級·無雙混沌屠魔劍 (+320 攻擊 | +45% 暴擊率 | +25% 閃避)", nameEn: "Adv Chaos Sword (+320 Atk | +45% Crit | +25% Evasion)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Warrior", tier: "adv", atk: 320, critRate: 45, evasion: 25 },
-    { category: "warrior", nameZh: "高級·終極神怒崩天神刃 (+380 攻擊 | +50% 暴擊率 | +80% 暴傷)", nameEn: "Adv Ultimate Divine Blade (+380 Atk | +50% Crit | +80% CritDmg)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Warrior", tier: "adv", atk: 380, critRate: 50, critDmg: 80 },
 
-    // 🔮 法師武器 (初級 10 種)
+    // 🔮 法師武器 (初級/中級/高級)
     { category: "mage", nameZh: "初級·學徒木杖 (+15 攻擊)", nameEn: "Basic Apprentice Wand (+15 Atk)", req: { copper: 5 }, job: "Mage", tier: "basic", atk: 15 },
-    { category: "mage", nameZh: "初級·橡木魔導杖 (+18 攻擊)", nameEn: "Basic Oak Wand (+18 Atk)", req: { copper: 6 }, job: "Mage", tier: "basic", atk: 18 },
-    { category: "mage", nameZh: "初級·水晶短杖 (+20 攻擊)", nameEn: "Basic Crystal Wand (+20 Atk)", req: { copper: 7 }, job: "Mage", tier: "basic", atk: 20 },
-    { category: "mage", nameZh: "初級·元素元素杖 (+22 攻擊)", nameEn: "Basic Elemental Wand (+22 Atk)", req: { copper: 8 }, job: "Mage", tier: "basic", atk: 22 },
-    { category: "mage", nameZh: "初級·紫晶權杖 (+24 攻擊)", nameEn: "Basic Amethyst Scepter (+24 Atk)", req: { copper: 9 }, job: "Mage", tier: "basic", atk: 24 },
-    { category: "mage", nameZh: "初級·古木魔法杖 (+25 攻擊)", nameEn: "Basic Ancient Wand (+25 Atk)", req: { copper: 10 }, job: "Mage", tier: "basic", atk: 25 },
-    { category: "mage", nameZh: "初級·符文長杖 (+26 攻擊)", nameEn: "Basic Rune Staff (+26 Atk)", req: { copper: 10, iron: 2 }, job: "Mage", tier: "basic", atk: 26 },
-    { category: "mage", nameZh: "初級·水藍魔杖 (+28 攻擊)", nameEn: "Basic Aqua Wand (+28 Atk)", req: { copper: 10, iron: 3 }, job: "Mage", tier: "basic", atk: 28 },
-    { category: "mage", nameZh: "初級·烈火短權杖 (+29 攻擊)", nameEn: "Basic Fire Scepter (+29 Atk)", req: { copper: 10, iron: 4 }, job: "Mage", tier: "basic", atk: 29 },
-    { category: "mage", nameZh: "初級·秘銀魔導杖 (+30 攻擊)", nameEn: "Basic Mithril Wand (+30 Atk)", req: { copper: 10, iron: 5 }, job: "Mage", tier: "basic", atk: 30 },
-
-    // 🔮 法師武器 (中級 10 種)
     { category: "mage", nameZh: "中級·秘銀符文權杖 (+35 攻擊 | +10% 暴擊率)", nameEn: "Mid Rune Scepter (+35 Atk | +10% Crit)", req: { copper: 12, iron: 8 }, job: "Mage", tier: "mid", atk: 35, critRate: 10 },
-    { category: "mage", nameZh: "中級·水晶導導法杖 (+38 攻擊 | +10% 暴傷)", nameEn: "Mid Crystal Staff (+38 Atk | +10% CritDmg)", req: { copper: 13, iron: 9 }, job: "Mage", tier: "mid", atk: 38, critDmg: 10 },
-    { category: "mage", nameZh: "中級·熾熱火球權杖 (+40 攻擊 | +15% 燃燒率)", nameEn: "Mid Fire Scepter (+40 Atk | +15% Burn)", req: { copper: 14, iron: 10 }, job: "Mage", tier: "mid", atk: 40, burnRate: 15 },
-    { category: "mage", nameZh: "中級·冰霜凍結法杖 (+42 攻擊 | +5% 閃避)", nameEn: "Mid Frost Staff (+42 Atk | +5% Evasion)", req: { copper: 15, iron: 11 }, job: "Mage", tier: "mid", atk: 42, evasion: 5 },
-    { category: "mage", nameZh: "中級·雷霆電擊權杖 (+45 攻擊 | +8% 暴擊率)", nameEn: "Mid Thunder Scepter (+45 Atk | +8% Crit)", req: { copper: 16, iron: 12 }, job: "Mage", tier: "mid", atk: 45, critRate: 8 },
-    { category: "mage", nameZh: "中級·毒素魔法杖 (+48 攻擊 | +20% 中毒率)", nameEn: "Mid Poison Wand (+48 Atk | +20% Poison)", req: { copper: 17, iron: 13 }, job: "Mage", tier: "mid", atk: 48, poisonRate: 20 },
-    { category: "mage", nameZh: "中級·星光奧術權杖 (+50 攻擊 | +15% 暴傷)", nameEn: "Mid Starlight Scepter (+50 Atk | +15% CritDmg)", req: { copper: 18, iron: 14 }, job: "Mage", tier: "mid", atk: 50, critDmg: 15 },
-    { category: "mage", nameZh: "中級·虛空長法杖 (+52 攻擊 | +10% 暴擊率)", nameEn: "Mid Void Staff (+52 Atk | +10% Crit)", req: { copper: 19, iron: 15 }, job: "Mage", tier: "mid", atk: 52, critRate: 10 },
-    { category: "mage", nameZh: "中級·神聖聖光權杖 (+55 攻擊 | +8% 閃避)", nameEn: "Mid Holy Scepter (+55 Atk | +8% Evasion)", req: { copper: 20, iron: 16 }, job: "Mage", tier: "mid", atk: 55, evasion: 8 },
-    { category: "mage", nameZh: "中級·深海潮汐法杖 (+58 攻擊 | +12% 暴傷)", nameEn: "Mid Ocean Staff (+58 Atk | +12% CritDmg)", req: { copper: 22, iron: 18 }, job: "Mage", tier: "mid", atk: 58, critDmg: 12 },
-
-    // 🔮 法師武器 (高級 10 種)
     { category: "mage", nameZh: "高級·熾熱元素法杖 (+70 攻擊 | +25% 燃燒率 | +20% 暴傷)", nameEn: "Adv Flame Staff (+70 Atk | +25% Burn | +20% CritDmg)", req: { copper: 25, iron: 20, gold: 3 }, job: "Mage", tier: "adv", atk: 70, burnRate: 25, critDmg: 20 },
     { category: "mage", nameZh: "高級·星空星爆聖權杖 (+150 攻擊 | +35% 暴傷 | +20% 燃燒)", nameEn: "Adv Star Burst Scepter (+150 Atk | +35% CritDmg | +20% Burn)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Mage", tier: "adv", atk: 150, critDmg: 35, burnRate: 20 },
-    { category: "mage", nameZh: "高級·虛空毀滅奧術魔杖 (+190 攻擊 | +30% 暴擊率 | +25% 毒傷)", nameEn: "Adv Void Wand (+190 Atk | +30% Crit | +25% Poison)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Mage", tier: "adv", atk: 190, critRate: 30, poisonRate: 25 },
-    { category: "mage", nameZh: "高級·超新星極限權杖 (+210 攻擊 | +40% 暴傷 | +15% 閃避)", nameEn: "Adv Supernova Scepter (+210 Atk | +40% CritDmg | +15% Evasion)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Mage", tier: "adv", atk: 210, critDmg: 40, evasion: 15 },
-    { category: "mage", nameZh: "高級·絕對零度極寒法杖 (+230 攻擊 | +35% 暴擊率 | +20% 閃避)", nameEn: "Adv Absolute Zero Staff (+230 Atk | +35% Crit | +20% Evasion)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Mage", tier: "adv", atk: 230, critRate: 35, evasion: 20 },
-    { category: "mage", nameZh: "高級·末日審判黑洞權杖 (+250 攻擊 | +50% 暴傷 | +30% 燃燒)", nameEn: "Adv Doomsday Scepter (+250 Atk | +50% CritDmg | +30% Burn)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Mage", tier: "adv", atk: 250, critDmg: 50, burnRate: 30 },
-    { category: "mage", nameZh: "高級·創世神聖光輝魔杖 (+270 攻擊 | +40% 暴擊率 | +25% 閃避)", nameEn: "Adv Genesis Wand (+270 Atk | +40% Crit | +25% Evasion)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Mage", tier: "adv", atk: 270, critRate: 40, evasion: 25 },
-    { category: "mage", nameZh: "高級·混沌元素滅世權杖 (+290 攻擊 | +60% 暴傷 | +30% 毒傷)", nameEn: "Adv Chaos Scepter (+290 Atk | +60% CritDmg | +30% Poison)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Mage", tier: "adv", atk: 290, critDmg: 60, poisonRate: 30 },
-    { category: "mage", nameZh: "高級·流星天罰大魔導法杖 (+330 攻擊 | +45% 暴擊率 | +30% 閃避)", nameEn: "Adv Meteor Archmage Staff (+330 Atk | +45% Crit | +30% Evasion)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Mage", tier: "adv", atk: 330, critRate: 45, evasion: 30 },
-    { category: "mage", nameZh: "高級·終極神怒創世至尊魔杖 (+390 攻擊 | +55% 暴擊率 | +85% 暴傷)", nameEn: "Adv Supreme Divine Staff (+390 Atk | +55% Crit | +85% CritDmg)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Mage", tier: "adv", atk: 390, critRate: 55, critDmg: 85 },
 
-    // 🏹 射手武器 (初級 10 種)
+    // 🏹 射手武器 (初級/中級/高級)
     { category: "archer", nameZh: "初級·短獵弓 (+14 攻擊)", nameEn: "Basic Short Bow (+14 Atk)", req: { copper: 5 }, job: "Archer", tier: "basic", atk: 14 },
-    { category: "archer", nameZh: "初級·精鋼神木弓 (+16 攻擊)", nameEn: "Basic Steel Bow (+16 Atk)", req: { copper: 6 }, job: "Archer", tier: "basic", atk: 16 },
-    { category: "archer", nameZh: "初級·獵人輕弩 (+18 攻擊)", nameEn: "Basic Hunter Crossbow (+18 Atk)", req: { copper: 7 }, job: "Archer", tier: "basic", atk: 18 },
-    { category: "archer", nameZh: "初級·竹製長弓 (+20 攻擊)", nameEn: "Basic Bamboo Bow (+20 Atk)", req: { copper: 8 }, job: "Archer", tier: "basic", atk: 20 },
-    { category: "archer", nameZh: "初級·複合木弓 (+22 攻擊)", nameEn: "Basic Composite Bow (+22 Atk)", req: { copper: 9 }, job: "Archer", tier: "basic", atk: 22 },
-    { category: "archer", nameZh: "初級·精銳反曲弓 (+24 攻擊)", nameEn: "Basic Recurve Bow (+24 Atk)", req: { copper: 10 }, job: "Archer", tier: "basic", atk: 24 },
-    { category: "archer", nameZh: "初級·鐵臂重弩 (+25 攻擊)", nameEn: "Basic Iron Crossbow (+25 Atk)", req: { copper: 10, iron: 2 }, job: "Archer", tier: "basic", atk: 25 },
-    { category: "archer", nameZh: "初級·疾風短弓 (+27 攻擊)", nameEn: "Basic Gale Bow (+27 Atk)", req: { copper: 10, iron: 3 }, job: "Archer", tier: "basic", atk: 27 },
-    { category: "archer", nameZh: "初級·穿雲木弓 (+28 攻擊)", nameEn: "Basic Cloud Bow (+28 Atk)", req: { copper: 10, iron: 4 }, job: "Archer", tier: "basic", atk: 28 },
-    { category: "archer", nameZh: "初級·神射鋼弩 (+30 攻擊)", nameEn: "Basic Sniper Crossbow (+30 Atk)", req: { copper: 10, iron: 5 }, job: "Archer", tier: "basic", atk: 30 },
-
-    // 🏹 射手武器 (中級 10 種)
     { category: "archer", nameZh: "中級·追風神射弩 (+32 攻擊 | +10% 閃避率)", nameEn: "Mid Wind Crossbow (+32 Atk | +10% Evasion)", req: { copper: 12, iron: 8 }, job: "Archer", tier: "mid", atk: 32, evasion: 10 },
-    { category: "archer", nameZh: "中級·精準長弩 (+35 攻擊 | +8% 暴擊率)", nameEn: "Mid Precision Crossbow (+35 Atk | +8% Crit)", req: { copper: 13, iron: 9 }, job: "Archer", tier: "mid", atk: 35, critRate: 8 },
-    { category: "archer", nameZh: "中級·致命毒矢弓 (+38 攻擊 | +20% 中毒率)", nameEn: "Mid Poison Bow (+38 Atk | +20% Poison)", req: { copper: 14, iron: 10 }, job: "Archer", tier: "mid", atk: 38, poisonRate: 20 },
-    { category: "archer", nameZh: "中級·疾風連發弩 (+40 攻擊 | +6% 閃避率)", nameEn: "Mid Repeating Crossbow (+40 Atk | +6% Evasion)", req: { copper: 15, iron: 11 }, job: "Archer", tier: "mid", atk: 40, evasion: 6 },
-    { category: "archer", nameZh: "中級·鷹眼狙擊弓 (+42 攻擊 | +12% 暴傷)", nameEn: "Mid Hawkeye Bow (+42 Atk | +12% CritDmg)", req: { copper: 16, iron: 12 }, job: "Archer", tier: "mid", atk: 42, critDmg: 12 },
-    { category: "archer", nameZh: "中級·爆裂火焰弩 (+45 攻擊 | +15% 燃燒率)", nameEn: "Mid Explosive Crossbow (+45 Atk | +15% Burn)", req: { copper: 17, iron: 13 }, job: "Archer", tier: "mid", atk: 45, burnRate: 15 },
-    { category: "archer", nameZh: "中級·影縫長弓 (+48 攻擊 | +10% 暴擊率)", nameEn: "Mid Shadow Bow (+48 Atk | +10% Crit)", req: { copper: 18, iron: 14 }, job: "Archer", tier: "mid", atk: 48, critRate: 10 },
-    { category: "archer", nameZh: "中級·穿透金屬弩 (+50 攻擊 | +15% 暴傷)", nameEn: "Mid Piercing Crossbow (+50 Atk | +15% CritDmg)", req: { copper: 19, iron: 15 }, job: "Archer", tier: "mid", atk: 50, critDmg: 15 },
-    { category: "archer", nameZh: "中級·寒冰獵魔弓 (+52 攻擊 | +8% 閃避)", nameEn: "Mid Ice Hunter Bow (+52 Atk | +8% Evasion)", req: { copper: 20, iron: 16 }, job: "Archer", tier: "mid", atk: 52, evasion: 8 },
-    { category: "archer", nameZh: "中級·紫晶重型弩 (+55 攻擊 | +12% 暴擊率)", nameEn: "Mid Amethyst Crossbow (+55 Atk | +12% Crit)", req: { copper: 22, iron: 18 }, job: "Archer", tier: "mid", atk: 55, critRate: 12 },
-
-    // 🏹 射手武器 (高級 10 種)
     { category: "archer", nameZh: "高級·追魂神魔巨弩 (+80 攻擊 | +20% 暴擊率 | +50% 暴傷)", nameEn: "Adv Soul Crossbow (+80 Atk | +20% Crit | +50% CritDmg)", req: { copper: 25, iron: 20, gold: 5, diamond: 1 }, job: "Archer", tier: "adv", atk: 80, critRate: 20, critDmg: 50 },
-    { category: "archer", nameZh: "高級·貫星連擊神天弩 (+145 攻擊 | +25% 暴擊率 | +20% 閃避)", nameEn: "Adv Star Crossbow (+145 Atk | +25% Crit | +20% Evasion)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Archer", tier: "adv", atk: 145, critRate: 25, evasion: 20 },
-    { category: "archer", nameZh: "高級·神怒貫穿天罰弓 (+185 攻擊 | +35% 暴擊率 | +60% 暴傷)", nameEn: "Adv Wrath Bow (+185 Atk | +35% Crit | +60% CritDmg)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Archer", tier: "adv", atk: 185, critRate: 35, critDmg: 60 },
-    { category: "archer", nameZh: "高級·影舞幻影滅世弓 (+205 攻擊 | +30% 閃避 | +30% 暴擊率)", nameEn: "Adv Phantom Bow (+205 Atk | +30% Evasion | +30% Crit)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Archer", tier: "adv", atk: 205, evasion: 30, critRate: 30 },
-    { category: "archer", nameZh: "高級·爆裂天火神威弩 (+225 攻擊 | +30% 燃燒 | +45% 暴傷)", nameEn: "Adv Flame Crossbow (+225 Atk | +30% Burn | +45% CritDmg)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Archer", tier: "adv", atk: 225, burnRate: 30, critDmg: 45 },
-    { category: "archer", nameZh: "高級·毒龍噬魂神箭弩 (+245 攻擊 | +35% 毒傷 | +25% 暴擊率)", nameEn: "Adv Dragon Crossbow (+245 Atk | +35% Poison | +25% Crit)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Archer", tier: "adv", atk: 245, poisonRate: 35, critRate: 25 },
-    { category: "archer", nameZh: "高級·疾風穿雲聖光弓 (+265 攻擊 | +35% 閃避 | +50% 暴傷)", nameEn: "Adv Cloud Bow (+265 Atk | +35% Evasion | +50% CritDmg)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Archer", tier: "adv", atk: 265, evasion: 35, critDmg: 50 },
-    { category: "archer", nameZh: "高級·阿修羅破天神箭弩 (+285 攻擊 | +40% 暴擊率 | +65% 暴傷)", nameEn: "Adv Asura Crossbow (+285 Atk | +40% Crit | +65% CritDmg)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Archer", tier: "adv", atk: 285, critRate: 40, critDmg: 65 },
-    { category: "archer", nameZh: "高級·混沌滅世神箭弓 (+325 攻擊 | +40% 閃避 | +35% 暴擊率)", nameEn: "Adv Chaos Bow (+325 Atk | +40% Evasion | +35% Crit)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Archer", tier: "adv", atk: 325, evasion: 40, critRate: 35 },
-    { category: "archer", nameZh: "高級·終極天罰滅世神尊弩 (+385 攻擊 | +50% 暴擊率 | +90% 暴傷)", nameEn: "Adv Supreme Crossbow (+385 Atk | +50% Crit | +90% CritDmg)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Archer", tier: "adv", atk: 385, critRate: 50, critDmg: 90 },
 
-    // 🛡️ 共通裝備 (防具 6 種)
+    // 🛡️ 共通裝備 (防具)
     { category: "armor", nameZh: "初級·鐵骨胸甲 (+60 MaxHP)", nameEn: "Basic Iron Armor (+60 HP)", req: { iron: 5 }, job: null, tier: "basic", hp: 60 },
     { category: "armor", nameZh: "中級·精鋼合金武裝 (+110 MaxHP | +5% 閃避率)", nameEn: "Mid Alloy Armor (+110 HP | +5% Evasion)", req: { copper: 12, iron: 8 }, job: null, tier: "mid", hp: 110, evasion: 5 },
-    { category: "armor", nameZh: "高級·黑曜石鎖子甲 (+220 MaxHP | +15% 閃避率 | +20% 抗暗影)", nameEn: "Adv Obsidian Mail (+220 HP | +15% Evasion | +20% DarkRes)", req: { copper: 20, iron: 15, gold: 3 }, job: null, tier: "adv", hp: 220, evasion: 15, darkRes: 20 },
-    { category: "armor", nameZh: "高級·泰坦神聖防護壁 (+400 MaxHP | +20% 閃避率 | +100 護盾)", nameEn: "Adv Titan Wall (+400 HP | +20% Evasion | +100 Shield)", req: { copper: 35, iron: 30, gold: 8, diamond: 2 }, job: null, tier: "adv", hp: 400, evasion: 20 },
-    { category: "armor", nameZh: "高級·龍鱗重型護甲 (+550 MaxHP | +25% 閃避率 | +10% 抗火)", nameEn: "Adv Dragon Scale Armor (+550 HP | +25% Evasion | +10% BurnRes)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: null, tier: "adv", hp: 550, evasion: 25 },
-    { category: "armor", nameZh: "高級·不朽神聖鎧甲 (+800 MaxHP | +30% 閃避率 | +15% 抗毒)", nameEn: "Adv Immortal Armor (+800 HP | +30% Evasion | +15% PoisonRes)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: null, tier: "adv", hp: 800, evasion: 30 }
+    { category: "armor", nameZh: "高級·黑曜石鎖子甲 (+220 MaxHP | +15% 閃避率 | +20% 抗暗影)", nameEn: "Adv Obsidian Mail (+220 HP | +15% Evasion | +20% DarkRes)", req: { copper: 20, iron: 15, gold: 3 }, job: null, tier: "adv", hp: 220, evasion: 15, darkRes: 20 }
 ];
 
 const WEAPON_ENCHANTS = [
@@ -806,6 +762,7 @@ function hideAll() {
 
 function showMainMenu() { 
     hideAll(); 
+    setBattleBgm(false);
     document.getElementById('main-menu').classList.remove('hidden'); 
     document.getElementById('btn-corner-rules').classList.remove('hidden');
     applyLanguage(); 
@@ -834,6 +791,7 @@ function initGame(jobCode) {
 
 function startNextBattle() {
     defeatedCount++; hideAll(); document.getElementById('battle-screen').classList.remove('hidden');
+    setBattleBgm(true);
     spawnMonster();
 }
 
@@ -862,6 +820,15 @@ function spawnMonster() {
     updateBattleUI();
 }
 
+function checkBloodDanger() {
+    let container = document.getElementById('game-container');
+    if (player.hp > 0 && (player.hp / player.maxHp) <= 0.10) {
+        container.classList.add('blood-danger');
+    } else {
+        container.classList.remove('blood-danger');
+    }
+}
+
 function updateBattleUI() {
     let t = I18N[curLang];
     let mapObj = MAPS[monster.mapId] || MAPS[1];
@@ -871,6 +838,8 @@ function updateBattleUI() {
     let encStr = player.weaponEnchants.length > 0 ? player.weaponEnchants.join(' + ') : t.noEnc;
     document.getElementById('buff-status').innerText = `${t.weapon}: [${player.weapon}] (${encStr})\n${t.cardsLabel}: ${player.cards.length > 0 ? player.cards.join(', ') : t.noCard}`;
     document.getElementById('monster-status').innerText = `【${monster.name}】HP: ${monster.hp}/${monster.maxHp}`;
+    
+    checkBloodDanger();
 }
 
 function render4SkillButtons() {
@@ -922,12 +891,12 @@ function useBattlePotion(type) {
     let p = player;
     if (type === 'hp' && p.potions.hp > 0) {
         p.potions.hp--; p.hp = Math.min(p.maxHp, p.hp + 100);
-        playSound('heal');
+        playSound('heal', p.jobCode);
         cancelPotionSelect();
         log("🧪 使用了生命藥水，恢復 100 HP！", "log-heal");
     } else if (type === 'mp' && p.potions.mp > 0) {
         p.potions.mp--; p.mp = Math.min(p.maxMp, p.mp + 50);
-        playSound('heal');
+        playSound('heal', p.jobCode);
         cancelPotionSelect();
         log("🧪 使用了魔力藥水，恢復 50 MP！", "log-heal");
     }
@@ -948,20 +917,22 @@ function executeTurn(skillKey) {
         dealtDmg = Math.floor(randomAtk() * (sInfo.mult || 1.5));
         if (isCrit) dealtDmg = Math.floor(dealtDmg * (player.critDmg / 100));
         monster.hp -= dealtDmg;
-        playSound('skill');
-        log((isCrit ? "⚡【暴擊！】" : "") + t.skillLog.replace('{s}', getSkillName(skillKey)).replace('{d}', dealtDmg), isCrit ? "log-crit" : "log-skill");
+        playSound('skill', player.jobCode);
+        
+        let extraTag = sInfo.buffZh ? ` (${sInfo.buffZh})` : (sInfo.debuffZh ? ` (${sInfo.debuffZh})` : "");
+        log((isCrit ? "⚡【暴擊！】" : "") + t.skillLog.replace('{s}', getSkillName(skillKey)).replace('{d}', dealtDmg) + extraTag, isCrit ? "log-crit" : "log-skill");
     } else {
         dealtDmg = randomAtk();
         if (isCrit) dealtDmg = Math.floor(dealtDmg * (player.critDmg / 100));
         monster.hp -= dealtDmg;
-        playSound('hit');
+        playSound('hit', player.jobCode);
         log((isCrit ? "⚡【暴擊！】" : "") + t.attackLog.replace('{w}', player.weapon).replace('{d}', dealtDmg), isCrit ? "log-crit" : "");
     }
 
     updateBattleUI();
 
     if (monster.hp <= 0) {
-        playSound('victory');
+        playSound('victory', player.jobCode);
         let gotStone = Math.random() < 0.10;
         let stoneMsg = gotStone ? t.stoneGot : "";
         if (gotStone) player.enchantStones++;
@@ -1011,7 +982,9 @@ function fallbackStage() { if (defeatedCount > 1) defeatedCount--; player.hp = p
 function randomAtk() { return Math.floor(Math.random() * (player.atkMax - player.atkMin + 1) + player.atkMin); }
 
 function showCardSelect() {
-    hideAll(); document.getElementById('card-screen').classList.remove('hidden'); let container = document.getElementById('card-list'); container.innerHTML = "";
+    hideAll(); 
+    setBattleBgm(false);
+    document.getElementById('card-screen').classList.remove('hidden'); let container = document.getElementById('card-list'); container.innerHTML = "";
     let available = CARDS.filter(c => !player.cards.includes(c.id)); let shuffled = available.sort(() => 0.5 - Math.random()).slice(0, 3);
     shuffled.forEach(card => {
         let btn = document.createElement('button'); btn.className = "btn btn-card";
@@ -1044,7 +1017,9 @@ function enterVillage() {
 }
 
 function showVillage() {
-    hideAll(); document.getElementById('village-screen').classList.remove('hidden');
+    hideAll(); 
+    setBattleBgm(false);
+    document.getElementById('village-screen').classList.remove('hidden');
     let t = I18N[curLang];
     let curMapId = Math.min(Math.floor((defeatedCount - 1) / 10) + 1, 10);
     let mapObj = MAPS[curMapId] || MAPS[1];
@@ -1068,6 +1043,8 @@ function updateVillageUI() {
 
     document.getElementById('btn-v-forge').disabled = (act <= 0);
     document.getElementById('btn-v-magic').disabled = (act <= 0);
+    
+    checkBloodDanger();
 }
 
 function showPlayerStats() {
@@ -1293,11 +1270,11 @@ function updateEnchantHouseUI() {
     });
 }
 
-// 修正：進入裝備商店時明確隱藏「換一批技能」按鈕，修復BUG
+// 修正：進入裝備商店時明確隱藏「換一批技能」按鈕
 function showEquipShop() { 
     hideAll(); 
     document.getElementById('shop-screen').classList.remove('hidden'); 
-    document.getElementById('btn-refresh').style.display = "none"; // BUG修復
+    document.getElementById('btn-refresh').style.display = "none";
     updateEquipShopUI(); 
 }
 
