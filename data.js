@@ -45,6 +45,7 @@ const I18N = {
     }
 };
 
+// 全 61 招技能資料庫 (完全展開寫死)
 const SKILLS = {
     // 通用 (11)
     "重擊": { nameEn: "Heavy Strike", type: "universal", cost: 50, mp: 5, mult: 1.5, cd: 0, descZh: "通用：1.5倍物理傷害" },
@@ -132,7 +133,7 @@ const CLASSES = {
     "Archer": { nameZh: "射手", nameEn: "Archer", hp: 130, mp: 90, min: 25, max: 35, weaponZh: "獵人長弓", weaponEn: "Hunter Bow", critRate: 15, critDmg: 150, evasion: 20 }
 };
 
-// **隨機裝備商店池（嚴格過濾排除所有高級 "adv" 裝備）**
+// 隨機商店池（嚴格過濾排除高級 tier: "adv" 裝備）
 const ALL_EQUIPS_POOL = [
     { nameZh: "初級·鋼鐵頭盔 (+30 MaxHP)", slot: "helmet", tier: "basic", cost: 60, hp: 30 },
     { nameZh: "初級·皮質胸甲 (+40 MaxHP)", slot: "chest", tier: "basic", cost: 70, hp: 40 },
@@ -182,24 +183,111 @@ const CARDS_DATABASE = [
     { id: "holy_revive", nameZh: "👼 聖光復甦", nameEn: "👼 Holy Light", descZh: "戰鬥獲勝自動恢復 30 HP", descEn: "Heal 30 HP on Victory" }
 ];
 
-// **所有高級 (tier: "adv") 武器與防具獨佔於鐵匠鋪鍛造資料庫**
+// 90 把武器與高級專屬神裝 (完全列出)
 const FORGE_RECIPES_DATABASE = [
-    // ⚔️ 戰士武器
+    // ⚔️ 戰士武器 (10/10/10)
     { category: "warrior", slot: "weapon", nameZh: "初級·青銅劍 (+15 攻擊)", nameEn: "Basic Bronze Sword (+15 Atk)", req: { copper: 5 }, job: "Warrior", tier: "basic", atk: 15 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·粗鐵長刀 (+18 攻擊)", nameEn: "Basic Iron Saber (+18 Atk)", req: { copper: 6 }, job: "Warrior", tier: "basic", atk: 18 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·鋼製戰斧 (+20 攻擊)", nameEn: "Basic Steel Axe (+20 Atk)", req: { copper: 7 }, job: "Warrior", tier: "basic", atk: 20 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·騎士短劍 (+22 攻擊)", nameEn: "Basic Knight Dagger (+22 Atk)", req: { copper: 8 }, job: "Warrior", tier: "basic", atk: 22 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·重型鐵錘 (+24 攻擊)", nameEn: "Basic Heavy Hammer (+24 Atk)", req: { copper: 9 }, job: "Warrior", tier: "basic", atk: 24 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·雙刃戰斧 (+25 攻擊)", nameEn: "Basic Double Axe (+25 Atk)", req: { copper: 10 }, job: "Warrior", tier: "basic", atk: 25 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·精鋼長槍 (+26 攻擊)", nameEn: "Basic Steel Spear (+26 Atk)", req: { copper: 10, iron: 2 }, job: "Warrior", tier: "basic", atk: 26 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·開山大刀 (+28 攻擊)", nameEn: "Basic Mountain Cleaver (+28 Atk)", req: { copper: 10, iron: 3 }, job: "Warrior", tier: "basic", atk: 28 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·獵魔長劍 (+29 攻擊)", nameEn: "Basic Demon Sword (+29 Atk)", req: { copper: 10, iron: 4 }, job: "Warrior", tier: "basic", atk: 29 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·破甲巨劍 (+30 攻擊)", nameEn: "Basic Buster Sword (+30 Atk)", req: { copper: 10, iron: 5 }, job: "Warrior", tier: "basic", atk: 30 },
+
     { category: "warrior", slot: "weapon", nameZh: "中級·刺客毒刃 (+35 攻擊 | +20% 中毒率)", nameEn: "Mid Poison Dagger (+35 Atk | +20% Poison)", req: { copper: 12, iron: 8 }, job: "Warrior", tier: "mid", atk: 35, poisonRate: 20 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·騎士長劍 (+38 攻擊 | +5% 暴擊率)", nameEn: "Mid Knight Sword (+38 Atk | +5% Crit)", req: { copper: 13, iron: 9 }, job: "Warrior", tier: "mid", atk: 38, critRate: 5 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·狂暴重斧 (+40 攻擊 | +10% 暴傷)", nameEn: "Mid Berserk Axe (+40 Atk | +10% CritDmg)", req: { copper: 14, iron: 10 }, job: "Warrior", tier: "mid", atk: 40, critDmg: 10 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·破軍長槍 (+42 攻擊 | +6% 暴擊率)", nameEn: "Mid Breaker Spear (+42 Atk | +6% Crit)", req: { copper: 15, iron: 11 }, job: "Warrior", tier: "mid", atk: 42, critRate: 6 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·雙手斬馬刀 (+45 攻擊 | +12% 暴傷)", nameEn: "Mid Katana (+45 Atk | +12% CritDmg)", req: { copper: 16, iron: 12 }, job: "Warrior", tier: "mid", atk: 45, critDmg: 12 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·寒鐵巨劍 (+48 攻擊 | +5% 閃避)", nameEn: "Mid Coldsword (+48 Atk | +5% Evasion)", req: { copper: 17, iron: 13 }, job: "Warrior", tier: "mid", atk: 48, evasion: 5 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·烈焰戰斧 (+50 攻擊 | +15% 燃燒率)", nameEn: "Mid Flame Axe (+50 Atk | +15% Burn)", req: { copper: 18, iron: 14 }, job: "Warrior", tier: "mid", atk: 50, burnRate: 15 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·碎骨重錘 (+52 攻擊 | +8% 暴擊率)", nameEn: "Mid Bone Hammer (+52 Atk | +8% Crit)", req: { copper: 19, iron: 15 }, job: "Warrior", tier: "mid", atk: 52, critRate: 8 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·血氣巨刀 (+55 攻擊 | +15% 暴傷)", nameEn: "Mid Blood Blade (+55 Atk | +15% CritDmg)", req: { copper: 20, iron: 16 }, job: "Warrior", tier: "mid", atk: 55, critDmg: 15 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·黑曜石戰刃 (+58 攻擊 | +8% 閃避)", nameEn: "Mid Obsidian Blade (+58 Atk | +8% Evasion)", req: { copper: 22, iron: 18 }, job: "Warrior", tier: "mid", atk: 58, evasion: 8 },
+
     { category: "warrior", slot: "weapon", nameZh: "高級·狂暴屠魔巨斧 (+70 攻擊 | +15% 暴擊率 | +30% 暴傷)", nameEn: "Adv Berserk Axe (+70 Atk | +15% Crit | +30% CritDmg)", req: { copper: 25, iron: 20, gold: 3 }, job: "Warrior", tier: "adv", atk: 70, critRate: 15, critDmg: 30 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·龍怒屠龍寶刀 (+140 攻擊 | +30% 暴擊率 | +40% 暴傷)", nameEn: "Adv Dragon Saber (+140 Atk | +30% Crit | +40% CritDmg)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Warrior", tier: "adv", atk: 140, critRate: 30, critDmg: 40 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·泰坦破天巨錘 (+180 攻擊 | +40% 暴傷 | +10% 閃避)", nameEn: "Adv Titan Hammer (+180 Atk | +40% CritDmg | +10% Evasion)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Warrior", tier: "adv", atk: 180, critDmg: 40, evasion: 10 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·霸王毀滅重劍 (+200 攻擊 | +25% 暴擊率 | +20% 中毒)", nameEn: "Adv Overlord Sword (+200 Atk | +25% Crit | +20% Poison)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Warrior", tier: "adv", atk: 200, critRate: 25, poisonRate: 20 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·雷霆破陣巨長槍 (+220 攻擊 | +35% 暴擊率 | +15% 閃避)", nameEn: "Adv Thunder Spear (+220 Atk | +35% Crit | +15% Evasion)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Warrior", tier: "adv", atk: 220, critRate: 35, evasion: 15 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·滅世死神巨鐮 (+240 攻擊 | +50% 暴傷 | +25% 燃燒)", nameEn: "Adv Scythe (+240 Atk | +50% CritDmg | +25% Burn)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Warrior", tier: "adv", atk: 240, critDmg: 50, burnRate: 25 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·聖光開山寶劍 (+260 攻擊 | +40% 暴擊率 | +20% 閃避)", nameEn: "Adv Holy Cleaver (+260 Atk | +40% Crit | +20% Evasion)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Warrior", tier: "adv", atk: 260, critRate: 40, evasion: 20 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·阿修羅雙刃刀 (+280 攻擊 | +60% 暴傷 | +30% 中毒)", nameEn: "Adv Asura Dual Blade (+280 Atk | +60% CritDmg | +30% Poison)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Warrior", tier: "adv", atk: 280, critDmg: 60, poisonRate: 30 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·無雙混沌屠魔劍 (+320 攻擊 | +45% 暴擊率 | +25% 閃避)", nameEn: "Adv Chaos Sword (+320 Atk | +45% Crit | +25% Evasion)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Warrior", tier: "adv", atk: 320, critRate: 45, evasion: 25 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·終極神怒崩天神刃 (+380 攻擊 | +50% 暴擊率 | +80% 暴傷)", nameEn: "Adv Ultimate Divine Blade (+380 Atk | +50% Crit | +80% CritDmg)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Warrior", tier: "adv", atk: 380, critRate: 50, critDmg: 80 },
 
-    // 🔮 法師武器
+    // 🔮 法師武器 (10/10/10)
     { category: "mage", slot: "weapon", nameZh: "初級·學徒木杖 (+15 攻擊)", nameEn: "Basic Apprentice Wand (+15 Atk)", req: { copper: 5 }, job: "Mage", tier: "basic", atk: 15 },
+    { category: "mage", slot: "weapon", nameZh: "初級·橡木魔導杖 (+18 攻擊)", nameEn: "Basic Oak Wand (+18 Atk)", req: { copper: 6 }, job: "Mage", tier: "basic", atk: 18 },
+    { category: "mage", slot: "weapon", nameZh: "初級·水晶短杖 (+20 攻擊)", nameEn: "Basic Crystal Wand (+20 Atk)", req: { copper: 7 }, job: "Mage", tier: "basic", atk: 20 },
+    { category: "mage", slot: "weapon", nameZh: "初級·元素元素杖 (+22 攻擊)", nameEn: "Basic Elemental Wand (+22 Atk)", req: { copper: 8 }, job: "Mage", tier: "basic", atk: 22 },
+    { category: "mage", slot: "weapon", nameZh: "初級·紫晶權杖 (+24 攻擊)", nameEn: "Basic Amethyst Scepter (+24 Atk)", req: { copper: 9 }, job: "Mage", tier: "basic", atk: 24 },
+    { category: "mage", slot: "weapon", nameZh: "初級·古木魔法杖 (+25 攻擊)", nameEn: "Basic Ancient Wand (+25 Atk)", req: { copper: 10 }, job: "Mage", tier: "basic", atk: 25 },
+    { category: "mage", slot: "weapon", nameZh: "初級·符文長杖 (+26 攻擊)", nameEn: "Basic Rune Staff (+26 Atk)", req: { copper: 10, iron: 2 }, job: "Mage", tier: "basic", atk: 26 },
+    { category: "mage", slot: "weapon", nameZh: "初級·水藍魔杖 (+28 攻擊)", nameEn: "Basic Aqua Wand (+28 Atk)", req: { copper: 10, iron: 3 }, job: "Mage", tier: "basic", atk: 28 },
+    { category: "mage", slot: "weapon", nameZh: "初級·烈火短權杖 (+29 攻擊)", nameEn: "Basic Fire Scepter (+29 Atk)", req: { copper: 10, iron: 4 }, job: "Mage", tier: "basic", atk: 29 },
+    { category: "mage", slot: "weapon", nameZh: "初級·秘銀魔導杖 (+30 攻擊)", nameEn: "Basic Mithril Wand (+30 Atk)", req: { copper: 10, iron: 5 }, job: "Mage", tier: "basic", atk: 30 },
+
     { category: "mage", slot: "weapon", nameZh: "中級·秘銀符文權杖 (+35 攻擊 | +10% 暴擊率)", nameEn: "Mid Rune Scepter (+35 Atk | +10% Crit)", req: { copper: 12, iron: 8 }, job: "Mage", tier: "mid", atk: 35, critRate: 10 },
+    { category: "mage", slot: "weapon", nameZh: "中級·水晶導導法杖 (+38 攻擊 | +10% 暴傷)", nameEn: "Mid Crystal Staff (+38 Atk | +10% CritDmg)", req: { copper: 13, iron: 9 }, job: "Mage", tier: "mid", atk: 38, critDmg: 10 },
+    { category: "mage", slot: "weapon", nameZh: "中級·熾熱火球權杖 (+40 攻擊 | +15% 燃燒率)", nameEn: "Mid Fire Scepter (+40 Atk | +15% Burn)", req: { copper: 14, iron: 10 }, job: "Mage", tier: "mid", atk: 40, burnRate: 15 },
+    { category: "mage", slot: "weapon", nameZh: "中級·冰霜凍結法杖 (+42 攻擊 | +5% 閃避)", nameEn: "Mid Frost Staff (+42 Atk | +5% Evasion)", req: { copper: 15, iron: 11 }, job: "Mage", tier: "mid", atk: 42, evasion: 5 },
+    { category: "mage", slot: "weapon", nameZh: "中級·雷霆電擊權杖 (+45 攻擊 | +8% 暴擊率)", nameEn: "Mid Thunder Scepter (+45 Atk | +8% Crit)", req: { copper: 16, iron: 12 }, job: "Mage", tier: "mid", atk: 45, critRate: 8 },
+    { category: "mage", slot: "weapon", nameZh: "中級·毒素魔法杖 (+48 攻擊 | +20% 中毒率)", nameEn: "Mid Poison Wand (+48 Atk | +20% Poison)", req: { copper: 17, iron: 13 }, job: "Mage", tier: "mid", atk: 48, poisonRate: 20 },
+    { category: "mage", slot: "weapon", nameZh: "中級·星光奧術權杖 (+50 攻擊 | +15% 暴傷)", nameEn: "Mid Starlight Scepter (+50 Atk | +15% CritDmg)", req: { copper: 18, iron: 14 }, job: "Mage", tier: "mid", atk: 50, critDmg: 15 },
+    { category: "mage", slot: "weapon", nameZh: "中級·虛空長法杖 (+52 攻擊 | +10% 暴擊率)", nameEn: "Mid Void Staff (+52 Atk | +10% Crit)", req: { copper: 19, iron: 15 }, job: "Mage", tier: "mid", atk: 52, critRate: 10 },
+    { category: "mage", slot: "weapon", nameZh: "中級·神聖聖光權杖 (+55 攻擊 | +8% 閃避)", nameEn: "Mid Holy Scepter (+55 Atk | +8% Evasion)", req: { copper: 20, iron: 16 }, job: "Mage", tier: "mid", atk: 55, evasion: 8 },
+    { category: "mage", slot: "weapon", nameZh: "中級·深海潮汐法杖 (+58 攻擊 | +12% 暴傷)", nameEn: "Mid Ocean Staff (+58 Atk | +12% CritDmg)", req: { copper: 22, iron: 18 }, job: "Mage", tier: "mid", atk: 58, critDmg: 12 },
+
     { category: "mage", slot: "weapon", nameZh: "高級·熾熱元素法杖 (+70 攻擊 | +25% 燃燒率 | +20% 暴傷)", nameEn: "Adv Flame Staff (+70 Atk | +25% Burn | +20% CritDmg)", req: { copper: 25, iron: 20, gold: 3 }, job: "Mage", tier: "adv", atk: 70, burnRate: 25, critDmg: 20 },
+    { category: "mage", slot: "weapon", nameZh: "高級·星空星爆聖權杖 (+150 攻擊 | +35% 暴傷 | +20% 燃燒)", nameEn: "Adv Star Burst Scepter (+150 Atk | +35% CritDmg | +20% Burn)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Mage", tier: "adv", atk: 150, critDmg: 35, burnRate: 20 },
+    { category: "mage", slot: "weapon", nameZh: "高級·虛空毀滅奧術魔杖 (+190 攻擊 | +30% 暴擊率 | +25% 毒傷)", nameEn: "Adv Void Wand (+190 Atk | +30% Crit | +25% Poison)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Mage", tier: "adv", atk: 190, critRate: 30, poisonRate: 25 },
+    { category: "mage", slot: "weapon", nameZh: "高級·超新星極限權杖 (+210 攻擊 | +40% 暴傷 | +15% 閃避)", nameEn: "Adv Supernova Scepter (+210 Atk | +40% CritDmg | +15% Evasion)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Mage", tier: "adv", atk: 210, critDmg: 40, evasion: 15 },
+    { category: "mage", slot: "weapon", nameZh: "高級·絕對零度極寒法杖 (+230 攻擊 | +35% 暴擊率 | +20% 閃避)", nameEn: "Adv Absolute Zero Staff (+230 Atk | +35% Crit | +20% Evasion)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Mage", tier: "adv", atk: 230, critRate: 35, evasion: 20 },
+    { category: "mage", slot: "weapon", nameZh: "高級·末日審判黑洞權杖 (+250 攻擊 | +50% 暴傷 | +30% 燃燒)", nameEn: "Adv Doomsday Scepter (+250 Atk | +50% CritDmg | +30% Burn)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Mage", tier: "adv", atk: 250, critDmg: 50, burnRate: 30 },
+    { category: "mage", slot: "weapon", nameZh: "高級·創世神聖光輝魔杖 (+270 攻擊 | +40% 暴擊率 | +25% 閃避)", nameEn: "Adv Genesis Wand (+270 Atk | +40% Crit | +25% Evasion)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Mage", tier: "adv", atk: 270, critRate: 40, evasion: 25 },
+    { category: "mage", slot: "weapon", nameZh: "高級·混沌元素滅世權杖 (+290 攻擊 | +60% 暴傷 | +30% 毒傷)", nameEn: "Adv Chaos Scepter (+290 Atk | +60% CritDmg | +30% Poison)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Mage", tier: "adv", atk: 290, critDmg: 60, poisonRate: 30 },
+    { category: "mage", slot: "weapon", nameZh: "高級·流星天罰大魔導法杖 (+330 攻擊 | +45% 暴擊率 | +30% 閃避)", nameEn: "Adv Meteor Archmage Staff (+330 Atk | +45% Crit | +30% Evasion)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Mage", tier: "adv", atk: 330, critRate: 45, evasion: 30 },
+    { category: "mage", slot: "weapon", nameZh: "高級·終極神怒創世至尊魔杖 (+390 攻擊 | +55% 暴擊率 | +85% 暴傷)", nameEn: "Adv Supreme Divine Staff (+390 Atk | +55% Crit | +85% CritDmg)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Mage", tier: "adv", atk: 390, critRate: 55, critDmg: 85 },
 
-    // 🏹 射手武器
+    // 🏹 射手武器 (10/10/10)
     { category: "archer", slot: "weapon", nameZh: "初級·短獵弓 (+14 攻擊)", nameEn: "Basic Short Bow (+14 Atk)", req: { copper: 5 }, job: "Archer", tier: "basic", atk: 14 },
-    { category: "archer", slot: "weapon", nameZh: "中級·追風神射弩 (+32 攻擊 | +10% 閃避率)", nameEn: "Mid Wind Crossbow (+32 Atk | +10% Evasion)", req: { copper: 12, iron: 8 }, job: "Archer", tier: "mid", atk: 32, evasion: 10 },
-    { category: "archer", slot: "weapon", nameZh: "高級·追魂神魔巨弩 (+80 攻擊 | +20% 暴擊率 | +50% 暴傷)", nameEn: "Adv Soul Crossbow (+80 Atk | +20% Crit | +50% CritDmg)", req: { copper: 25, iron: 20, gold: 5, diamond: 1 }, job: "Archer", tier: "adv", atk: 80, critRate: 20, critDmg: 50 },
+    { category: "archer", slot: "weapon", nameZh: "初級·精鋼神木弓 (+16 攻擊)", nameEn: "Basic Steel Bow (+16 Atk)", req: { copper: 6 }, job: "Archer", tier: "basic", atk: 16 },
+    { category: "archer", slot: "weapon", nameZh: "初級·獵人輕弩 (+18 攻擊)", nameEn: "Basic Hunter Crossbow (+18 Atk)", req: { copper: 7 }, job: "Archer", tier: "basic", atk: 18 },
+    { category: "archer", slot: "weapon", nameZh: "初級·竹製長弓 (+20 攻擊)", nameEn: "Basic Bamboo Bow (+20 Atk)", req: { copper: 8 }, job: "Archer", tier: "basic", atk: 20 },
+    { category: "archer", slot: "weapon", nameZh: "初級·複合木弓 (+22 攻擊)", nameEn: "Basic Composite Bow (+22 Atk)", req: { copper: 9 }, job: "Archer", tier: "basic", atk: 22 },
+    { category: "archer", slot: "weapon", nameZh: "初級·精銳反曲弓 (+24 攻擊)", nameEn: "Basic Recurve Bow (+24 Atk)", req: { copper: 10 }, job: "Archer", tier: "basic", atk: 24 },
+    { category: "archer", slot: "weapon", nameZh: "初級·鐵臂重弩 (+25 攻擊)", nameEn: "Basic Iron Crossbow (+25 Atk)", req: { copper: 10, iron: 2 }, job: "Archer", tier: "basic", atk: 25 },
+    { category: "archer", slot: "weapon", nameZh: "初級·疾風短弓 (+27 攻擊)", nameEn: "Basic Gale Bow (+27 Atk)", req: { copper: 10, iron: 3 }, job: "Archer", tier: "basic", atk: 27 },
+    { category: "archer", slot: "weapon", nameZh: "初級·穿雲木弓 (+28 攻擊)", nameEn: "Basic Cloud Bow (+28 Atk)", req: { copper: 10, iron: 4 }, job: "Archer", tier: "basic", atk: 28 },
+    { category: "archer", slot: "weapon", nameZh: "初級·神射鋼弩 (+30 攻擊)", nameEn: "Basic Sniper Crossbow (+30 Atk)", req: { copper: 10, iron: 5 }, job: "Archer", tier: "basic", atk: 30 },
 
-    // 🛡️ 防具 (頭盔, 胸甲, 腿甲, 手腕 - 含高級專屬)
+    { category: "archer", slot: "weapon", nameZh: "中級·追風神射弩 (+32 攻擊 | +10% 閃避率)", nameEn: "Mid Wind Crossbow (+32 Atk | +10% Evasion)", req: { copper: 12, iron: 8 }, job: "Archer", tier: "mid", atk: 32, evasion: 10 },
+    { category: "archer", slot: "weapon", nameZh: "中級·精準長弩 (+35 攻擊 | +8% 暴擊率)", nameEn: "Mid Precision Crossbow (+35 Atk | +8% Crit)", req: { copper: 13, iron: 9 }, job: "Archer", tier: "mid", atk: 35, critRate: 8 },
+    { category: "archer", slot: "weapon", nameZh: "中級·致命毒矢弓 (+38 攻擊 | +20% 中毒率)", nameEn: "Mid Poison Bow (+38 Atk | +20% Poison)", req: { copper: 14, iron: 10 }, job: "Archer", tier: "mid", atk: 38, poisonRate: 20 },
+    { category: "archer", slot: "weapon", nameZh: "中級·疾風連發弩 (+40 攻擊 | +6% 閃避率)", nameEn: "Mid Repeating Crossbow (+40 Atk | +6% Evasion)", req: { copper: 15, iron: 11 }, job: "Archer", tier: "mid", atk: 40, evasion: 6 },
+    { category: "archer", slot: "weapon", nameZh: "中級·鷹眼狙擊弓 (+42 攻擊 | +12% 暴傷)", nameEn: "Mid Hawkeye Bow (+42 Atk | +12% CritDmg)", req: { copper: 16, iron: 12 }, job: "Archer", tier: "mid", atk: 42, critDmg: 12 },
+    { category: "archer", slot: "weapon", nameZh: "中級·爆裂火焰弩 (+45 攻擊 | +15% 燃燒率)", nameEn: "Mid Explosive Crossbow (+45 Atk | +15% Burn)", req: { copper: 17, iron: 13 }, job: "Archer", tier: "mid", atk: 45, burnRate: 15 },
+    { category: "archer", slot: "weapon", nameZh: "中級·影縫長弓 (+48 攻擊 | +10% 暴擊率)", nameEn: "Mid Shadow Bow (+48 Atk | +10% Crit)", req: { copper: 18, iron: 14 }, job: "Archer", tier: "mid", atk: 48, critRate: 10 },
+    { category: "archer", slot: "weapon", nameZh: "中級·穿透金屬弩 (+50 攻擊 | +15% 暴傷)", nameEn: "Mid Piercing Crossbow (+50 Atk | +15% CritDmg)", req: { copper: 19, iron: 15 }, job: "Archer", tier: "mid", atk: 50, critDmg: 15 },
+    { category: "archer", slot: "weapon", nameZh: "中級·寒冰獵魔弓 (+52 攻擊 | +8% 閃避)", nameEn: "Mid Ice Hunter Bow (+52 Atk | +8% Evasion)", req: { copper: 20, iron: 16 }, job: "Archer", tier: "mid", atk: 52, evasion: 8 },
+    { category: "archer", slot: "weapon", nameZh: "中級·紫晶重型弩 (+55 攻擊 | +12% 暴擊率)", nameEn: "Mid Amethyst Crossbow (+55 Atk | +12% Crit)", req: { copper: 22, iron: 18 }, job: "Archer", tier: "mid", atk: 55, critRate: 12 },
+
+    { category: "archer", slot: "weapon", nameZh: "高級·追魂神魔巨弩 (+80 攻擊 | +20% 暴擊率 | +50% 暴傷)", nameEn: "Adv Soul Crossbow (+80 Atk | +20% Crit | +50% CritDmg)", req: { copper: 25, iron: 20, gold: 5, diamond: 1 }, job: "Archer", tier: "adv", atk: 80, critRate: 20, critDmg: 50 },
+    { category: "archer", slot: "weapon", nameZh: "高級·貫星連擊神天弩 (+145 攻擊 | +25% 暴擊率 | +20% 閃避)", nameEn: "Adv Star Crossbow (+145 Atk | +25% Crit | +20% Evasion)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Archer", tier: "adv", atk: 145, critRate: 25, evasion: 20 },
+    { category: "archer", slot: "weapon", nameZh: "高級·神怒貫穿天罰弓 (+185 攻擊 | +35% 暴擊率 | +60% 暴傷)", nameEn: "Adv Wrath Bow (+185 Atk | +35% Crit | +60% CritDmg)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Archer", tier: "adv", atk: 185, critRate: 35, critDmg: 60 },
+    { category: "archer", slot: "weapon", nameZh: "高級·影舞幻影滅世弓 (+205 攻擊 | +30% 閃避 | +30% 暴擊率)", nameEn: "Adv Phantom Bow (+205 Atk | +30% Evasion | +30% Crit)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Archer", tier: "adv", atk: 205, evasion: 30, critRate: 30 },
+    { category: "archer", slot: "weapon", nameZh: "高級·爆裂天火神威弩 (+225 攻擊 | +30% 燃燒 | +45% 暴傷)", nameEn: "Adv Flame Crossbow (+225 Atk | +30% Burn | +45% CritDmg)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Archer", tier: "adv", atk: 225, burnRate: 30, critDmg: 45 },
+    { category: "archer", slot: "weapon", nameZh: "高級·毒龍噬魂神箭弩 (+245 攻擊 | +35% 毒傷 | +25% 暴擊率)", nameEn: "Adv Dragon Crossbow (+245 Atk | +35% Poison | +25% Crit)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Archer", tier: "adv", atk: 245, poisonRate: 35, critRate: 25 },
+    { category: "archer", slot: "weapon", nameZh: "高級·疾風穿雲聖光弓 (+265 攻擊 | +35% 閃避 | +50% 暴傷)", nameEn: "Adv Cloud Bow (+265 Atk | +35% Evasion | +50% CritDmg)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Archer", tier: "adv", atk: 265, evasion: 35, critDmg: 50 },
+    { category: "archer", slot: "weapon", nameZh: "高級·阿修羅破天神箭弩 (+285 攻擊 | +40% 暴擊率 | +65% 暴傷)", nameEn: "Adv Asura Crossbow (+285 Atk | +40% Crit | +65% CritDmg)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Archer", tier: "adv", atk: 285, critRate: 40, critDmg: 65 },
+    { category: "archer", slot: "weapon", nameZh: "高級·混沌滅世神箭弓 (+325 攻擊 | +40% 閃避 | +35% 暴擊率)", nameEn: "Adv Chaos Bow (+325 Atk | +40% Evasion | +35% Crit)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Archer", tier: "adv", atk: 325, evasion: 40, critRate: 35 },
+    { category: "archer", slot: "weapon", nameZh: "高級·終極天罰滅世神尊弩 (+385 攻擊 | +50% 暴擊率 | +90% 暴傷)", nameEn: "Adv Supreme Crossbow (+385 Atk | +50% Crit | +90% CritDmg)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Archer", tier: "adv", atk: 385, critRate: 50, critDmg: 90 },
+
+    // 🛡️ 防具 (頭盔, 胸甲, 腿甲, 手腕 - 含高級獨佔神裝)
     { category: "armor", slot: "helmet", nameZh: "初級·鋼鐵頭盔 (+35 MaxHP)", req: { iron: 4 }, job: null, tier: "basic", hp: 35 },
     { category: "armor", slot: "helmet", nameZh: "中級·精鋼戰盔 (+85 MaxHP | +40 MP)", req: { copper: 10, iron: 6 }, job: null, tier: "mid", hp: 85, mp: 40 },
     { category: "armor", slot: "helmet", nameZh: "高級·泰坦聖光盔 (+180 MaxHP | +8% 閃避)", req: { copper: 20, iron: 15, gold: 3 }, job: null, tier: "adv", hp: 180, evasion: 8 },
@@ -221,12 +309,72 @@ const WEAPON_ENCHANTS = [
     { id: "flame", keyZh: "烈焰", keyEn: "Flame", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃燒 2 回合" },
     { id: "vampire", keyZh: "吸血", keyEn: "Vampire", nameZh: "🩸 吸血附魔 (10 附魔石)", stoneReq: 10, descZh: "獲得 15% 傷害吸血" },
     { id: "sharp", keyZh: "銳利", keyEn: "Sharp", nameZh: "⚡ 銳利附魔 (10 附魔石)", stoneReq: 10, descZh: "基礎攻擊力提升 25 點" },
-    { id: "frost", keyZh: "冰霜", keyEn: "Frost", nameZh: "❄️ 冰霜附魔 (10 附魔石)", stoneReq: 10, descZh: "20% 機率凍結敵人 1 回合" }
+    { id: "frost", keyZh: "冰霜", keyEn: "Frost", nameZh: "❄️ 冰霜附魔 (10 附魔石)", stoneReq: 10, descZh: "20% 機率凍結敵人 1 回合" },
+    { id: "pierce", keyZh: "破甲", keyEn: "Pierce", nameZh: "🛡️ 破甲附魔 (10 附魔石)", stoneReq: 10, descZh: "無視防禦 +20 固定傷害" },
+    { id: "holy", keyZh: "聖光", keyEn: "Holy", nameZh: "✨ 聖光附魔 (10 附魔石)", stoneReq: 10, descZh: "對 BOSS / 魔王額外 +30% 傷害" },
+    { id: "storm", keyZh: "風暴", keyEn: "Storm", nameZh: "🌪️ 風暴附魔 (10 附魔石)", stoneReq: 10, descZh: "連擊機率提升 20%" },
+    { id: "poison", keyZh: "毒素", keyEn: "Poison", nameZh: "☠️ 毒素附魔 (10 附魔石)", stoneReq: 10, descZh: "敵人每回合受到 20 點毒傷" },
+    { id: "bless", keyZh: "祈願", keyEn: "Bless", nameZh: "🌟 祈願附魔 (10 附魔石)", stoneReq: 10, descZh: "戰鬥勝利獲得金幣量增加 25%" },
+    { id: "fury", keyZh: "暴怒", keyEn: "Fury", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
 ];
 
+// 50 項四大分類成就全數寫死列出
 const ACHIEVEMENTS_DATABASE = [
-    { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },
-    { category: "stage", id: "stage_20", titleZh: "🏆 冰雪勇將", descZh: "擊敗第 2 區 BOSS (2-10)", reqType: "stage", reqVal: 20, gold: 300, stones: 3 },
-    { category: "mine", id: "mine_10", titleZh: "⛏️ 採礦大師", descZh: "完成 10 次採礦", reqType: "mine", reqVal: 10, gold: 250, stones: 3 },
-    { category: "wealth", id: "gold_500", titleZh: "💰 第一桶金", descZh: "持有金幣達到 500 G", reqType: "gold", reqVal: 500, gold: 200, stones: 2 }
+    // ⚔️ 主線關卡 (15項)
+    { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", titleEn: "Stage 1-10 Clear", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },
+    { category: "stage", id: "stage_20", titleZh: "🏆 冰雪勇將", titleEn: "Stage 2-10 Clear", descZh: "擊敗第 2 區 BOSS (2-10)", reqType: "stage", reqVal: 20, gold: 300, stones: 3 },
+    { category: "stage", id: "stage_30", titleZh: "🏆 沙漠霸主", titleEn: "Stage 3-10 Clear", descZh: "擊敗第 3 區 BOSS (3-10)", reqType: "stage", reqVal: 30, gold: 400, stones: 4 },
+    { category: "stage", id: "stage_40", titleZh: "🏆 熔岩屠龍者", titleEn: "Stage 4-10 Clear", descZh: "擊敗第 4 區 BOSS (4-10)", reqType: "stage", reqVal: 40, gold: 500, stones: 5 },
+    { category: "stage", id: "stage_50", titleZh: "🏆 地底破魔者", titleEn: "Stage 5-10 Clear", descZh: "擊敗第 5 區 BOSS (5-10)", reqType: "stage", reqVal: 50, gold: 600, stones: 6 },
+    { category: "stage", id: "stage_60", titleZh: "🏆 古城尋寶家", titleEn: "Stage 6-10 Clear", descZh: "擊敗第 6 區 BOSS (6-10)", reqType: "stage", reqVal: 60, gold: 700, stones: 7 },
+    { category: "stage", id: "stage_70", titleZh: "🏆 雷霆征服者", titleEn: "Stage 7-10 Clear", descZh: "擊敗第 7 區 BOSS (7-10)", reqType: "stage", reqVal: 70, gold: 800, stones: 8 },
+    { category: "stage", id: "stage_80", titleZh: "🏆 深海獵手", titleEn: "Stage 8-10 Clear", descZh: "擊敗第 8 區 BOSS (8-10)", reqType: "stage", reqVal: 80, gold: 900, stones: 9 },
+    { category: "stage", id: "stage_90", titleZh: "🏆 聖光洗禮者", titleEn: "Stage 9-10 Clear", descZh: "擊敗第 9 區 BOSS (9-10)", reqType: "stage", reqVal: 90, gold: 1000, stones: 10 },
+    { category: "stage", id: "stage_100", titleZh: "👑 滅世救世主", titleEn: "Final Boss Defeated", descZh: "通關 100 關擊敗滅世魔王", reqType: "stage", reqVal: 100, gold: 3000, stones: 20 },
+    { category: "stage", id: "stage_win_5", titleZh: "⚔️ 連戰連捷", titleEn: "Win 5 Battles", descZh: "累積勝場達到 5 次", reqType: "stage", reqVal: 5, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_win_15", titleZh: "⚔️ 戰場老兵", titleEn: "Win 15 Battles", descZh: "累積勝場達到 15 次", reqType: "stage", reqVal: 15, gold: 200, stones: 2 },
+    { category: "stage", id: "stage_win_30", titleZh: "⚔️ 無敵勇者", titleEn: "Win 30 Battles", descZh: "累積勝場達到 30 次", reqType: "stage", reqVal: 30, gold: 400, stones: 4 },
+    { category: "stage", id: "stage_win_60", titleZh: "⚔️ 戰神轉世", titleEn: "Win 60 Battles", descZh: "累積勝場達到 60 次", reqType: "stage", reqVal: 60, gold: 800, stones: 8 },
+    { category: "stage", id: "stage_win_90", titleZh: "⚔️ 百戰不殆", titleEn: "Win 90 Battles", descZh: "累積勝場達到 90 次", reqType: "stage", reqVal: 90, gold: 1200, stones: 12 },
+
+    // ⛏️ 採礦鍛造 (15項)
+    { category: "mine", id: "mine_1", titleZh: "⛏️ 採礦新手", titleEn: "Mine 1 Time", descZh: "完成 1 次採礦", reqType: "mine", reqVal: 1, gold: 100, stones: 1 },
+    { category: "mine", id: "mine_5", titleZh: "⛏️ 礦坑勤務員", titleEn: "Mine 5 Times", descZh: "完成 5 次採礦", reqType: "mine", reqVal: 5, gold: 150, stones: 2 },
+    { category: "mine", id: "mine_10", titleZh: "⛏️ 採礦大師", titleEn: "Mine 10 Times", descZh: "完成 10 次採礦", reqType: "mine", reqVal: 10, gold: 250, stones: 3 },
+    { category: "mine", id: "mine_25", titleZh: "⛏️ 礦脈探險家", titleEn: "Mine 25 Times", descZh: "完成 25 次採礦", reqType: "mine", reqVal: 25, gold: 500, stones: 5 },
+    { category: "mine", id: "mine_50", titleZh: "⛏️ 傳奇黃金礦工", titleEn: "Mine 50 Times", descZh: "完成 50 次採礦", reqType: "mine", reqVal: 50, gold: 1000, stones: 10 },
+    { category: "mine", id: "mine_copper", titleZh: "🥉 銅礦愛好者", titleEn: "Own Copper", descZh: "擁有一顆銅礦石", reqType: "copper", reqVal: 1, gold: 80, stones: 1 },
+    { category: "mine", id: "mine_iron", titleZh: "🥈 鐵骨好手", titleEn: "Own Iron", descZh: "擁有一顆鐵礦石", reqType: "iron", reqVal: 1, gold: 120, stones: 1 },
+    { category: "mine", id: "mine_gold", titleZh: "🥇 黃金大亨", titleEn: "Own Gold Ore", descZh: "擁有一顆金礦石", reqType: "gold", reqVal: 1, gold: 300, stones: 3 },
+    { category: "mine", id: "mine_diamond", titleZh: "💎 鑽石獵人", titleEn: "Own Diamond", descZh: "擁有一顆鑽石", reqType: "diamond", reqVal: 1, gold: 800, stones: 5 },
+    { category: "mine", id: "craft_1", titleZh: "🔨 學徒打鐵師", titleEn: "Craft 1 Gear", descZh: "在鐵匠鋪打造 1 件裝備", reqType: "craft", reqVal: 1, gold: 200, stones: 2 },
+    { category: "mine", id: "craft_3", titleZh: "🔨 熟練鐵匠", titleEn: "Craft 3 Gear", descZh: "在鐵匠鋪打造 3 件裝備", reqType: "craft", reqVal: 3, gold: 400, stones: 4 },
+    { category: "mine", id: "craft_5", titleZh: "🔨 神兵鑄造師", titleEn: "Craft 5 Gear", descZh: "在鐵匠鋪打造 5 件裝備", reqType: "craft", reqVal: 5, gold: 800, stones: 8 },
+    { category: "mine", id: "craft_10", titleZh: "👑 鍛造宗師", titleEn: "Craft 10 Gear", descZh: "在鐵匠鋪打造 10 件裝備", reqType: "craft", reqVal: 10, gold: 1500, stones: 15 },
+    { category: "mine", id: "equip_basic", titleZh: "🛡️ 基礎武裝", titleEn: "Equip Basic", descZh: "裝備至少 1 件初級裝備", reqType: "equipCount", reqVal: 1, gold: 100, stones: 1 },
+    { category: "mine", id: "equip_full", titleZh: "🛡️ 神裝加身", titleEn: "Equip Advanced", descZh: "裝備至少 5 件裝備", reqType: "equipCount", reqVal: 5, gold: 1000, stones: 10 },
+
+    // 🔮 魔法附魔 (10項)
+    { category: "enchant", id: "enc_1", titleZh: "🔮 初次附魔", titleEn: "Enchant 1 Time", descZh: "完成 1 次武器魔法附魔", reqType: "enchantCount", reqVal: 1, gold: 300, stones: 3 },
+    { category: "enchant", id: "enc_2", titleZh: "🔮 元素親和", titleEn: "Enchant 2 Times", descZh: "完成 2 次武器魔法附魔", reqType: "enchantCount", reqVal: 2, gold: 500, stones: 5 },
+    { category: "enchant", id: "enc_3", titleZh: "🔮 附魔大師", titleEn: "Enchant 3 Times", descZh: "完成 3 次武器魔法附魔", reqType: "enchantCount", reqVal: 3, gold: 800, stones: 8 },
+    { category: "enchant", id: "enc_5", titleZh: "🔮 魔力滿溢", titleEn: "Enchant 5 Times", descZh: "完成 5 次武器魔法附魔", reqType: "enchantCount", reqVal: 5, gold: 1200, stones: 12 },
+    { category: "enchant", id: "enc_stone_10", titleZh: "💎 附魔石收藏家", titleEn: "Own 10 Stones", descZh: "持有 10 顆附魔石", reqType: "stones", reqVal: 10, gold: 500, stones: 5 },
+    { category: "enchant", id: "enc_stone_20", titleZh: "💎 魔法寶石富豪", titleEn: "Own 20 Stones", descZh: "持有 20 顆附魔石", reqType: "stones", reqVal: 20, gold: 1000, stones: 10 },
+    { category: "enchant", id: "enc_flame", titleZh: "🔥 熾熱火焰", titleEn: "Flame Enchant", descZh: "獲得烈焰附魔", reqType: "hasEnchant", reqVal: "烈焰", gold: 300, stones: 3 },
+    { category: "enchant", id: "enc_vampire", titleZh: "🩸 嗜血魔咒", titleEn: "Vampire Enchant", descZh: "獲得吸血附魔", reqType: "hasEnchant", reqVal: "吸血", gold: 300, stones: 3 },
+    { category: "enchant", id: "enc_frost", titleZh: "❄️ 寒冰凍結", titleEn: "Frost Enchant", descZh: "獲得冰霜附魔", reqType: "hasEnchant", reqVal: "冰霜", gold: 300, stones: 3 },
+    { category: "enchant", id: "enc_fury", titleZh: "💥 暴怒狂之", titleEn: "Fury Enchant", descZh: "獲得暴怒附魔", reqType: "hasEnchant", reqVal: "暴怒", gold: 300, stones: 3 },
+
+    // 💰 冒險財富 (10項)
+    { category: "wealth", id: "gold_500", titleZh: "💰 第一桶金", titleEn: "Reach 500 Gold", descZh: "持有金幣達到 500 G", reqType: "gold", reqVal: 500, gold: 200, stones: 2 },
+    { category: "wealth", id: "gold_2000", titleZh: "💰 村莊小富豪", titleEn: "Reach 2000 Gold", descZh: "持有金幣達到 2,000 G", reqType: "gold", reqVal: 2000, gold: 500, stones: 5 },
+    { category: "wealth", id: "gold_5000", titleZh: "💰 富甲一方", titleEn: "Reach 5000 Gold", descZh: "持有金幣達到 5,000 G", reqType: "gold", reqVal: 5000, gold: 1000, stones: 8 },
+    { category: "wealth", id: "gold_10000", titleZh: "💰 富可敵國", titleEn: "Reach 10000 Gold", descZh: "持有金幣達到 10,000 G", reqType: "gold", reqVal: 10000, gold: 2000, stones: 15 },
+    { category: "wealth", id: "skill_2", titleZh: "📖 技能入門", titleEn: "Learn 2 Skills", descZh: "學會 2 招技能", reqType: "skillCount", reqVal: 2, gold: 200, stones: 2 },
+    { category: "wealth", id: "skill_4", titleZh: "📖 技能滿載", titleEn: "Learn 4 Skills", descZh: "學滿 4 招技能", reqType: "skillCount", reqVal: 4, gold: 500, stones: 5 },
+    { category: "wealth", id: "potion_hp", titleZh: "🧪 生命保障", titleEn: "Own 5 HP Potions", descZh: "持有 5 瓶生命藥水", reqType: "potHp", reqVal: 5, gold: 200, stones: 2 },
+    { category: "wealth", id: "potion_mp", titleZh: "💧 魔力源泉", titleEn: "Own 5 MP Potions", descZh: "持有 5 瓶魔力藥水", reqType: "potMp", reqVal: 5, gold: 200, stones: 2 },
+    { category: "wealth", id: "shop_refresh", titleZh: "🔄 購物狂人", titleEn: "Refresh Shop", descZh: "進行 1 次技能商店換一批", reqType: "gold", reqVal: 100, gold: 150, stones: 1 },
+    { category: "wealth", id: "action_rest", titleZh: "⛪ 充分休息", titleEn: "Rest at Inn", descZh: "在旅館完成休息恢復", reqType: "gold", reqVal: 30, gold: 100, stones: 1 }
 ];

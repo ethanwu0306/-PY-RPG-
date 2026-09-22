@@ -4,6 +4,7 @@ let monster = {};
 let shopEquips = [];
 let shopSkills = [];
 let currentForgeTab = 'warrior';
+let currentArmorSubTab = 'chest';
 let currentAchieveTab = 'stage';
 let pendingSkillToLearn = null;
 let villageNpcMsg = "";
@@ -64,7 +65,7 @@ function applyLanguage() {
 }
 
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen', 'transfer-save-screen', 'victory-modal-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen', 'transfer-save-screen', 'victory-modal-screen', 'equipment-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -92,7 +93,16 @@ function initGame(jobCode) {
         atkMin: c.min, atkMax: c.max, weapon: curLang === "zh" ? c.weaponZh : (c.weaponEn || c.weaponZh),
         gold: 100, enchantStones: 0, villageActions: 5, maxVillageActions: 5, skills: ["重擊"], cards: [], 
         equips: [], 
-        equippedWeapon: null, equippedArmor: null,
+        
+        equipmentSlots: {
+            helmet: null,
+            chest: null,
+            leggings: null,
+            bracer1: null,
+            bracer2: null,
+            weapon: null
+        },
+
         weaponEnchants: [],
         ores: { copper: 0, iron: 0, gold: 0, diamond: 0 },
         potions: { hp: 1, mp: 1 }, mineCount: 0, achieved: [],
@@ -419,7 +429,10 @@ function rollRandomSkills() {
 
 function enterVillage() {
     player.villageActions = 5;
-    shopEquips = ALL_EQUIPS_POOL.sort(() => 0.5 - Math.random()).slice(0, 3);
+    
+    // **核心過濾：隨機裝備商店嚴格排除所有高級 (tier: "adv") 裝備**
+    let normalShopPool = ALL_EQUIPS_POOL.filter(eq => eq.tier !== 'adv');
+    shopEquips = normalShopPool.sort(() => 0.5 - Math.random()).slice(0, 3);
     rollRandomSkills();
 
     if (Math.random() < 0.50) {
@@ -473,8 +486,9 @@ function showPlayerStats() {
     let html = `
         <b>【${t.job}: ${p.jobName}】</b> | ${t.stage}: ${getStageString(defeatedCount)}<br>
         ${t.gold}: ${p.gold} G | 💎 ${t.stones}: ${p.enchantStones}<br>
-        🗡️ 當前武器: <b>[${p.weapon}]</b> (${encStr})<br>
-        🛡️ 當前防具: <b>[${p.equippedArmor || '無'}]</b><br><br>
+        🗡️ 當前武器: <b>[${p.equipmentSlots.weapon || p.weapon}]</b> (${encStr})<br>
+        🪖 當前頭盔: <b>[${p.equipmentSlots.helmet || '無'}]</b> | 🛡️ 當前胸甲: <b>[${p.equipmentSlots.chest || '無'}]</b><br>
+        🦵 當前腿甲: <b>[${p.equipmentSlots.leggings || '無'}]</b> | 🥊 手腕1/2: <b>[${p.equipmentSlots.bracer1 || '無'}] / [${p.equipmentSlots.bracer2 || '無'}]</b><br><br>
         <b>⚔️ 戰鬥面板屬性：</b><br>
         ❤️ HP: ${p.hp} / ${p.maxHp} | 💧 MP: ${p.mp} / ${p.maxMp}<br>
         🗡️ ${t.atkLabel}: ${p.atkMin} ~ ${p.atkMax}<br>
@@ -483,60 +497,115 @@ function showPlayerStats() {
         ${t.cardsLabel}: ${cardStr}
     `;
     document.getElementById('stats-content').innerHTML = html;
-
-    renderInventoryList();
 }
 
-function renderInventoryList() {
-    let container = document.getElementById('inventory-list');
+// 🛡️ 獨立部位裝備穿脫管理系統
+function showEquipmentScreen() {
+    hideAll();
+    document.getElementById('equipment-screen').classList.remove('hidden');
+    updateEquipmentUI();
+}
+
+function updateEquipmentUI() {
+    let slots = player.equipmentSlots;
+    let summaryBox = document.getElementById('equipped-slots-summary');
+    
+    summaryBox.innerHTML = `
+        <b>目前穿戴裝備欄位狀態：</b><br>
+        🪖 <b>[頭盔]</b>：${slots.helmet ? `<b>${slots.helmet}</b> <button onclick="unequipSlot('helmet')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        🛡️ <b>[胸甲]</b>：${slots.chest ? `<b>${slots.chest}</b> <button onclick="unequipSlot('chest')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        🦵 <b>[腿甲]</b>：${slots.leggings ? `<b>${slots.leggings}</b> <button onclick="unequipSlot('leggings')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        🥊 <b>[手腕 1]</b>：${slots.bracer1 ? `<b>${slots.bracer1}</b> <button onclick="unequipSlot('bracer1')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        🥊 <b>[手腕 2]</b>：${slots.bracer2 ? `<b>${slots.bracer2}</b> <button onclick="unequipSlot('bracer2')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        🗡️ <b>[武器]</b>：${slots.weapon ? `<b>${slots.weapon}</b> <button onclick="unequipSlot('weapon')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : `<span style="color:#888;">[基本預設: ${player.weapon}]</span>`}
+    `;
+
+    renderEquipmentBagList();
+}
+
+function renderEquipmentBagList() {
+    let container = document.getElementById('equipment-bag-list');
     container.innerHTML = "";
+
     if (!player.equips || player.equips.length === 0) {
-        container.innerHTML = "<p style='color:#888; text-align:center;'>背包目前是空的</p>";
+        container.innerHTML = "<p style='color:#888; text-align:center;'>背包目前沒有備用裝備</p>";
         return;
     }
 
-    player.equips.forEach((eqName, idx) => {
-        let isWeaponEquipped = (player.weapon === eqName);
-        let isArmorEquipped = (player.equippedArmor === eqName);
-        let isEquipped = isWeaponEquipped || isArmorEquipped;
-
+    player.equips.forEach((eqName) => {
+        let isEquipped = Object.values(player.equipmentSlots).includes(eqName);
         let btn = document.createElement('button');
         btn.className = "btn";
         btn.style.fontSize = "12px";
-        btn.style.margin = "3px 0";
+        btn.style.margin = "4px 0";
 
         if (isEquipped) {
-            btn.innerText = `✔ [已穿戴] ${eqName} (點擊卸下)`;
-            btn.style.background = "linear-gradient(180deg, #16a085 0%, #0e6251 100%)";
-            btn.onclick = () => unequipItem(eqName);
+            btn.innerText = `✔ [使用中] ${eqName}`;
+            btn.disabled = true;
         } else {
-            btn.innerText = `🎒 ${eqName} (點擊穿戴)`;
-            btn.onclick = () => equipItemFromBag(eqName);
+            btn.innerText = `✨ [裝備] ${eqName}`;
+            btn.onclick = () => equipItemToSlot(eqName);
         }
         container.appendChild(btn);
     });
 }
 
-function equipItemFromBag(eqName) {
-    let recipe = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName);
-    if (recipe) {
-        if (recipe.category === 'armor' || recipe.type === 'armor') {
-            player.equippedArmor = eqName;
-            if (recipe.hp) player.maxHp += recipe.hp;
-        } else {
-            player.weapon = eqName;
-            if (recipe.atk) { player.atkMin += recipe.atk; player.atkMax += recipe.atk; }
+function equipItemToSlot(eqName) {
+    let item = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName);
+    if (!item) return;
+
+    let targetSlot = item.slot || (item.type === 'armor' ? 'chest' : 'weapon');
+    let slots = player.equipmentSlots;
+
+    if (targetSlot === 'bracer') {
+        if (!slots.bracer1) targetSlot = 'bracer1';
+        else if (!slots.bracer2) targetSlot = 'bracer2';
+        else {
+            alert("⚠️ 兩個【手腕】欄位都已有裝備！請先點擊「❌ 卸下」騰出空間才可穿上新手腕。");
+            return;
         }
-        alert(`✨ 成功穿戴上 [${eqName}]！`);
-        showPlayerStats();
+    } else {
+        if (slots[targetSlot]) {
+            alert(`⚠️ 【${getSlotNameZh(targetSlot)}】欄位已有裝備 [${slots[targetSlot]}]！\n請先將原裝備「❌ 卸下」後才能替換！`);
+            return;
+        }
     }
+
+    slots[targetSlot] = eqName;
+    if (item.atk) { player.atkMin += item.atk; player.atkMax += item.atk; }
+    if (item.hp) { player.maxHp += item.hp; player.hp += item.hp; }
+    if (item.mp) { player.maxMp += item.mp; player.mp += item.mp; }
+    if (item.critRate) player.critRate += item.critRate;
+    if (item.evasion) player.evasion += item.evasion;
+    if (targetSlot === 'weapon') player.weapon = eqName;
+
+    alert(`🎉 成功將 [${eqName}] 穿戴至【${getSlotNameZh(targetSlot)}】部位！`);
+    updateEquipmentUI();
 }
 
-function unequipItem(eqName) {
-    if (player.weapon === eqName) player.weapon = "拳頭";
-    if (player.equippedArmor === eqName) player.equippedArmor = null;
-    alert(`❌ 已卸下 [${eqName}]。`);
-    showPlayerStats();
+function unequipSlot(slotKey) {
+    let eqName = player.equipmentSlots[slotKey];
+    if (!eqName) return;
+
+    let item = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName);
+    if (item) {
+        if (item.atk) { player.atkMin = Math.max(10, player.atkMin - item.atk); player.atkMax = Math.max(15, player.atkMax - item.atk); }
+        if (item.hp) { player.maxHp = Math.max(50, player.maxHp - item.hp); player.hp = Math.min(player.hp, player.maxHp); }
+        if (item.mp) { player.maxMp = Math.max(30, player.maxMp - item.mp); player.mp = Math.min(player.mp, player.maxMp); }
+        if (item.critRate) player.critRate = Math.max(0, player.critRate - item.critRate);
+        if (item.evasion) player.evasion = Math.max(0, player.evasion - item.evasion);
+    }
+
+    player.equipmentSlots[slotKey] = null;
+    if (slotKey === 'weapon') player.weapon = CLASSES[player.jobCode].weaponZh;
+
+    alert(`❌ 已成功將【${getSlotNameZh(slotKey)}】部位的 [${eqName}] 卸下！`);
+    updateEquipmentUI();
+}
+
+function getSlotNameZh(slotKey) {
+    const names = { helmet: "頭盔", chest: "胸甲", leggings: "腿甲", bracer1: "手腕1", bracer2: "手腕2", weapon: "武器" };
+    return names[slotKey] || slotKey;
 }
 
 function updateMineUI() { updateVillageUI(); }
@@ -574,6 +643,7 @@ function getStatDiffText(item) {
     let diffs = [];
     if (item.atk) diffs.push(`⚔️ 攻擊:+${item.atk}`);
     if (item.hp) diffs.push(`❤️ HP:+${item.hp}`);
+    if (item.mp) diffs.push(`💧 MP:+${item.mp}`);
     if (item.critRate) diffs.push(`⚡ 暴擊率:+${item.critRate}%`);
     if (item.critDmg) diffs.push(`💥 暴傷:+${item.critDmg}%`);
     if (item.evasion) diffs.push(`🌀 閃避:+${item.evasion}%`);
@@ -650,8 +720,27 @@ function updateAchieveUI() {
     });
 }
 
-function showForge() { hideAll(); document.getElementById('forge-screen').classList.remove('hidden'); updateForgeUI(); }
-function switchForgeTab(tab) { currentForgeTab = tab; updateForgeUI(); }
+function showForge() { 
+    hideAll(); 
+    document.getElementById('forge-screen').classList.remove('hidden'); 
+    switchForgeTab('warrior'); 
+}
+
+function switchForgeTab(tab) { 
+    currentForgeTab = tab; 
+    let subTabMenu = document.getElementById('armor-sub-tabs');
+    if (tab === 'armor') {
+        subTabMenu.classList.remove('hidden');
+    } else {
+        subTabMenu.classList.add('hidden');
+    }
+    updateForgeUI(); 
+}
+
+function switchForgeArmorTab(slot) {
+    currentArmorSubTab = slot;
+    updateForgeUI();
+}
 
 function updateForgeUI() {
     let p = player; let t = I18N[curLang];
@@ -659,7 +748,12 @@ function updateForgeUI() {
     document.getElementById('ore-status').innerText = `${t.weapon}: [${p.weapon}]\n${t.ores}: ${t.copper}:${p.ores.copper} | ${t.iron}:${p.ores.iron} | ${t.goldOre}:${p.ores.gold} | ${t.diamond}:${p.ores.diamond}\n⚡ 行動力: ${act}/5`;
     let forgeBox = document.getElementById('forge-items'); forgeBox.innerHTML = "";
     
-    let recipeList = FORGE_RECIPES_DATABASE.filter(r => r.category === currentForgeTab);
+    let recipeList = [];
+    if (currentForgeTab === 'armor') {
+        recipeList = FORGE_RECIPES_DATABASE.filter(r => r.category === 'armor' && r.slot === currentArmorSubTab);
+    } else {
+        recipeList = FORGE_RECIPES_DATABASE.filter(r => r.category === currentForgeTab);
+    }
 
     recipeList.forEach(recipe => {
         let bought = p.equips.includes(getItemName(recipe));
@@ -682,14 +776,7 @@ function updateForgeUI() {
             btn.onclick = () => {
                 p.villageActions--;
                 Object.keys(recipe.req).forEach(k => p.ores[k] -= recipe.req[k]); p.equips.push(getItemName(recipe));
-                if (recipe.atk) { p.atkMin += recipe.atk; p.atkMax += recipe.atk; }
-                if (recipe.hp) { p.maxHp += recipe.hp; p.hp += recipe.hp; }
-                if (recipe.critRate) p.critRate += recipe.critRate;
-                if (recipe.critDmg) p.critDmg += recipe.critDmg;
-                if (recipe.evasion) p.evasion += recipe.evasion;
-                if (recipe.poisonRate) p.poisonRate += recipe.poisonRate;
-                if (recipe.darkRes) p.darkRes += recipe.darkRes;
-                alert(t.craftSuccess.replace('{i}', getItemName(recipe))); updateForgeUI();
+                alert(t.craftSuccess.replace('{i}', getItemName(recipe)) + " (已存入背包，請至裝備管理頁面穿戴)"); updateForgeUI();
             };
         }
         forgeBox.appendChild(btn);
@@ -755,14 +842,7 @@ function updateEquipShopUI() {
         else {
             btn.onclick = () => {
                 player.gold -= item.cost; player.equips.push(getItemName(item));
-                if (item.atk) { player.atkMin += item.atk; player.atkMax += item.atk; player.weapon = getItemName(item); }
-                if (item.hp) { player.maxHp += item.hp; player.hp += item.hp; }
-                if (item.critRate) player.critRate += item.critRate;
-                if (item.critDmg) player.critDmg += item.critDmg;
-                if (item.evasion) player.evasion += item.evasion;
-                if (item.poisonRate) player.poisonRate += item.poisonRate;
-                if (item.burnRate) player.burnRate += item.burnRate;
-                alert(t.equipSuccess.replace('{i}', getItemName(item))); updateEquipShopUI();
+                alert(t.equipSuccess.replace('{i}', getItemName(item)) + " (已存入背包，請至裝備管理頁面穿戴)"); updateEquipShopUI();
             };
         }
         container.appendChild(btn);
@@ -854,12 +934,15 @@ function loadGame() {
             if (data.shopEquips) shopEquips = data.shopEquips;
             if (data.shopSkills) shopSkills = data.shopSkills;
 
+            if (!player.equipmentSlots) {
+                player.equipmentSlots = { helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null };
+            }
             if (!player.skillCDs) player.skillCDs = {};
             if (!player.equips) player.equips = [];
             if (!player.ores) player.ores = { copper: 0, iron: 0, gold: 0, diamond: 0 };
             if (!player.potions) player.potions = { hp: 1, mp: 1 };
             
-            alert(I18N[curLang].loadSuccess + "\n(舊存檔版本已自動向上升級修復！)"); 
+            alert(I18N[curLang].loadSuccess + "\n(舊存檔版本已自動向上升級！)"); 
             showVillage(); 
         } else {
             alert("⚠️ 找不到本地存檔，請確認您已在本頁面存檔過，或使用【跨裝置代碼匯入】進度。");
