@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 成就判定修復版 v3.1</title>
+    <title>Py RPG</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,10 +11,10 @@
 <div id="game-container">
     <button id="btn-corner-rules" class="btn-rules-corner" onclick="showGameGuide()">📖 遊玩規則與介紹</button>
 
-    <!-- 主選單畫面 -->
+    <!-- 主選單畫面 (版本簡化) -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.1 (成就判定修復版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.1</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -139,7 +139,7 @@
         <button class="btn btn-secondary" onclick="fallbackStage()" id="btn-fallback">⬅️ 退回上一關並回到村莊</button>
     </div>
 
-    <!-- 村莊畫面（已移除右側方便存檔字樣） -->
+    <!-- 村莊畫面 -->
     <div id="village-screen" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="showMainMenu()">⬅️ 返回主畫面</button>

@@ -227,7 +227,7 @@ const FORGE_RECIPES_DATABASE = [
 ];
 
 const WEAPON_ENCHANTS = [
-    { id: "flame", keyZh: "烈焰", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃術 2 回合" },
+    { id: "flame", keyZh: "烈焰", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃燒 2 回合" },
     { id: "vampire", keyZh: "吸血", nameZh: "🩸 吸血附魔 (10 附魔石)", stoneReq: 10, descZh: "獲得 15% 傷害吸血" },
     { id: "sharp", keyZh: "銳利", nameZh: "⚡ 銳利附魔 (10 附魔石)", stoneReq: 10, descZh: "基礎攻擊力提升 25 點" },
     { id: "frost", keyZh: "冰霜", nameZh: "❄️ 冰霜附魔 (10 附魔石)", stoneReq: 10, descZh: "20% 機率凍結敵人 1 回合" },
@@ -239,7 +239,6 @@ const WEAPON_ENCHANTS = [
     { id: "fury", keyZh: "暴怒", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
 ];
 
-// **成就資料庫：精準修復 reqType 欄位**
 const ACHIEVEMENTS_DATABASE = [
     // ⚔️ 主線關卡 (15項)
     { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },
