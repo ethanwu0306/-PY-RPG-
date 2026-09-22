@@ -94,8 +94,8 @@ function initGame(jobCode) {
         gold: 100, enchantStones: 0, villageActions: 5, maxVillageActions: 5, skills: ["重擊"], cards: [], 
         equips: [], 
         refines: {}, 
-        pickaxeLvl: 0, // 鎬子強化等級 (0 ~ 5)
-        refineStones: 0, // 專屬精煉石
+        pickaxeLvl: 0, 
+        refineStones: 0, 
         
         equipmentSlots: {
             helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null
@@ -457,10 +457,15 @@ function rollRandomSkills() {
     shopSkills = shuffled.slice(0, 3);
 }
 
+// **重點修改：隨機裝備商店一次刷新 5 欄位（只包含初級與中級）**
+function rollRandomEquipShop() {
+    let normalShopPool = ALL_EQUIPS_POOL.filter(eq => eq.tier !== 'adv');
+    shopEquips = normalShopPool.sort(() => 0.5 - Math.random()).slice(0, 5);
+}
+
 function enterVillage() {
     player.villageActions = 5;
-    let normalShopPool = ALL_EQUIPS_POOL.filter(eq => eq.tier !== 'adv');
-    shopEquips = normalShopPool.sort(() => 0.5 - Math.random()).slice(0, 3);
+    rollRandomEquipShop();
     rollRandomSkills();
 
     if (Math.random() < 0.50) {
@@ -491,10 +496,7 @@ function updateVillageUI() {
     let act = player.villageActions;
     let pLvl = player.pickaxeLvl || 0;
     
-    document.getElementById('village-status').innerText = `${t.job}: ${player.jobName} | ${t.gold}: ${player.gold} G | 💎 ${t.stones}: ${player.enchantStones} | 💠 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ ${t.actionsLabel}: ${act}/${player.maxVillageActions}\n⛏️ 鎬子強化: +${pLvl}`;
-    
-    let pickBtnTag = document.getElementById('pickaxe-lvl-tag');
-    if (pickBtnTag) pickBtnTag.innerText = `+${pLvl}`;
+    document.getElementById('village-status').innerText = `${t.job}: ${player.jobName} | ${t.gold}: ${player.gold} G | 💎 ${t.stones}: ${player.enchantStones} | 💠 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ ${t.actionsLabel}: ${act}/${player.maxVillageActions}\n⛏️ 採礦鎬子等級: +${pLvl}`;
 
     document.getElementById('btn-v-rest').disabled = (player.gold < 30 || act <= 0);
     
@@ -647,7 +649,7 @@ function getSlotNameZh(slotKey) {
 }
 
 // -------------------------------------------------------------
-// ⛏️ 採礦與鎬子強化機制 (支援 +1~+5 鎬子與精煉石機率掉落)
+// ⛏️ 採礦機制
 // -------------------------------------------------------------
 function mine() {
     if (player.villageActions <= 0) { alert(I18N[curLang].noActions); return; }
@@ -656,8 +658,8 @@ function mine() {
     player.mineCount = (player.mineCount || 0) + 1;
     
     let pLvl = player.pickaxeLvl || 0;
-    let doubleOreRate = pLvl * 0.15; // 雙倍採礦率
-    let highOreRateBonus = pLvl * 0.10; // 金/鑽石提升率
+    let doubleOreRate = pLvl * 0.15;
+    let highOreRateBonus = pLvl * 0.10;
 
     let rand = Math.random();
     let count = (Math.random() < doubleOreRate) ? 2 : 1;
@@ -673,7 +675,6 @@ function mine() {
         player.ores.diamond += count; gotMsg = `💎 ${t.diamond} x${count}`; 
     }
 
-    // 💎 +3 以上鎬子機率挖到精煉石 (+3:20%, +4:40%, +5:60%)
     let refineStoneRate = 0;
     if (pLvl === 3) refineStoneRate = 0.20;
     else if (pLvl === 4) refineStoneRate = 0.40;
@@ -687,35 +688,6 @@ function mine() {
 
     let refineStoneMsg = gotRefineStone ? "\n✨ 鎬子神威發揮！幸運額外採集到了 1 顆【💠 精煉石】！" : "";
     alert(`⛏️ 採礦成功！獲得 ${gotMsg}${refineStoneMsg}\n(${t.actionsLabel}: ${player.villageActions}/${player.maxVillageActions})`);
-    updateVillageUI();
-}
-
-function upgradePickaxe() {
-    let curLvl = player.pickaxeLvl || 0;
-    if (curLvl >= 5) {
-        alert("🔨 採礦鎬子已達到最高等級 (+5 神級採礦鎬)！");
-        return;
-    }
-
-    let reqCopper = (curLvl + 1) * 5;
-    let reqIron = (curLvl + 1) * 3;
-    let reqGold = curLvl >= 2 ? (curLvl) * 2 : 0;
-
-    let canUpgrade = (player.ores.copper >= reqCopper && player.ores.iron >= reqIron && player.ores.gold >= reqGold);
-
-    if (!canUpgrade) {
-        let reqGoldTxt = reqGold > 0 ? `, 金x${reqGold}` : "";
-        alert(`❌ 升級鎬子 (+${curLvl} ➡️ +${curLvl+1}) 資源不足！\n需求: 銅x${reqCopper}, 鐵x${reqIron}${reqGoldTxt}`);
-        return;
-    }
-
-    player.ores.copper -= reqCopper;
-    player.ores.iron -= reqIron;
-    if (reqGold > 0) player.ores.gold -= reqGold;
-
-    player.pickaxeLvl = curLvl + 1;
-    let unlockStoneMsg = (curLvl + 1 >= 3) ? `\n🎉 鎬子達到 +${curLvl+1}！正式解鎖採礦時可獲得【💠 精煉石】能力！` : "";
-    alert(`🔨 鎬子升級成功！當前等級: +${curLvl+1}${unlockStoneMsg}`);
     updateVillageUI();
 }
 
@@ -748,6 +720,7 @@ function showPotionShop() {
     hideAll(); 
     document.getElementById('shop-screen').classList.remove('hidden');
     document.getElementById('btn-refresh').style.display = "none";
+    document.getElementById('btn-refresh-equip').style.display = "none";
     let container = document.getElementById('shop-items'); container.innerHTML = "";
     document.getElementById('shop-status').innerText = `目前金幣: ${player.gold} G | 🧪 生命藥水: ${player.potions.hp} 瓶 | 魔力藥水: ${player.potions.mp} 瓶`;
 
@@ -849,7 +822,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪神兵鍛造 & ✨ 裝備精煉強化系統 (需消耗💠精煉石)
+// 🔨 鐵匠鋪神兵鍛造 & ✨ 裝備精煉 & ⛏️ 升級鎬子
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -876,11 +849,16 @@ function switchForgeArmorTab(slot) {
 function updateForgeUI() {
     let p = player; let t = I18N[curLang];
     let act = p.villageActions;
-    document.getElementById('ore-status').innerText = `${t.weapon}: [${p.weapon}]\n${t.ores}: ${t.copper}:${p.ores.copper} | ${t.iron}:${p.ores.iron} | ${t.goldOre}:${p.ores.gold} | ${t.diamond}:${p.ores.diamond} | 💠精煉石:${p.refineStones || 0}\n⚡ 行動力: ${act}/5`;
+    document.getElementById('ore-status').innerText = `${t.weapon}: [${p.weapon}]\n${t.ores}: ${t.copper}:${p.ores.copper} | ${t.iron}:${p.ores.iron} | ${t.goldOre}:${p.ores.gold} | ${t.diamond}:${p.ores.diamond} | 💠精煉石:${p.refineStones || 0}\n⛏️ 鎬子等級: +${p.pickaxeLvl || 0} | ⚡ 行動力: ${act}/5`;
     let forgeBox = document.getElementById('forge-items'); forgeBox.innerHTML = "";
     
     if (currentForgeTab === 'refine') {
         renderEquipmentRefineList();
+        return;
+    }
+
+    if (currentForgeTab === 'pickaxe') {
+        renderPickaxeUpgradeUI();
         return;
     }
 
@@ -919,6 +897,41 @@ function updateForgeUI() {
     });
 }
 
+function renderPickaxeUpgradeUI() {
+    let forgeBox = document.getElementById('forge-items');
+    forgeBox.innerHTML = "";
+
+    let curLvl = player.pickaxeLvl || 0;
+    let btn = document.createElement('button');
+    btn.className = "btn";
+
+    if (curLvl >= 5) {
+        btn.innerText = "⛏️ 採礦鎬子已達到最高等級 (+5 神級鎬子)";
+        btn.disabled = true;
+    } else {
+        let reqCopper = (curLvl + 1) * 5;
+        let reqIron = (curLvl + 1) * 3;
+        let reqGold = curLvl >= 2 ? (curLvl) * 2 : 0;
+        let canUpgrade = (player.ores.copper >= reqCopper && player.ores.iron >= reqIron && player.ores.gold >= reqGold);
+
+        let reqGoldTxt = reqGold > 0 ? `, 金x${reqGold}` : "";
+        btn.innerText = `🔨 升級鎬子: (+${curLvl} ➡️ +${curLvl+1}) (需求: 銅x${reqCopper}, 鐵x${reqIron}${reqGoldTxt})`;
+        btn.disabled = !canUpgrade;
+
+        btn.onclick = () => {
+            player.ores.copper -= reqCopper;
+            player.ores.iron -= reqIron;
+            if (reqGold > 0) player.ores.gold -= reqGold;
+            player.pickaxeLvl = curLvl + 1;
+
+            let unlockStoneMsg = (curLvl + 1 >= 3) ? `\n🎉 鎬子升至 +${curLvl+1}！已解鎖採礦時可挖到【💠 精煉石】能力！` : "";
+            alert(`🔨 鎬子升級成功！當前等級: +${curLvl+1}${unlockStoneMsg}`);
+            updateForgeUI();
+        };
+    }
+    forgeBox.appendChild(btn);
+}
+
 function renderEquipmentRefineList() {
     let forgeBox = document.getElementById('forge-items');
     forgeBox.innerHTML = "";
@@ -938,7 +951,7 @@ function renderEquipmentRefineList() {
             btn.disabled = true;
         } else {
             let reqCopper = (curLvl + 1) * 3;
-            let reqRefineStone = (curLvl + 1); // 必須消耗精煉石
+            let reqRefineStone = (curLvl + 1);
             let canRefine = (player.ores.copper >= reqCopper && (player.refineStones || 0) >= reqRefineStone && player.villageActions > 0);
 
             btn.innerText = `✨ 精煉升級: ${eqName} (+${curLvl} ➡️ +${curLvl+1}) (需求: 銅x${reqCopper}, 💠精煉石x${reqRefineStone})`;
@@ -997,6 +1010,7 @@ function showEquipShop() {
     hideAll(); 
     document.getElementById('shop-screen').classList.remove('hidden'); 
     document.getElementById('btn-refresh').style.display = "none";
+    document.getElementById('btn-refresh-equip').style.display = "block";
     updateEquipShopUI(); 
 }
 
@@ -1004,6 +1018,9 @@ function updateEquipShopUI() {
     let t = I18N[curLang];
     document.getElementById('shop-status').innerText = `${t.gold}: ${player.gold} G | ${t.job}: ${player.jobName}`;
     let container = document.getElementById('shop-items'); container.innerHTML = "";
+    
+    document.getElementById('btn-refresh-equip').disabled = (player.gold < 100);
+
     shopEquips.forEach(item => {
         let bought = player.equips.includes(getItemName(item));
         let wrongJob = (item.job && item.job !== player.jobCode);
@@ -1023,7 +1040,14 @@ function updateEquipShopUI() {
     });
 }
 
-function showSkillShop() { hideAll(); document.getElementById('shop-screen').classList.remove('hidden'); document.getElementById('btn-refresh').style.display = "block"; updateSkillShopUI(); }
+function refreshEquipShop() {
+    let t = I18N[curLang];
+    if (player.gold >= 100) {
+        player.gold -= 100; rollRandomEquipShop(); alert("🔄 裝備商店已刷新！(消耗 100 G)"); updateEquipShopUI();
+    } else alert(t.noGold);
+}
+
+function showSkillShop() { hideAll(); document.getElementById('shop-screen').classList.remove('hidden'); document.getElementById('btn-refresh').style.display = "block"; document.getElementById('btn-refresh-equip').style.display = "none"; updateSkillShopUI(); }
 function updateSkillShopUI() {
     let t = I18N[curLang];
     document.getElementById('shop-status').innerText = `${t.gold}: ${player.gold} G | Skills: ${player.skills.length}/4`;
