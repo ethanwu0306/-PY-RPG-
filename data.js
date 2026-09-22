@@ -1,4 +1,4 @@
-const SAVE_KEY = "pyrpg_save_github_v3.0_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v3.1_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const SKILLS = {
     // 通用 (11)
@@ -141,7 +141,7 @@ const CARDS_DATABASE = [
 ];
 
 const FORGE_RECIPES_DATABASE = [
-    // ⚔️ 戰士高級神兵 (10/10/10)
+    // ⚔️ 戰士高級神兵 (10種)
     { category: "warrior", slot: "weapon", nameZh: "高級·狂暴屠魔巨斧 (+70 攻擊 | +15% 暴擊率 | +30% 暴傷)", req: { copper: 25, iron: 20, gold: 3 }, job: "Warrior", tier: "adv", atk: 70, critRate: 15, critDmg: 30 },
     { category: "warrior", slot: "weapon", nameZh: "高級·龍怒屠龍寶刀 (+140 攻擊 | +30% 暴擊率 | +40% 暴傷)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Warrior", tier: "adv", atk: 140, critRate: 30, critDmg: 40 },
     { category: "warrior", slot: "weapon", nameZh: "高級·泰坦破天巨錘 (+180 攻擊 | +40% 暴傷 | +10% 閃避)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Warrior", tier: "adv", atk: 180, critDmg: 40, evasion: 10 },
@@ -227,7 +227,7 @@ const FORGE_RECIPES_DATABASE = [
 ];
 
 const WEAPON_ENCHANTS = [
-    { id: "flame", keyZh: "烈焰", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃燒 2 回合" },
+    { id: "flame", keyZh: "烈焰", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃術 2 回合" },
     { id: "vampire", keyZh: "吸血", nameZh: "🩸 吸血附魔 (10 附魔石)", stoneReq: 10, descZh: "獲得 15% 傷害吸血" },
     { id: "sharp", keyZh: "銳利", nameZh: "⚡ 銳利附魔 (10 附魔石)", stoneReq: 10, descZh: "基礎攻擊力提升 25 點" },
     { id: "frost", keyZh: "冰霜", nameZh: "❄️ 冰霜附魔 (10 附魔石)", stoneReq: 10, descZh: "20% 機率凍結敵人 1 回合" },
@@ -239,7 +239,7 @@ const WEAPON_ENCHANTS = [
     { id: "fury", keyZh: "暴怒", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
 ];
 
-// 全 50 項成就資料（完整不省略）
+// **成就資料庫：精準修復 reqType 欄位**
 const ACHIEVEMENTS_DATABASE = [
     // ⚔️ 主線關卡 (15項)
     { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },
@@ -266,7 +266,7 @@ const ACHIEVEMENTS_DATABASE = [
     { category: "mine", id: "mine_50", titleZh: "⛏️ 傳奇黃金礦工", descZh: "完成 50 次採礦", reqType: "mine", reqVal: 50, gold: 1000, stones: 10 },
     { category: "mine", id: "mine_copper", titleZh: "🥉 銅礦愛好者", descZh: "擁有一顆銅礦石", reqType: "copper", reqVal: 1, gold: 80, stones: 1 },
     { category: "mine", id: "mine_iron", titleZh: "🥈 鐵骨好手", descZh: "擁有一顆鐵礦石", reqType: "iron", reqVal: 1, gold: 120, stones: 1 },
-    { category: "mine", id: "mine_gold", titleZh: "🥇 黃金大亨", descZh: "擁有一顆金礦石", reqType: "gold", reqVal: 1, gold: 300, stones: 3 },
+    { category: "mine", id: "mine_gold", titleZh: "🥇 黃金大亨", descZh: "擁有一顆金礦石", reqType: "goldOre", reqVal: 1, gold: 300, stones: 3 },
     { category: "mine", id: "mine_diamond", titleZh: "💎 鑽石獵人", descZh: "擁有一顆鑽石", reqType: "diamond", reqVal: 1, gold: 800, stones: 5 },
     { category: "mine", id: "craft_1", titleZh: "🔨 學徒打鐵師", descZh: "在鐵匠鋪打造 1 件裝備", reqType: "craft", reqVal: 1, gold: 200, stones: 2 },
     { category: "mine", id: "craft_3", titleZh: "🔨 熟練鐵匠", descZh: "在鐵匠鋪打造 3 件裝備", reqType: "craft", reqVal: 3, gold: 400, stones: 4 },
@@ -296,6 +296,6 @@ const ACHIEVEMENTS_DATABASE = [
     { category: "wealth", id: "skill_4", titleZh: "📖 技能滿載", descZh: "學滿 4 招技能", reqType: "skillCount", reqVal: 4, gold: 500, stones: 5 },
     { category: "wealth", id: "potion_hp", titleZh: "🧪 生命保障", descZh: "持有 5 瓶生命藥水", reqType: "potHp", reqVal: 5, gold: 200, stones: 2 },
     { category: "wealth", id: "potion_mp", titleZh: "💧 魔力源泉", descZh: "持有 5 瓶魔力藥水", reqType: "potMp", reqVal: 5, gold: 200, stones: 2 },
-    { category: "wealth", id: "shop_refresh", titleZh: "🔄 購物狂人", descZh: "進行 1 次技能商店換一批", reqType: "gold", reqVal: 100, gold: 150, stones: 1 },
-    { category: "wealth", id: "action_rest", titleZh: "⛪ 充分休息", descZh: "在旅館完成休息恢復", reqType: "gold", reqVal: 30, gold: 100, stones: 1 }
+    { category: "wealth", id: "shop_refresh", titleZh: "🔄 購物狂人", descZh: "進行 1 次技能商店換一批", reqType: "shopRefreshCount", reqVal: 1, gold: 150, stones: 1 },
+    { category: "wealth", id: "action_rest", titleZh: "⛪ 充分休息", descZh: "在旅館完成休息恢復", reqType: "restCount", reqVal: 1, gold: 100, stones: 1 }
 ];

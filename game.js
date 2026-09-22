@@ -45,6 +45,8 @@ function initGame(jobCode) {
         refines: {}, 
         pickaxeLvl: 0, 
         refineStones: 0, 
+        shopRefreshCount: 0, // 紀錄換一批次數
+        restCount: 0, // 紀錄旅館休息次數
         
         equipmentSlots: {
             helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null
@@ -98,7 +100,6 @@ function spawnMonster() {
     updateBattleUI();
 }
 
-// 動態 Canvas 繪製：玩家職業與怪物圖像
 function drawAvatarAndMonsterVisuals(mapId, isBoss) {
     let pCanvas = document.getElementById('player-avatar-canvas');
     if (pCanvas) {
@@ -160,7 +161,6 @@ function updateBattleUI() {
     let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
     if (player.isDefending) buffStr += " | 防禦防護中";
 
-    // 更新即時視覺動態血條 & 魔條
     let pHpPct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
     let pMpPct = Math.max(0, Math.min(100, (player.mp / player.maxMp) * 100));
     let mHpPct = Math.max(0, Math.min(100, (monster.hp / monster.maxHp) * 100));
@@ -508,7 +508,6 @@ function showPlayerStats() {
     document.getElementById('stats-content').innerHTML = html;
 }
 
-// 🛡️ 獨立部位裝備穿脫管理系統（完全不顯示 Icon 圖示）
 function showEquipmentScreen() {
     hideAll();
     document.getElementById('equipment-screen').classList.remove('hidden');
@@ -667,6 +666,7 @@ function rest() {
     if (player.gold >= 30) {
         player.gold -= 30; player.hp = player.maxHp; player.mp = player.maxMp;
         player.villageActions--;
+        player.restCount = (player.restCount || 0) + 1; // 正確紀錄休息次數
         alert("✨ 狀態完全恢復！(消耗 1 行動力)"); showVillage();
     } else alert("❌ 金幣不足！");
 }
@@ -710,6 +710,7 @@ function showPotionShop() {
 function showAchievements() { hideAll(); document.getElementById('achieve-screen').classList.remove('hidden'); updateAchieveUI(); }
 function switchAchieveTab(tab) { currentAchieveTab = tab; updateAchieveUI(); }
 
+// **修正成就邏輯：精準讀取專屬統計欄位**
 function updateAchieveUI() {
     let container = document.getElementById('achieve-items'); container.innerHTML = "";
     let achList = ACHIEVEMENTS_DATABASE.filter(a => a.category === currentAchieveTab);
@@ -722,12 +723,15 @@ function updateAchieveUI() {
         if (ach.reqType === "mine") curVal = player.mineCount || 0;
         if (ach.reqType === "copper") curVal = player.ores.copper || 0;
         if (ach.reqType === "iron") curVal = player.ores.iron || 0;
-        if (ach.reqType === "gold") curVal = player.gold || 0;
+        if (ach.reqType === "goldOre") curVal = player.ores.gold || 0;
         if (ach.reqType === "diamond") curVal = player.ores.diamond || 0;
+        if (ach.reqType === "gold") curVal = player.gold || 0;
         if (ach.reqType === "enchantCount") curVal = player.weaponEnchants.length || 0;
         if (ach.reqType === "stones") curVal = player.enchantStones || 0;
         if (ach.reqType === "skillCount") curVal = player.skills.length || 0;
         if (ach.reqType === "equipCount") curVal = player.equips.length || 0;
+        if (ach.reqType === "shopRefreshCount") curVal = player.shopRefreshCount || 0;
+        if (ach.reqType === "restCount") curVal = player.restCount || 0;
 
         let canClaim = (curVal >= ach.reqVal) || (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal));
         let progressTxt = typeof ach.reqVal === 'number' ? ` [ ${Math.min(curVal, ach.reqVal)} / ${ach.reqVal} ]` : "";
@@ -763,12 +767,15 @@ function claimAllAchievements() {
             if (ach.reqType === "mine") curVal = player.mineCount || 0;
             if (ach.reqType === "copper") curVal = player.ores.copper || 0;
             if (ach.reqType === "iron") curVal = player.ores.iron || 0;
-            if (ach.reqType === "gold") curVal = player.gold || 0;
+            if (ach.reqType === "goldOre") curVal = player.ores.gold || 0;
             if (ach.reqType === "diamond") curVal = player.ores.diamond || 0;
+            if (ach.reqType === "gold") curVal = player.gold || 0;
             if (ach.reqType === "enchantCount") curVal = player.weaponEnchants.length || 0;
             if (ach.reqType === "stones") curVal = player.enchantStones || 0;
             if (ach.reqType === "skillCount") curVal = player.skills.length || 0;
             if (ach.reqType === "equipCount") curVal = player.equips.length || 0;
+            if (ach.reqType === "shopRefreshCount") curVal = player.shopRefreshCount || 0;
+            if (ach.reqType === "restCount") curVal = player.restCount || 0;
 
             let canClaim = (curVal >= ach.reqVal) || (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal));
             if (canClaim) {
@@ -789,7 +796,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪高級神兵鍛造 & ✨ 精煉 & ⛏️ 升級鎬子
+// 🔨 鐵匠鋪高級神兵鍛造 & 精煉 & 升級鎬子
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -1005,7 +1012,10 @@ function updateEquipShopUI() {
 
 function refreshEquipShop() {
     if (player.gold >= 100) {
-        player.gold -= 100; rollRandomEquipShop(); alert("🔄 裝備商店已刷新！(消耗 100 G)"); updateEquipShopUI();
+        player.gold -= 100;
+        player.shopRefreshCount = (player.shopRefreshCount || 0) + 1; // 記錄換一批次數
+        rollRandomEquipShop(); 
+        alert("🔄 裝備商店已刷新！(消耗 100 G)"); updateEquipShopUI();
     } else alert("❌ 金幣不足！");
 }
 
@@ -1064,7 +1074,9 @@ function executeReplaceSkill(replaceIndex) {
 
 function refreshSkills() {
     if (player.gold >= 100) {
-        player.gold -= 100; rollRandomSkills(); alert("🔄 換一批技能 (100 G)"); updateSkillShopUI();
+        player.gold -= 100;
+        player.shopRefreshCount = (player.shopRefreshCount || 0) + 1; // 記錄換一批次數
+        rollRandomSkills(); alert("🔄 換一批技能 (100 G)"); updateSkillShopUI();
     } else alert("❌ 金幣不足！");
 }
 
@@ -1091,6 +1103,8 @@ function loadGame() {
             if (!player.refines) player.refines = {};
             if (!player.pickaxeLvl) player.pickaxeLvl = 0;
             if (!player.refineStones) player.refineStones = 0;
+            if (!player.shopRefreshCount) player.shopRefreshCount = 0;
+            if (!player.restCount) player.restCount = 0;
 
             if (!player.equipmentSlots) {
                 player.equipmentSlots = { helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null };

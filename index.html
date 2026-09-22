@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 全代碼圖像與精美UI重製版 v3.0</title>
+    <title>Py RPG - 成就判定修復版 v3.1</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.0 (視覺繪圖重製版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.1 (成就判定修復版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -54,7 +54,7 @@
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予 10 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
-            • 🛠️ <b>裝備商店 (5欄位)</b>：出售初級與中級現成裝備，支援 100 G 換一批！<br>
+            • 🛠️ <b>裝備商店</b>：出售初級與中級現成裝備，支援 100 G 換一批！<br>
             • 📖 <b>技能商店</b>：刷新所有職業技能。<br>
             • 🏆 <b>勇者成就</b>：50 項成就支援<b>一鍵領取與進度條顯示</b>！
         </div>
@@ -78,11 +78,10 @@
         <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-top:10px;" id="btn-refresh-card" onclick="refreshCardSelection()">🔄 刷新卡片 (消耗 1 顆附魔石 | 剩餘 3 次)</button>
     </div>
 
-    <!-- 戰鬥對決畫面 (繪圖版雙 Canvas 對決) -->
+    <!-- 戰鬥畫面 -->
     <div id="battle-screen" class="hidden">
         <h3 id="map-info">區域: 1-1</h3>
         
-        <!-- 玩家與怪物繪圖對決區 -->
         <div class="battle-arena-box">
             <div class="arena-unit">
                 <canvas id="player-avatar-canvas" width="120" height="120"></canvas>
@@ -140,11 +139,10 @@
         <button class="btn btn-secondary" onclick="fallbackStage()" id="btn-fallback">⬅️ 退回上一關並回到村莊</button>
     </div>
 
-    <!-- 村莊畫面 -->
+    <!-- 村莊畫面（已移除右側方便存檔字樣） -->
     <div id="village-screen" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="showMainMenu()">⬅️ 返回主畫面</button>
-            <span style="font-size:12px; color:#aaa;">方便隨時存讀檔/備份</span>
         </div>
         <h2 id="village-title" style="margin-top:0;">🏡 歡迎來到村莊</h2>
         <div class="status-box" id="village-status"></div>
@@ -167,7 +165,7 @@
 
         <div class="section-header">🏪 冒險整備 (免行動力)</div>
         <div class="tab-grid">
-            <button class="btn btn-secondary" onclick="showEquipShop()" id="btn-v-equip">🛠️ 裝備商店 (5欄)</button>
+            <button class="btn btn-secondary" onclick="showEquipShop()" id="btn-v-equip">🛠️ 裝備商店</button>
             <button class="btn btn-secondary" onclick="showSkillShop()" id="btn-v-skill">📖 技能商店</button>
         </div>
         <div class="tab-grid">

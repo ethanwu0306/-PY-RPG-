@@ -32,7 +32,6 @@ body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0
     40%, 60% { transform: translate3d(6px, 0, 0); }
 }
 
-/* 戰鬥對決擂台區 */
 .battle-arena-box {
     display: flex;
     justify-content: space-around;
