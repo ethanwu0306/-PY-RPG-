@@ -1,6 +1,6 @@
-const SAVE_KEY = "pyrpg_save_github_v3.3_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v3.5_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
-// 5 大冒險突發奇遇事件庫
+// 5 大冒險突發奇遇事件庫 (已更新流浪商人 300G 福袋掉落機率)
 const RANDOM_EVENTS_DATABASE = [
     {
         id: "wishing_well",
@@ -24,9 +24,9 @@ const RANDOM_EVENTS_DATABASE = [
     {
         id: "wandering_merchant",
         title: "🧙‍♂️ 迷術流浪商人",
-        desc: "一位身穿斗篷的商人向你招手：『嘿勇者！要不要看看我剛從地底採集到的神奇寶袋？』",
+        desc: "一位身穿斗篷的商人向你招手：『嘿勇者！要不要看看我剛採集到的神秘福袋？』",
         choices: [
-            { text: "🪙 支付 150 G 購買神秘福袋 (獲得 3 顆精煉石或藥水)", action: "buy_bag" },
+            { text: "🪙 支付 300 G 購買神秘福袋 (20%附魔石 / 79%金幣 / 1%精煉石)", action: "buy_bag" },
             { text: "🚶 禮貌拒絕離去", action: "leave" }
         ]
     },

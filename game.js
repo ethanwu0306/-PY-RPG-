@@ -11,7 +11,7 @@ let villageNpcMsg = "";
 let cardRefreshCount = 3;
 let pendingVictoryData = null;
 let isJobTrialBattle = false;
-let currentRandomEvent = null; // 當前觸發的奇遇事件
+let currentRandomEvent = null;
 
 function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
@@ -70,7 +70,6 @@ function startNextBattle() {
     hideAll(); 
     isJobTrialBattle = false;
 
-    // 🎲 15% 機率觸發突發奇遇事件（BOSS 關卡除外）
     if (defeatedCount % 10 !== 0 && Math.random() < 0.15) {
         triggerRandomEvent();
         return;
@@ -102,6 +101,7 @@ function triggerRandomEvent() {
     });
 }
 
+// **重點修改：福袋價格 300G，機率調整為 20% 附魔石 / 79% 少許金幣 / 1% 精煉石**
 function handleEventChoice(action) {
     if (action === "drink_well") {
         if (Math.random() < 0.60) {
@@ -137,11 +137,22 @@ function handleEventChoice(action) {
             return;
         }
     } else if (action === "buy_bag") {
-        if (player.gold >= 150) {
-            player.gold -= 150;
-            player.refineStones = (player.refineStones || 0) + 3;
-            alert("🎁 購買神秘福袋成功！獲得了 3 顆【精煉石】！");
-        } else alert("❌ 金幣不足 150 G！");
+        if (player.gold >= 300) {
+            player.gold -= 300;
+            let rand = Math.random();
+            if (rand < 0.01) { // 1% 精煉石
+                player.refineStones = (player.refineStones || 0) + 1;
+                alert("🎉【超稀有幸運爆發！】福袋內隱藏著 1 顆璀璨的【精煉石】！");
+            } else if (rand < 0.21) { // 20% 附魔石
+                let gotStones = Math.floor(Math.random() * 2 + 1);
+                player.enchantStones += gotStones;
+                alert(`🔮 拆開福袋獲得了 ${gotStones} 顆【附魔石】！`);
+            } else { // 79% 少許金幣
+                let gotGold = Math.floor(Math.random() * 101 + 150); // 150G ~ 250G
+                player.gold += gotGold;
+                alert(`🪙 拆開福袋獲得了少許金幣 +${gotGold} G！`);
+            }
+        } else alert("❌ 金幣不足 300 G！");
     } else if (action === "learn_swordsman") {
         if (player.gold >= 100) {
             player.gold -= 100;
@@ -158,7 +169,6 @@ function handleEventChoice(action) {
         alert("✨ 得到祭壇聖光庇護！獲得 80 點開場護盾！");
     }
 
-    // 事件結束進入下一戰場
     enterBattleAfterEvent();
 }
 
@@ -176,14 +186,14 @@ function spawnMonster() {
     let mapData = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { nameZh: "微光森林", bossZh: "區域頭目", monstersZh: ["哥布林斥候"] };
 
     if (isFinal) { 
-        monster = { name: "👑 滅世魔王·路西法", hp: 3500, maxHp: 3500, min: 80, max: 120, reward: 2000, expReward: 800, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
+        monster = { name: "👑 滅世魔王·路西法", hp: 6500, maxHp: 6500, min: 140, max: 220, reward: 3000, expReward: 1200, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
     } else if (isBoss) { 
         let reward = Math.floor(Math.random() * 31 + 80);
-        monster = { name: `👑 ${mapData.bossZh}`, hp: 500 + defeatedCount * 25, maxHp: 500 + defeatedCount * 25, min: 25 + curMapId * 7, max: 45 + curMapId * 9, reward: reward, expReward: 150 + defeatedCount * 10, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
+        monster = { name: `👑 ${mapData.bossZh}`, hp: 900 + defeatedCount * 45, maxHp: 900 + defeatedCount * 45, min: 45 + curMapId * 12, max: 75 + curMapId * 15, reward: reward, expReward: 200 + defeatedCount * 15, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false, isBoss: true }; 
     } else { 
         let reward = Math.floor(Math.random() * 11 + 40);
         let mName = mapData.monstersZh[Math.floor(Math.random() * mapData.monstersZh.length)];
-        monster = { name: mName, hp: 120 + defeatedCount * 16, maxHp: 120 + defeatedCount * 16, min: 12 + defeatedCount * 3, max: 22 + defeatedCount * 4, reward: reward, expReward: 40 + defeatedCount * 5, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
+        monster = { name: mName, hp: 220 + defeatedCount * 30, maxHp: 220 + defeatedCount * 30, min: 20 + defeatedCount * 5, max: 35 + defeatedCount * 7, reward: reward, expReward: 60 + defeatedCount * 8, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
     }
 
     drawAvatarAndMonsterVisuals(curMapId, isBoss || isFinal);
@@ -201,13 +211,16 @@ function startJobAdvanceTrial() {
     if (typeof setBattleBgm === "function") setBattleBgm(true);
 
     monster = {
-        name: `👑 【轉職試煉者】${player.jobName}之影`,
-        hp: 1200, maxHp: 1200, min: 45, max: 70, reward: 500, expReward: 300,
+        name: `👑 【鏡像分身】${player.jobName}之影`,
+        hp: Math.floor(player.maxHp * 1.2), maxHp: Math.floor(player.maxHp * 1.2),
+        min: player.atkMin, max: player.atkMax,
+        critRate: player.critRate,
+        reward: 800, expReward: 500,
         isFinal: false, isBoss: true, mapId: 5, debuffTurns: 0, isRaged: false
     };
 
     drawAvatarAndMonsterVisuals(5, true);
-    document.getElementById('log-box').innerHTML = "⚔️ 進入一階轉職試煉！擊敗【轉職試煉者】以證明你的實力！\n";
+    document.getElementById('log-box').innerHTML = "⚔️ 進入一階轉職試煉！鏡像分身複製了你的全部實力與技能！戰勝自我！\n";
     player.shield = 0;
     player.skillCDs = {};
     player.isDefending = false;
@@ -271,7 +284,7 @@ function updateBattleUI() {
     let mapObj = (typeof MAPS !== "undefined" && MAPS[monster.mapId]) ? MAPS[monster.mapId] : { nameZh: "荒野" };
     let weaknessZh = { flame: "🔥火", frost: "❄️冰", thunder: "⚡雷", gale: "🍃風" }[mapObj.weakness] || "無";
 
-    document.getElementById('map-info').innerText = isJobTrialBattle ? "👑 一階轉職試煉戰" : `區域: ${getStageString(defeatedCount)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
+    document.getElementById('map-info').innerText = isJobTrialBattle ? "👑 一階轉職試煉戰 (鏡像分身)" : `區域: ${getStageString(defeatedCount)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
     
     let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
     if (player.isDefending) buffStr += " | 防禦防護中";
@@ -482,18 +495,28 @@ function executeTurn(skillKey, isDefendingAction) {
     }
 
     let enemyActionRand = Math.random();
-    let mDmg = Math.floor(Math.random() * (monster.max - monster.min + 1) + monster.min);
+    let mDmg = 0;
 
-    if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
-
-    if (enemyActionRand < 0.15) {
-        mDmg = Math.floor(mDmg * 1.5);
+    if (isJobTrialBattle && enemyActionRand < 0.40 && player.skills.length > 0) {
+        let randSkillKey = player.skills[Math.floor(Math.random() * player.skills.length)];
+        let sInfo = SKILLS[randSkillKey] || { mult: 1.5 };
+        mDmg = Math.floor(randomAtk() * (sInfo.mult || 1.5));
         if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
         player.hp -= mDmg;
-        log(`🩸 ${monster.name} 施展【猛烈重擊】，造成 ${mDmg} 點傷害！`, "log-crit");
+        log(`⚡ 【鏡像分身】複製並施展了你的【${randSkillKey}】，造成 ${mDmg} 點鏡像傷害！`, "log-crit");
     } else {
-        player.hp -= mDmg;
-        log(`🩸 ${monster.name} 反擊，造成 ${mDmg} 點傷害`, "log-dmg");
+        mDmg = Math.floor(Math.random() * (monster.max - monster.min + 1) + monster.min);
+        if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
+
+        if (enemyActionRand < 0.15) {
+            mDmg = Math.floor(mDmg * 1.5);
+            if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
+            player.hp -= mDmg;
+            log(`🩸 ${monster.name} 施展【猛烈重擊】，造成 ${mDmg} 點傷害！`, "log-crit");
+        } else {
+            player.hp -= mDmg;
+            log(`🩸 ${monster.name} 反擊，造成 ${mDmg} 點傷害`, "log-dmg");
+        }
     }
 
     if (player.hp <= 0) {
