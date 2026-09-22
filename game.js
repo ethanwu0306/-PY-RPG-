@@ -45,8 +45,8 @@ function initGame(jobCode) {
         refines: {}, 
         pickaxeLvl: 0, 
         refineStones: 0, 
-        shopRefreshCount: 0, // 紀錄換一批次數
-        restCount: 0, // 紀錄旅館休息次數
+        shopRefreshCount: 0, 
+        restCount: 0, 
         
         equipmentSlots: {
             helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null
@@ -666,7 +666,7 @@ function rest() {
     if (player.gold >= 30) {
         player.gold -= 30; player.hp = player.maxHp; player.mp = player.maxMp;
         player.villageActions--;
-        player.restCount = (player.restCount || 0) + 1; // 正確紀錄休息次數
+        player.restCount = (player.restCount || 0) + 1;
         alert("✨ 狀態完全恢復！(消耗 1 行動力)"); showVillage();
     } else alert("❌ 金幣不足！");
 }
@@ -710,7 +710,6 @@ function showPotionShop() {
 function showAchievements() { hideAll(); document.getElementById('achieve-screen').classList.remove('hidden'); updateAchieveUI(); }
 function switchAchieveTab(tab) { currentAchieveTab = tab; updateAchieveUI(); }
 
-// **修正成就邏輯：精準讀取專屬統計欄位**
 function updateAchieveUI() {
     let container = document.getElementById('achieve-items'); container.innerHTML = "";
     let achList = ACHIEVEMENTS_DATABASE.filter(a => a.category === currentAchieveTab);
@@ -796,7 +795,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪高級神兵鍛造 & 精煉 & 升級鎬子
+// 🔨 鐵匠鋪高級神兵鍛造 & ✨ 精煉 & ⛏️ 升級鎬子
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -1013,7 +1012,7 @@ function updateEquipShopUI() {
 function refreshEquipShop() {
     if (player.gold >= 100) {
         player.gold -= 100;
-        player.shopRefreshCount = (player.shopRefreshCount || 0) + 1; // 記錄換一批次數
+        player.shopRefreshCount = (player.shopRefreshCount || 0) + 1;
         rollRandomEquipShop(); 
         alert("🔄 裝備商店已刷新！(消耗 100 G)"); updateEquipShopUI();
     } else alert("❌ 金幣不足！");
@@ -1075,7 +1074,7 @@ function executeReplaceSkill(replaceIndex) {
 function refreshSkills() {
     if (player.gold >= 100) {
         player.gold -= 100;
-        player.shopRefreshCount = (player.shopRefreshCount || 0) + 1; // 記錄換一批次數
+        player.shopRefreshCount = (player.shopRefreshCount || 0) + 1;
         rollRandomSkills(); alert("🔄 換一批技能 (100 G)"); updateSkillShopUI();
     } else alert("❌ 金幣不足！");
 }
