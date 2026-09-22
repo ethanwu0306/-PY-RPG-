@@ -1,6 +1,6 @@
-const SAVE_KEY = "pyrpg_save_github_v3.5_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v3.7_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
-// 5 大冒險突發奇遇事件庫 (已更新流浪商人 300G 福袋掉落機率)
+// 5 大冒險突發奇遇事件庫
 const RANDOM_EVENTS_DATABASE = [
     {
         id: "wishing_well",

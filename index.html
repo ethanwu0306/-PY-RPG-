@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.5</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.7</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -38,6 +38,17 @@
         <button class="btn btn-secondary" onclick="showMainMenu()">⬅️ 返回主畫面</button>
     </div>
 
+    <!-- 🗺️ 地圖關卡選擇畫面 -->
+    <div id="map-select-screen" class="hidden">
+        <h2>🗺️ 冒險地圖關卡選擇</h2>
+        <div class="status-box" style="font-size:12px;">
+            可自由選擇飛躍至已通關關卡刷經驗與金幣！<br>
+            <span style="color:#e67e22;">⚠️ 注意：重複挑戰已通關的舊關卡，收益 (G/EXP) 減半 50%！</span>
+        </div>
+        <div id="map-stages-list" style="max-height: 240px; overflow-y: auto;"></div>
+        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;">⬅️ 返回村莊</button>
+    </div>
+
     <!-- 🎲 突發奇遇事件畫面 -->
     <div id="event-screen" class="hidden">
         <h2 style="color:#f39c12;">🎲 冒險突發奇遇！</h2>
@@ -51,6 +62,7 @@
         <div class="status-box" style="height: 380px; overflow-y: auto; text-align: left; font-size: 12px;">
             <div class="section-header">⚔️ 一、核心冒險機制</div>
             • <b>關卡目標</b>：總共 10 大區域（100 小關），第 10 關為區域 BOSS，第 100 關為終極魔王路西法！<br>
+            • <b>自由選關</b>：可在村莊進入「🗺️ 地圖選關」飛躍至已通關舊關卡農資源（收益減半 50%）！<br>
             • <b>突發奇遇</b>：征途途中有 15% 機率觸發許願池、寶箱、流浪商人等<b>冒險奇遇抉擇</b>！<br>
             • <b>經驗升級</b>：戰鬥勝利獲得 EXP 升級！<b>達到 Lv.20 可解鎖轉職試練</b>！<br>
             • <b>屬性克制</b>：技能具備火、冰、雷、風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br>
@@ -160,7 +172,7 @@
     <div id="defeat-screen" class="hidden">
         <h2 style="color:#e74c3c;" id="defeat-title">💀 戰鬥失敗！</h2>
         <p style="color:#ccc; text-align:center; font-size:13px;" id="defeat-sub">你不幸倒下了，請選擇下一步行動：</p>
-        <button class="btn" style="background: linear-gradient(180deg, #f39c12 0%, #7e5109 100%); border-color:#f1c40f; color:#fff;" onclick="retryBattle()" id="btn-retry">⚔️ 繼續挑戰當前關卡</button>
+        <button class="btn" style="background: linear-gradient(180deg, #f39c12 0%, #7e5109 100%); border-color:#f1c40f; color:#fff;" onclick="retryBattle()" id="btn-retry">⚔️ 以 50% HP/MP 繼續挑戰當前關卡</button>
         <button class="btn btn-secondary" onclick="fallbackStage()" id="btn-fallback">⬅️ 退回上一關並回到村莊</button>
     </div>
 
@@ -168,6 +180,7 @@
     <div id="village-screen" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="showMainMenu()">⬅️ 返回主畫面</button>
+            <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px; background:#d35400; border-color:#f1c40f;" onclick="showMapSelectScreen()">🗺️ 冒險地圖選關</button>
         </div>
         <h2 id="village-title" style="margin-top:0;">🏡 歡迎來到村莊</h2>
         <div class="status-box" id="village-status"></div>

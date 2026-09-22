@@ -1,5 +1,7 @@
 let player = {};
 let defeatedCount = 0;
+let maxReachedStage = 1;
+let currentSelectedStage = 1;
 let monster = {};
 let shopEquips = [];
 let shopSkills = [];
@@ -21,7 +23,7 @@ function getMaxExp(lvl) {
 }
 
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen', 'event-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen', 'event-screen', 'map-select-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -61,16 +63,17 @@ function initGame(jobCode) {
         skillCDs: {}, buffTurns: 0, debuffTurns: 0, isDefending: false
     };
     defeatedCount = 0;
+    maxReachedStage = 1;
+    currentSelectedStage = 1;
     isJobTrialBattle = false;
     startNextBattle();
 }
 
 function startNextBattle() {
-    defeatedCount++; 
     hideAll(); 
     isJobTrialBattle = false;
 
-    if (defeatedCount % 10 !== 0 && Math.random() < 0.15) {
+    if (currentSelectedStage % 10 !== 0 && Math.random() < 0.15) {
         triggerRandomEvent();
         return;
     }
@@ -101,7 +104,6 @@ function triggerRandomEvent() {
     });
 }
 
-// **重點修改：福袋價格 300G，機率調整為 20% 附魔石 / 79% 少許金幣 / 1% 精煉石**
 function handleEventChoice(action) {
     if (action === "drink_well") {
         if (Math.random() < 0.60) {
@@ -140,15 +142,15 @@ function handleEventChoice(action) {
         if (player.gold >= 300) {
             player.gold -= 300;
             let rand = Math.random();
-            if (rand < 0.01) { // 1% 精煉石
+            if (rand < 0.01) {
                 player.refineStones = (player.refineStones || 0) + 1;
                 alert("🎉【超稀有幸運爆發！】福袋內隱藏著 1 顆璀璨的【精煉石】！");
-            } else if (rand < 0.21) { // 20% 附魔石
+            } else if (rand < 0.21) {
                 let gotStones = Math.floor(Math.random() * 2 + 1);
                 player.enchantStones += gotStones;
                 alert(`🔮 拆開福袋獲得了 ${gotStones} 顆【附魔石】！`);
-            } else { // 79% 少許金幣
-                let gotGold = Math.floor(Math.random() * 101 + 150); // 150G ~ 250G
+            } else {
+                let gotGold = Math.floor(Math.random() * 101 + 150);
                 player.gold += gotGold;
                 alert(`🪙 拆開福袋獲得了少許金幣 +${gotGold} G！`);
             }
@@ -180,20 +182,21 @@ function enterBattleAfterEvent() {
 }
 
 function spawnMonster() {
-    let curMapId = Math.min(Math.floor((defeatedCount - 1) / 10) + 1, 10);
-    let isBoss = (defeatedCount % 10 === 0);
-    let isFinal = (defeatedCount === 100);
+    let stageNum = currentSelectedStage;
+    let curMapId = Math.min(Math.floor((stageNum - 1) / 10) + 1, 10);
+    let isBoss = (stageNum % 10 === 0);
+    let isFinal = (stageNum === 100);
     let mapData = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { nameZh: "微光森林", bossZh: "區域頭目", monstersZh: ["哥布林斥候"] };
 
     if (isFinal) { 
         monster = { name: "👑 滅世魔王·路西法", hp: 6500, maxHp: 6500, min: 140, max: 220, reward: 3000, expReward: 1200, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
     } else if (isBoss) { 
         let reward = Math.floor(Math.random() * 31 + 80);
-        monster = { name: `👑 ${mapData.bossZh}`, hp: 900 + defeatedCount * 45, maxHp: 900 + defeatedCount * 45, min: 45 + curMapId * 12, max: 75 + curMapId * 15, reward: reward, expReward: 200 + defeatedCount * 15, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false, isBoss: true }; 
+        monster = { name: `👑 ${mapData.bossZh}`, hp: 900 + stageNum * 45, maxHp: 900 + stageNum * 45, min: 45 + curMapId * 12, max: 75 + curMapId * 15, reward: reward, expReward: 200 + stageNum * 15, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false, isBoss: true }; 
     } else { 
         let reward = Math.floor(Math.random() * 11 + 40);
         let mName = mapData.monstersZh[Math.floor(Math.random() * mapData.monstersZh.length)];
-        monster = { name: mName, hp: 220 + defeatedCount * 30, maxHp: 220 + defeatedCount * 30, min: 20 + defeatedCount * 5, max: 35 + defeatedCount * 7, reward: reward, expReward: 60 + defeatedCount * 8, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
+        monster = { name: mName, hp: 220 + stageNum * 30, maxHp: 220 + stageNum * 30, min: 20 + stageNum * 5, max: 35 + stageNum * 7, reward: reward, expReward: 60 + stageNum * 8, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
     }
 
     drawAvatarAndMonsterVisuals(curMapId, isBoss || isFinal);
@@ -284,7 +287,7 @@ function updateBattleUI() {
     let mapObj = (typeof MAPS !== "undefined" && MAPS[monster.mapId]) ? MAPS[monster.mapId] : { nameZh: "荒野" };
     let weaknessZh = { flame: "🔥火", frost: "❄️冰", thunder: "⚡雷", gale: "🍃風" }[mapObj.weakness] || "無";
 
-    document.getElementById('map-info').innerText = isJobTrialBattle ? "👑 一階轉職試煉戰 (鏡像分身)" : `區域: ${getStageString(defeatedCount)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
+    document.getElementById('map-info').innerText = isJobTrialBattle ? "👑 一階轉職試煉戰 (鏡像分身)" : `區域: ${getStageString(currentSelectedStage)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
     
     let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
     if (player.isDefending) buffStr += " | 防禦防護中";
@@ -461,9 +464,19 @@ function executeTurn(skillKey, isDefendingAction) {
     if (monster.hp <= 0) {
         if (typeof playSound === "function") playSound('victory', player.jobCode);
         
-        let expGained = monster.expReward || 50;
+        let isOldStage = (currentSelectedStage < maxReachedStage);
+        let rewardMult = isOldStage ? 0.50 : 1.0;
+
+        let expGained = Math.floor((monster.expReward || 50) * rewardMult);
+        let goldGained = Math.floor(monster.reward * rewardMult);
+
         player.exp += expGained;
-        player.gold += monster.reward;
+        player.gold += goldGained;
+
+        if (currentSelectedStage === maxReachedStage) {
+            maxReachedStage++;
+            currentSelectedStage = maxReachedStage;
+        }
 
         let levelUpMsg = "";
         while (player.exp >= player.maxExp && player.level < 50) {
@@ -482,7 +495,8 @@ function executeTurn(skillKey, isDefendingAction) {
         if (isJobTrialBattle) {
             showJobAdvanceSelectScreen();
         } else {
-            showVictoryModal(monster.name, monster.reward, expGained, gotStone, levelUpMsg);
+            let oldStageMsg = isOldStage ? " <span style='color:#e67e22;'>(舊關卡收益 50%)</span>" : "";
+            showVictoryModal(monster.name, goldGained, expGained, gotStone, levelUpMsg + oldStageMsg);
         }
         return;
     }
@@ -573,7 +587,7 @@ function selectJobAdvancement(advOption) {
 
 function confirmVictoryModal() {
     hideAll();
-    if (defeatedCount % 10 === 0) {
+    if (currentSelectedStage % 10 === 0) {
         cardRefreshCount = 3;
         showCardSelect();
     } else {
@@ -581,9 +595,56 @@ function confirmVictoryModal() {
     }
 }
 
-function retryBattle() { player.hp = player.maxHp; player.mp = player.maxMp; hideAll(); document.getElementById('battle-screen').classList.remove('hidden'); spawnMonster(); }
-function fallbackStage() { if (defeatedCount > 1) defeatedCount--; player.hp = player.maxHp; player.mp = player.maxMp; enterVillage(); }
+// **修復重點：重傷復活恢復為當前最大 HP 與 MP 的 50%（非全滿也不會變回初始狀態）**
+function retryBattle() { 
+    player.hp = Math.floor(player.maxHp * 0.50); 
+    player.mp = Math.floor(player.maxMp * 0.50); 
+    hideAll(); 
+    document.getElementById('battle-screen').classList.remove('hidden'); 
+    spawnMonster(); 
+}
+
+function fallbackStage() { 
+    if (currentSelectedStage > 1) currentSelectedStage--; 
+    player.hp = Math.floor(player.maxHp * 0.50); 
+    player.mp = Math.floor(player.maxMp * 0.50); 
+    enterVillage(); 
+}
+
 function randomAtk() { return Math.floor(Math.random() * (player.atkMax - player.atkMin + 1) + player.atkMin); }
+
+function showMapSelectScreen() {
+    hideAll();
+    document.getElementById('map-select-screen').classList.remove('hidden');
+    let container = document.getElementById('map-stages-list');
+    container.innerHTML = "";
+
+    for (let stg = 1; stg <= maxReachedStage; stg++) {
+        let curMapId = Math.min(Math.floor((stg - 1) / 10) + 1, 10);
+        let mapObj = MAPS[curMapId] || { nameZh: "荒野" };
+        let isCurrentMax = (stg === maxReachedStage);
+        
+        let btn = document.createElement('button');
+        btn.className = "btn";
+        btn.style.margin = "4px 0";
+        btn.style.fontSize = "12px";
+
+        if (isCurrentMax) {
+            btn.innerText = `⚔️ [當前進度] 關卡 ${getStageString(stg)} - ${mapObj.nameZh}`;
+            btn.style.background = "linear-gradient(180deg, #d35400 0%, #7e3200 100%)";
+        } else {
+            btn.innerText = `🔁 [已通關 收益50%] 關卡 ${getStageString(stg)} - ${mapObj.nameZh}`;
+            btn.style.background = "linear-gradient(180deg, #1f3a60 0%, #0d1f38 100%)";
+        }
+
+        btn.onclick = () => {
+            currentSelectedStage = stg;
+            alert(`🗺️ 飛躍關卡成功！準備進入【關卡 ${getStageString(stg)}】！`);
+            startNextBattle();
+        };
+        container.appendChild(btn);
+    }
+}
 
 function showCardSelect() {
     hideAll(); 
@@ -649,7 +710,7 @@ function showVillage() {
     hideAll(); 
     if (typeof setBattleBgm === "function") setBattleBgm(false);
     document.getElementById('village-screen').classList.remove('hidden');
-    let curMapId = Math.min(Math.floor((defeatedCount - 1) / 10) + 1, 10);
+    let curMapId = Math.min(Math.floor((currentSelectedStage - 1) / 10) + 1, 10);
     let mapObj = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { villageZh: "村莊" };
     document.getElementById('village-title').innerText = `🏡 區域 ${curMapId}: ${mapObj.villageZh}`;
     
@@ -1302,7 +1363,7 @@ function refreshSkills() {
 
 function saveGame() { 
     try {
-        let saveData = { player: player, defeatedCount: defeatedCount, shopEquips: shopEquips, shopSkills: shopSkills };
+        let saveData = { player: player, defeatedCount: defeatedCount, shopEquips: shopEquips, shopSkills: shopSkills, maxReachedStage: maxReachedStage, currentSelectedStage: currentSelectedStage };
         localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); 
         alert("💾 存檔成功！\n(存檔Key已寫入 GitHub Pages 專屬隔離區)"); 
     } catch(e) {
@@ -1317,6 +1378,8 @@ function loadGame() {
             let data = JSON.parse(saved); 
             player = data.player; 
             defeatedCount = data.defeatedCount; 
+            if (data.maxReachedStage) maxReachedStage = data.maxReachedStage; else maxReachedStage = defeatedCount || 1;
+            if (data.currentSelectedStage) currentSelectedStage = data.currentSelectedStage; else currentSelectedStage = maxReachedStage;
             if (data.shopEquips) shopEquips = data.shopEquips;
             if (data.shopSkills) shopSkills = data.shopSkills;
 
@@ -1352,7 +1415,7 @@ function loadGame() {
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {
-    const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen'];
+    const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen'];
     
     for (let id of screens) {
         let el = document.getElementById(id);
