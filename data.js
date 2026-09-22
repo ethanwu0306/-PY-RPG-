@@ -1,36 +1,68 @@
-const SAVE_KEY = "pyrpg_save_github_v3.2_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v3.3_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
-// 6 大二階轉職分支數據與屬性加成
+// 5 大冒險突發奇遇事件庫
+const RANDOM_EVENTS_DATABASE = [
+    {
+        id: "wishing_well",
+        title: "💧 神秘的許願井",
+        desc: "你在路邊發現一座發出微微藍光的古老許願井，井水清澈見底。",
+        choices: [
+            { text: "🚰 喝下許願井水 (60%機率恢復全滿，40%扣血20%進入戰鬥)", action: "drink_well" },
+            { text: "🪙 投擲 20 金幣許願", action: "coin_well" },
+            { text: "🚶 平安離開", action: "leave" }
+        ]
+    },
+    {
+        id: "lost_chest",
+        title: "📦 失落的流浪寶箱",
+        desc: "草叢中靜靜躺著一個雕刻著奇怪符文的重型木箱，似乎沒有鎖住。",
+        choices: [
+            { text: "🔨 消耗 1 行動力撬開寶箱 (高額金幣/精煉石，20%寶箱怪戰鬥)", action: "open_chest" },
+            { text: "🚶 不多作理會離去", action: "leave" }
+        ]
+    },
+    {
+        id: "wandering_merchant",
+        title: "🧙‍♂️ 迷術流浪商人",
+        desc: "一位身穿斗篷的商人向你招手：『嘿勇者！要不要看看我剛從地底採集到的神奇寶袋？』",
+        choices: [
+            { text: "🪙 支付 150 G 購買神秘福袋 (獲得 3 顆精煉石或藥水)", action: "buy_bag" },
+            { text: "🚶 禮貌拒絕離去", action: "leave" }
+        ]
+    },
+    {
+        id: "swordsman_training",
+        title: "⚔️ 流浪劍客的指點",
+        desc: "一位劍藝高超的退役老劍客正坐在樹下歇息，神情若有所思。",
+        choices: [
+            { text: "🪙 支付 100 G 請教戰鬥技巧 (獲得高額 EXP 經驗值)", action: "learn_swordsman" },
+            { text: "⚔️ 發起友好切磋戰鬥", action: "fight_swordsman" },
+            { text: "🚶 默默走過", action: "leave" }
+        ]
+    },
+    {
+        id: "holy_altar",
+        title: "⛲ 聖光高塔祭壇",
+        desc: "你路過一座發出溫暖光芒的祭壇，空氣中飄散著令人安心的神聖氣息。",
+        choices: [
+            { text: "✨ 虔誠祈禱 (下一場戰鬥獲得 80 點開場護盾)", action: "pray_altar" },
+            { text: "🚶 離開", action: "leave" }
+        ]
+    }
+];
+
 const JOB_ADVANCEMENTS = {
     Warrior: [
-        {
-            id: "BerserkerLord", nameZh: "狂戰士", descZh: "專精高爆發與吸血戰鬥！",
-            hp: 150, mp: 0, atk: 35, critRate: 10, critDmg: 30, evasion: 0
-        },
-        {
-            id: "Paladin", nameZh: "聖騎士", descZh: "極致生存防禦與神聖護盾！",
-            hp: 300, mp: 80, atk: 15, critRate: 0, critDmg: 0, evasion: 5
-        }
+        { id: "BerserkerLord", nameZh: "🔥 狂暴領主", descZh: "專精高爆發與吸血戰鬥！", hp: 150, mp: 0, atk: 35, critRate: 10, critDmg: 30, evasion: 0 },
+        { id: "Paladin", nameZh: "🛡️ 聖騎士", descZh: "極致生存防禦與神聖護盾！", hp: 300, mp: 80, atk: 15, critRate: 0, critDmg: 0, evasion: 5 }
     ],
     Mage: [
-        {
-            id: "ElementEmperor", nameZh: "元素法師", descZh: "毀滅性的多元素極限魔攻！",
-            hp: 80, mp: 200, atk: 40, critRate: 10, critDmg: 25, evasion: 0
-        },
-        {
-            id: "Necromancer", nameZh: "死靈巫師", descZh: "掌握持續毒傷與生命吸取！",
-            hp: 180, mp: 120, atk: 25, critRate: 5, critDmg: 0, evasion: 5
-        }
+        { id: "ElementEmperor", nameZh: "🔮 元素法皇", descZh: "毀滅性的多元素極限魔攻！", hp: 80, mp: 200, atk: 40, critRate: 10, critDmg: 25, evasion: 0 },
+        { id: "Necromancer", nameZh: "☠️ 死靈巫師", descZh: "掌握持續毒傷與生命吸取！", hp: 180, mp: 120, atk: 25, critRate: 5, critDmg: 0, evasion: 5 }
     ],
     Archer: [
-        {
-            id: "SoulSniper", nameZh: "狙擊手", descZh: "遠距離致命暴擊一擊必殺！",
-            hp: 100, mp: 40, atk: 45, critRate: 15, critDmg: 50, evasion: 5
-        },
-        {
-            id: "GaleRanger", nameZh: "疾風游俠", descZh: "高閃避與極致連續射擊！",
-            hp: 120, mp: 60, atk: 30, critRate: 5, critDmg: 15, evasion: 15
-        }
+        { id: "SoulSniper", nameZh: "🏹 追魂狙擊手", descZh: "遠距離致命暴擊一擊必殺！", hp: 100, mp: 40, atk: 45, critRate: 15, critDmg: 50, evasion: 5 },
+        { id: "GaleRanger", nameZh: "🌀 疾風游俠", descZh: "高閃避與極致連續射擊！", hp: 120, mp: 60, atk: 30, critRate: 5, critDmg: 15, evasion: 15 }
     ]
 };
 

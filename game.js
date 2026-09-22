@@ -10,7 +10,8 @@ let pendingSkillToLearn = null;
 let villageNpcMsg = "";
 let cardRefreshCount = 3;
 let pendingVictoryData = null;
-let isJobTrialBattle = false; // 是否為轉職試煉 BOSS 戰
+let isJobTrialBattle = false;
+let currentRandomEvent = null; // 當前觸發的奇遇事件
 
 function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
@@ -19,9 +20,8 @@ function getMaxExp(lvl) {
     return Math.floor(80 * Math.pow(1.15, lvl - 1));
 }
 
-// 隱藏所有視窗畫面
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen', 'event-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -69,6 +69,101 @@ function startNextBattle() {
     defeatedCount++; 
     hideAll(); 
     isJobTrialBattle = false;
+
+    // 🎲 15% 機率觸發突發奇遇事件（BOSS 關卡除外）
+    if (defeatedCount % 10 !== 0 && Math.random() < 0.15) {
+        triggerRandomEvent();
+        return;
+    }
+
+    document.getElementById('battle-screen').classList.remove('hidden');
+    if (typeof setBattleBgm === "function") setBattleBgm(true);
+    spawnMonster();
+}
+
+function triggerRandomEvent() {
+    hideAll();
+    let evt = RANDOM_EVENTS_DATABASE[Math.floor(Math.random() * RANDOM_EVENTS_DATABASE.length)];
+    currentRandomEvent = evt;
+
+    document.getElementById('event-screen').classList.remove('hidden');
+    document.getElementById('event-description').innerHTML = `<b>${evt.title}</b><br><br>${evt.desc}`;
+
+    let container = document.getElementById('event-choices-container');
+    container.innerHTML = "";
+
+    evt.choices.forEach(c => {
+        let btn = document.createElement('button');
+        btn.className = "btn";
+        btn.style.margin = "6px 0";
+        btn.innerText = c.text;
+        btn.onclick = () => handleEventChoice(c.action);
+        container.appendChild(btn);
+    });
+}
+
+function handleEventChoice(action) {
+    if (action === "drink_well") {
+        if (Math.random() < 0.60) {
+            player.hp = player.maxHp; player.mp = player.maxMp;
+            alert("✨ 神清氣爽！神奇的井水為你將 HP 與 MP 全部恢復填滿！");
+        } else {
+            player.hp = Math.floor(player.hp * 0.80);
+            alert("🤮 哎呀！井水似乎不太乾淨，肚子一陣絞痛扣除 20% 血量！強制進入戰鬥！");
+            enterBattleAfterEvent();
+            return;
+        }
+    } else if (action === "coin_well") {
+        if (player.gold >= 20) {
+            player.gold -= 20;
+            player.enchantStones += 2;
+            alert("🪙 投幣許願成功！井底泛起神奇光芒，獲得了 2 顆【附魔石】！");
+        } else alert("❌ 金幣不足 20 G！");
+    } else if (action === "open_chest") {
+        if (player.villageActions > 0) {
+            player.villageActions--;
+            if (Math.random() < 0.80) {
+                let gotGold = Math.floor(Math.random() * 201 + 200);
+                player.gold += gotGold;
+                player.refineStones = (player.refineStones || 0) + 1;
+                alert(`🎉 撬開寶箱成功！獲得金幣 +${gotGold} G 以及 1 顆【精煉石】！`);
+            } else {
+                alert("😱 糟糕！寶箱竟是偽裝的【寶箱怪】！直接展開襲擊戰鬥！");
+                enterBattleAfterEvent();
+                return;
+            }
+        } else {
+            alert("❌ 村莊行動力不足 1 點，無法撬開寶箱！");
+            return;
+        }
+    } else if (action === "buy_bag") {
+        if (player.gold >= 150) {
+            player.gold -= 150;
+            player.refineStones = (player.refineStones || 0) + 3;
+            alert("🎁 購買神秘福袋成功！獲得了 3 顆【精煉石】！");
+        } else alert("❌ 金幣不足 150 G！");
+    } else if (action === "learn_swordsman") {
+        if (player.gold >= 100) {
+            player.gold -= 100;
+            let gotExp = 150;
+            player.exp += gotExp;
+            alert(`⚔️ 受老劍客指點迷津，收穫頗豐！獲得 +${gotExp} EXP 經驗值！`);
+        } else alert("❌ 金幣不足 100 G！");
+    } else if (action === "fight_swordsman") {
+        alert("⚔️ 老劍客拔出長劍：『好小子！來切磋一番！』");
+        enterBattleAfterEvent();
+        return;
+    } else if (action === "pray_altar") {
+        player.shield += 80;
+        alert("✨ 得到祭壇聖光庇護！獲得 80 點開場護盾！");
+    }
+
+    // 事件結束進入下一戰場
+    enterBattleAfterEvent();
+}
+
+function enterBattleAfterEvent() {
+    hideAll();
     document.getElementById('battle-screen').classList.remove('hidden');
     if (typeof setBattleBgm === "function") setBattleBgm(true);
     spawnMonster();
@@ -93,7 +188,6 @@ function spawnMonster() {
 
     drawAvatarAndMonsterVisuals(curMapId, isBoss || isFinal);
     document.getElementById('log-box').innerHTML = "戰鬥開始！\n";
-    player.shield = 0; 
     player.skillCDs = {};
     player.isDefending = false;
     render4SkillButtons();
@@ -1232,13 +1326,11 @@ function loadGame() {
     }
 }
 
-// 📖 遊玩規則彈窗控制機制（修復重疊 BUG）
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {
-    const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen'];
+    const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen'];
     
-    // 找出目前正在顯示的視窗 ID 並記錄
     for (let id of screens) {
         let el = document.getElementById(id);
         if (el && !el.classList.contains('hidden')) {
@@ -1247,15 +1339,15 @@ function showGameGuide() {
         }
     }
     
-    hideAll(); // 先把所有視窗隱藏
-    document.getElementById('guide-screen').classList.remove('hidden'); // 再單獨開啟指南視窗
+    hideAll(); 
+    document.getElementById('guide-screen').classList.remove('hidden'); 
 }
 
 function hideGameGuide() {
-    hideAll(); // 關閉指南時，先隱藏所有視窗（包含指南本身）
+    hideAll(); 
     let prevEl = document.getElementById(previousScreenBeforeGuide);
     if (prevEl) {
-        prevEl.classList.remove('hidden'); // 只還原上一頁視窗
+        prevEl.classList.remove('hidden'); 
     } else {
         showMainMenu();
     }
