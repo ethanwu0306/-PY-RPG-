@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 完整無漏資料版 v2.3</title>
+    <title>Py RPG - 存讀檔修復與返回主選單版 v2.4</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.3 (全資料整合版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.4 (完全體修復版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
@@ -59,7 +59,7 @@
             • 🧪 <b>藥水商店</b>：購買生命藥水 (100 HP) 與魔力藥水 (50 MP)，戰鬥中隨時使用。<br>
             • 🏆 <b>勇者成就</b>：50 項四大分類成就，達成即領大量金幣與附魔石！
         </div>
-        <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回主畫面</button>
+        <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回前一頁</button>
     </div>
 
     <!-- 職業選擇畫面 -->
@@ -127,9 +127,13 @@
         <button class="btn btn-secondary" onclick="fallbackStage()" id="btn-fallback">⬅️ 退回上一關並回到村莊</button>
     </div>
 
-    <!-- 村莊畫面 -->
+    <!-- 村莊畫面（新增頂部返回主選單按鈕） -->
     <div id="village-screen" class="hidden">
-        <h2 id="village-title">🏡 歡迎來到村莊</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="showMainMenu()">⬅️ 返回主畫面</button>
+            <span style="font-size:12px; color:#aaa;">方便隨時存讀檔/備份</span>
+        </div>
+        <h2 id="village-title" style="margin-top:0;">🏡 歡迎來到村莊</h2>
         <div class="status-box" id="village-status"></div>
         <div id="npc-event-box" style="display:none; background:#196f3d; border:1px solid #2ecc71; color:white; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; text-align:center;"></div>
         

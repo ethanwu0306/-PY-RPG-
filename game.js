@@ -942,13 +942,83 @@ function loadGame() {
             if (!player.ores) player.ores = { copper: 0, iron: 0, gold: 0, diamond: 0 };
             if (!player.potions) player.potions = { hp: 1, mp: 1 };
             
-            alert(I18N[curLang].loadSuccess + "\n(舊存檔版本已自動向上升級！)"); 
+            alert(I18N[curLang].loadSuccess + "\n(存檔載入成功！)"); 
             showVillage(); 
         } else {
             alert("⚠️ 找不到本地存檔，請確認您已在本頁面存檔過，或使用【跨裝置代碼匯入】進度。");
         }
     } catch(e) {
         alert("❌ 讀取存檔時發生錯誤，存檔資料可能已被損壞。");
+    }
+}
+
+// 📖 遊玩規則彈窗控制機制
+let previousScreenBeforeGuide = 'main-menu';
+
+function showGameGuide() {
+    // 紀錄開啟規則之前的視窗 ID，關卡時可精準退回原畫面
+    const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen'];
+    for (let id of screens) {
+        let el = document.getElementById(id);
+        if (el && !el.classList.contains('hidden')) {
+            previousScreenBeforeGuide = id;
+            break;
+        }
+    }
+    hideAll();
+    document.getElementById('guide-screen').classList.remove('hidden');
+}
+
+function hideGameGuide() {
+    hideAll();
+    let prevEl = document.getElementById(previousScreenBeforeGuide);
+    if (prevEl) {
+        prevEl.classList.remove('hidden');
+    } else {
+        showMainMenu();
+    }
+    document.getElementById('btn-corner-rules').classList.remove('hidden');
+}
+
+// 跨裝置代碼備份匯入控制
+function showTransferSave() {
+    hideAll();
+    document.getElementById('transfer-save-screen').classList.remove('hidden');
+    let localData = localStorage.getItem(SAVE_KEY);
+    if (localData) {
+        document.getElementById('save-code-input').value = btoa(encodeURIComponent(localData));
+    } else {
+        document.getElementById('save-code-input').value = "";
+    }
+}
+
+function exportSaveCode() {
+    let localData = localStorage.getItem(SAVE_KEY);
+    if (!localData) { alert("⚠️ 目前沒有可導出的本地存檔！請先開始遊戲並存檔。"); return; }
+    let code = btoa(encodeURIComponent(localData));
+    navigator.clipboard.writeText(code).then(() => {
+        alert("📋 存檔代碼已成功複製到剪貼簿！您可以貼上發送給自己備份。");
+    }).catch(() => {
+        document.getElementById('save-code-input').value = code;
+        alert("📋 存檔代碼已生成於框內，請手動全選複製。");
+    });
+}
+
+function importSaveCode() {
+    let code = document.getElementById('save-code-input').value.trim();
+    if (!code) { alert("❌ 請先貼上有效的存檔代碼！"); return; }
+    try {
+        let jsonStr = decodeURIComponent(atob(code));
+        let testData = JSON.parse(jsonStr);
+        if (testData && testData.player) {
+            localStorage.setItem(SAVE_KEY, jsonStr);
+            alert("📥 存檔代碼匯入成功！即將為您載入進度...");
+            loadGame();
+        } else {
+            throw new Error("無效的資料格式");
+        }
+    } catch (e) {
+        alert("❌ 存檔代碼解析失敗，請確認代碼是否完整且未被修改！");
     }
 }
 

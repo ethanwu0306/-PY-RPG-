@@ -1,8 +1,8 @@
-const SAVE_KEY = "pyrpg_save_github_v2.3_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v2.4_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const I18N = {
     zh: {
-        langName: "中文", subTitle: "版本 v2.3", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
+        langName: "中文", subTitle: "版本 v2.4", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
         classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 初始 HP: 220 | MP: 60)", magB: "🔮 法師 (特性: 高魔力 | 初始 HP: 110 | MP: 220)", arcB: "🏹 射手 (特性: 高敏捷 | 初始 HP: 130 | MP: 90)",
         backMain: "⬅️ 返回主畫面", back: "⬅️ 返回村莊", cardT: "🔮 遇見神秘商人！", cardSub: "打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：",
         atkB: "⚔️ 普通攻擊", skillGridT: "✨ 技能快捷格 (最多4招)：",
@@ -23,7 +23,7 @@ const I18N = {
         saveSuccess: "💾 存檔成功！", loadSuccess: "📂 成功載入進度！", hpPotLabel: "生命藥水", mpPotLabel: "魔力藥水", noActions: "❌ 村莊行動力不足！"
     },
     en: {
-        langName: "English", subTitle: "Version v2.3", startG: "🎮 New Game", loadG: "📂 Load Game",
+        langName: "English", subTitle: "Version v2.4", startG: "🎮 New Game", loadG: "📂 Load Game",
         classT: "Choose Your Class", warB: "🛡️ Warrior (HP:220 | MP: 60)", magB: "🔮 Mage (HP:110 | MP: 220)", arcB: "🏹 Archer (HP:130 | MP: 90)",
         backMain: "⬅️ Return to Main Menu", back: "⬅️ Return to Village", cardT: "🔮 Mysterious Merchant!", cardSub: "Defeated Area Boss! Choose a card blessing:",
         atkB: "⚔️ Basic Attack", skillGridT: "✨ Skill Hotbars (Max 4):",
@@ -45,7 +45,6 @@ const I18N = {
     }
 };
 
-// 全 61 招技能資料庫 (完全展開寫死)
 const SKILLS = {
     // 通用 (11)
     "重擊": { nameEn: "Heavy Strike", type: "universal", cost: 50, mp: 5, mult: 1.5, cd: 0, descZh: "通用：1.5倍物理傷害" },
@@ -133,7 +132,7 @@ const CLASSES = {
     "Archer": { nameZh: "射手", nameEn: "Archer", hp: 130, mp: 90, min: 25, max: 35, weaponZh: "獵人長弓", weaponEn: "Hunter Bow", critRate: 15, critDmg: 150, evasion: 20 }
 };
 
-// 隨機商店池（嚴格過濾排除高級 tier: "adv" 裝備）
+// 隨機裝備商店池（全數過濾排除高級 "adv" 裝備）
 const ALL_EQUIPS_POOL = [
     { nameZh: "初級·鋼鐵頭盔 (+30 MaxHP)", slot: "helmet", tier: "basic", cost: 60, hp: 30 },
     { nameZh: "初級·皮質胸甲 (+40 MaxHP)", slot: "chest", tier: "basic", cost: 70, hp: 40 },
@@ -183,7 +182,7 @@ const CARDS_DATABASE = [
     { id: "holy_revive", nameZh: "👼 聖光復甦", nameEn: "👼 Holy Light", descZh: "戰鬥獲勝自動恢復 30 HP", descEn: "Heal 30 HP on Victory" }
 ];
 
-// 90 把武器與高級專屬神裝 (完全列出)
+// **所有 90 把武器與高級專屬神裝完全收錄於鐵匠鋪**
 const FORGE_RECIPES_DATABASE = [
     // ⚔️ 戰士武器 (10/10/10)
     { category: "warrior", slot: "weapon", nameZh: "初級·青銅劍 (+15 攻擊)", nameEn: "Basic Bronze Sword (+15 Atk)", req: { copper: 5 }, job: "Warrior", tier: "basic", atk: 15 },
@@ -287,7 +286,7 @@ const FORGE_RECIPES_DATABASE = [
     { category: "archer", slot: "weapon", nameZh: "高級·混沌滅世神箭弓 (+325 攻擊 | +40% 閃避 | +35% 暴擊率)", nameEn: "Adv Chaos Bow (+325 Atk | +40% Evasion | +35% Crit)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Archer", tier: "adv", atk: 325, evasion: 40, critRate: 35 },
     { category: "archer", slot: "weapon", nameZh: "高級·終極天罰滅世神尊弩 (+385 攻擊 | +50% 暴擊率 | +90% 暴傷)", nameEn: "Adv Supreme Crossbow (+385 Atk | +50% Crit | +90% CritDmg)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Archer", tier: "adv", atk: 385, critRate: 50, critDmg: 90 },
 
-    // 🛡️ 防具 (頭盔, 胸甲, 腿甲, 手腕 - 含高級獨佔神裝)
+    // 🛡️ 各部位防具 (頭盔, 胸甲, 腿甲, 手腕 - 含高級獨佔神裝)
     { category: "armor", slot: "helmet", nameZh: "初級·鋼鐵頭盔 (+35 MaxHP)", req: { iron: 4 }, job: null, tier: "basic", hp: 35 },
     { category: "armor", slot: "helmet", nameZh: "中級·精鋼戰盔 (+85 MaxHP | +40 MP)", req: { copper: 10, iron: 6 }, job: null, tier: "mid", hp: 85, mp: 40 },
     { category: "armor", slot: "helmet", nameZh: "高級·泰坦聖光盔 (+180 MaxHP | +8% 閃避)", req: { copper: 20, iron: 15, gold: 3 }, job: null, tier: "adv", hp: 180, evasion: 8 },
@@ -318,7 +317,7 @@ const WEAPON_ENCHANTS = [
     { id: "fury", keyZh: "暴怒", keyEn: "Fury", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
 ];
 
-// 50 項四大分類成就全數寫死列出
+// 全 50 項成就資料（完整無刪減）
 const ACHIEVEMENTS_DATABASE = [
     // ⚔️ 主線關卡 (15項)
     { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", titleEn: "Stage 1-10 Clear", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },
