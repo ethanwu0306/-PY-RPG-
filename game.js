@@ -93,7 +93,9 @@ function initGame(jobCode) {
         atkMin: c.min, atkMax: c.max, weapon: curLang === "zh" ? c.weaponZh : (c.weaponEn || c.weaponZh),
         gold: 100, enchantStones: 0, villageActions: 5, maxVillageActions: 5, skills: ["重擊"], cards: [], 
         equips: [], 
-        refines: {}, // 裝備精煉等級字典 (+1 ~ +5)
+        refines: {}, 
+        pickaxeLvl: 0, // 鎬子強化等級 (0 ~ 5)
+        refineStones: 0, // 專屬精煉石
         
         equipmentSlots: {
             helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null
@@ -297,7 +299,6 @@ function executeTurn(skillKey, isDefendingAction) {
 
         dealtDmg = Math.floor(randomAtk() * (sInfo.mult || 1.5));
         
-        // 💥 屬性克制計算 (1.5倍克制)
         let isCounter = (sInfo.elem && sInfo.elem === mapObj.weakness);
         if (isCounter) dealtDmg = Math.floor(dealtDmg * 1.5);
 
@@ -329,7 +330,6 @@ function executeTurn(skillKey, isDefendingAction) {
         log((isCrit ? "⚡【暴擊！】" : "") + t.attackLog.replace('{w}', player.weapon).replace('{d}', dealtDmg), isCrit ? "log-crit" : "");
     }
 
-    // 🔴 BOSS 狂暴化檢查 (HP < 30%)
     if ((monster.isBoss || monster.isFinal) && !monster.isRaged && (monster.hp / monster.maxHp) <= 0.30 && monster.hp > 0) {
         monster.isRaged = true;
         monster.min = Math.floor(monster.min * 1.4);
@@ -369,7 +369,7 @@ function executeTurn(skillKey, isDefendingAction) {
     let enemyActionRand = Math.random();
     let mDmg = Math.floor(Math.random() * (monster.max - monster.min + 1) + monster.min);
 
-    if (player.isDefending) mDmg = Math.floor(mDmg * 0.5); // 防禦減傷 50%
+    if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
 
     if (enemyActionRand < 0.15) {
         mDmg = Math.floor(mDmg * 1.5);
@@ -489,8 +489,13 @@ function showVillage() {
 function updateVillageUI() {
     let t = I18N[curLang];
     let act = player.villageActions;
-    document.getElementById('village-status').innerText = `${t.job}: ${player.jobName} | ${t.gold}: ${player.gold} G | 💎 ${t.stones}: ${player.enchantStones}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ ${t.actionsLabel}: ${act}/${player.maxVillageActions}\n🧪 ${t.hpPotLabel}:${player.potions.hp}瓶 | ${t.mpPotLabel}:${player.potions.mp}瓶`;
+    let pLvl = player.pickaxeLvl || 0;
     
+    document.getElementById('village-status').innerText = `${t.job}: ${player.jobName} | ${t.gold}: ${player.gold} G | 💎 ${t.stones}: ${player.enchantStones} | 💠 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ ${t.actionsLabel}: ${act}/${player.maxVillageActions}\n⛏️ 鎬子強化: +${pLvl}`;
+    
+    let pickBtnTag = document.getElementById('pickaxe-lvl-tag');
+    if (pickBtnTag) pickBtnTag.innerText = `+${pLvl}`;
+
     document.getElementById('btn-v-rest').disabled = (player.gold < 30 || act <= 0);
     
     let btnMine = document.getElementById('btn-mine');
@@ -513,7 +518,8 @@ function showPlayerStats() {
 
     let html = `
         <b>【${t.job}: ${p.jobName}】</b> | ${t.stage}: ${getStageString(defeatedCount)}<br>
-        ${t.gold}: ${p.gold} G | 💎 ${t.stones}: ${p.enchantStones}<br>
+        ${t.gold}: ${p.gold} G | 💎 ${t.stones}: ${p.enchantStones} | 💠 精煉石: ${p.refineStones || 0}<br>
+        ⛏️ 採礦鎬子強化等級: <b>+${p.pickaxeLvl || 0}</b><br>
         🗡️ 當前武器: <b>[${p.equipmentSlots.weapon || p.weapon}]</b> (${encStr})<br>
         🪖 當前頭盔: <b>[${p.equipmentSlots.helmet || '無'}]</b> | 🛡️ 當前胸甲: <b>[${p.equipmentSlots.chest || '無'}]</b><br>
         🦵 當前腿甲: <b>[${p.equipmentSlots.leggings || '無'}]</b> | 🥊 手腕1/2: <b>[${p.equipmentSlots.bracer1 || '無'}] / [${p.equipmentSlots.bracer2 || '無'}]</b><br><br>
@@ -601,7 +607,7 @@ function equipItemToSlot(eqName) {
         }
     }
 
-    let mult = 1 + (player.refines[eqName] || 0) * 0.15; // 精煉成效倍率
+    let mult = 1 + (player.refines[eqName] || 0) * 0.15;
     slots[targetSlot] = eqName;
     if (item.atk) { player.atkMin += Math.floor(item.atk * mult); player.atkMax += Math.floor(item.atk * mult); }
     if (item.hp) { player.maxHp += Math.floor(item.hp * mult); player.hp += Math.floor(item.hp * mult); }
@@ -640,22 +646,76 @@ function getSlotNameZh(slotKey) {
     return names[slotKey] || slotKey;
 }
 
-function updateMineUI() { updateVillageUI(); }
-
+// -------------------------------------------------------------
+// ⛏️ 採礦與鎬子強化機制 (支援 +1~+5 鎬子與精煉石機率掉落)
+// -------------------------------------------------------------
 function mine() {
     if (player.villageActions <= 0) { alert(I18N[curLang].noActions); return; }
     let t = I18N[curLang];
     player.villageActions--;
     player.mineCount = (player.mineCount || 0) + 1;
+    
+    let pLvl = player.pickaxeLvl || 0;
+    let doubleOreRate = pLvl * 0.15; // 雙倍採礦率
+    let highOreRateBonus = pLvl * 0.10; // 金/鑽石提升率
+
     let rand = Math.random();
-    let got = "";
+    let count = (Math.random() < doubleOreRate) ? 2 : 1;
+    let gotMsg = "";
 
-    if (rand < 0.72) { player.ores.copper++; got = `🥉 ${t.copper}`; }
-    else if (rand < 0.94) { player.ores.iron++; got = `🥈 ${t.iron}`; }
-    else if (rand < 0.99) { player.ores.gold++; got = `🥇 ${t.goldOre}`; }
-    else { player.ores.diamond++; got = `💎 ${t.diamond}`; }
+    if (rand < (0.72 - highOreRateBonus)) { 
+        player.ores.copper += count; gotMsg = `🥉 ${t.copper} x${count}`; 
+    } else if (rand < (0.94 - highOreRateBonus/2)) { 
+        player.ores.iron += count; gotMsg = `🥈 ${t.iron} x${count}`; 
+    } else if (rand < 0.98) { 
+        player.ores.gold += count; gotMsg = `🥇 ${t.goldOre} x${count}`; 
+    } else { 
+        player.ores.diamond += count; gotMsg = `💎 ${t.diamond} x${count}`; 
+    }
 
-    alert(`⛏️ ${got} +1 (${t.actionsLabel}: ${player.villageActions}/${player.maxVillageActions})`);
+    // 💎 +3 以上鎬子機率挖到精煉石 (+3:20%, +4:40%, +5:60%)
+    let refineStoneRate = 0;
+    if (pLvl === 3) refineStoneRate = 0.20;
+    else if (pLvl === 4) refineStoneRate = 0.40;
+    else if (pLvl >= 5) refineStoneRate = 0.60;
+
+    let gotRefineStone = false;
+    if (refineStoneRate > 0 && Math.random() < refineStoneRate) {
+        player.refineStones = (player.refineStones || 0) + 1;
+        gotRefineStone = true;
+    }
+
+    let refineStoneMsg = gotRefineStone ? "\n✨ 鎬子神威發揮！幸運額外採集到了 1 顆【💠 精煉石】！" : "";
+    alert(`⛏️ 採礦成功！獲得 ${gotMsg}${refineStoneMsg}\n(${t.actionsLabel}: ${player.villageActions}/${player.maxVillageActions})`);
+    updateVillageUI();
+}
+
+function upgradePickaxe() {
+    let curLvl = player.pickaxeLvl || 0;
+    if (curLvl >= 5) {
+        alert("🔨 採礦鎬子已達到最高等級 (+5 神級採礦鎬)！");
+        return;
+    }
+
+    let reqCopper = (curLvl + 1) * 5;
+    let reqIron = (curLvl + 1) * 3;
+    let reqGold = curLvl >= 2 ? (curLvl) * 2 : 0;
+
+    let canUpgrade = (player.ores.copper >= reqCopper && player.ores.iron >= reqIron && player.ores.gold >= reqGold);
+
+    if (!canUpgrade) {
+        let reqGoldTxt = reqGold > 0 ? `, 金x${reqGold}` : "";
+        alert(`❌ 升級鎬子 (+${curLvl} ➡️ +${curLvl+1}) 資源不足！\n需求: 銅x${reqCopper}, 鐵x${reqIron}${reqGoldTxt}`);
+        return;
+    }
+
+    player.ores.copper -= reqCopper;
+    player.ores.iron -= reqIron;
+    if (reqGold > 0) player.ores.gold -= reqGold;
+
+    player.pickaxeLvl = curLvl + 1;
+    let unlockStoneMsg = (curLvl + 1 >= 3) ? `\n🎉 鎬子達到 +${curLvl+1}！正式解鎖採礦時可獲得【💠 精煉石】能力！` : "";
+    alert(`🔨 鎬子升級成功！當前等級: +${curLvl+1}${unlockStoneMsg}`);
     updateVillageUI();
 }
 
@@ -704,9 +764,6 @@ function showPotionShop() {
     container.appendChild(mpBtn);
 }
 
-// -------------------------------------------------------------
-// 🏆 成就系統 (支援【一鍵領取】與進度條可視化顯示)
-// -------------------------------------------------------------
 function showAchievements() { hideAll(); document.getElementById('achieve-screen').classList.remove('hidden'); updateAchieveUI(); }
 function switchAchieveTab(tab) { currentAchieveTab = tab; updateAchieveUI(); }
 
@@ -792,7 +849,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪神兵鍛造 & ✨ 裝備精煉強化系統 (+1 ~ +5)
+// 🔨 鐵匠鋪神兵鍛造 & ✨ 裝備精煉強化系統 (需消耗💠精煉石)
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -819,7 +876,7 @@ function switchForgeArmorTab(slot) {
 function updateForgeUI() {
     let p = player; let t = I18N[curLang];
     let act = p.villageActions;
-    document.getElementById('ore-status').innerText = `${t.weapon}: [${p.weapon}]\n${t.ores}: ${t.copper}:${p.ores.copper} | ${t.iron}:${p.ores.iron} | ${t.goldOre}:${p.ores.gold} | ${t.diamond}:${p.ores.diamond}\n⚡ 行動力: ${act}/5`;
+    document.getElementById('ore-status').innerText = `${t.weapon}: [${p.weapon}]\n${t.ores}: ${t.copper}:${p.ores.copper} | ${t.iron}:${p.ores.iron} | ${t.goldOre}:${p.ores.gold} | ${t.diamond}:${p.ores.diamond} | 💠精煉石:${p.refineStones || 0}\n⚡ 行動力: ${act}/5`;
     let forgeBox = document.getElementById('forge-items'); forgeBox.innerHTML = "";
     
     if (currentForgeTab === 'refine') {
@@ -881,16 +938,16 @@ function renderEquipmentRefineList() {
             btn.disabled = true;
         } else {
             let reqCopper = (curLvl + 1) * 3;
-            let reqIron = (curLvl + 1) * 2;
-            let canRefine = (player.ores.copper >= reqCopper && player.ores.iron >= reqIron && player.villageActions > 0);
+            let reqRefineStone = (curLvl + 1); // 必須消耗精煉石
+            let canRefine = (player.ores.copper >= reqCopper && (player.refineStones || 0) >= reqRefineStone && player.villageActions > 0);
 
-            btn.innerText = `✨ 精煉升級: ${eqName} (+${curLvl} ➡️ +${curLvl+1}) (需求: 銅x${reqCopper}, 鐵x${reqIron})`;
+            btn.innerText = `✨ 精煉升級: ${eqName} (+${curLvl} ➡️ +${curLvl+1}) (需求: 銅x${reqCopper}, 💠精煉石x${reqRefineStone})`;
             btn.disabled = !canRefine;
 
             btn.onclick = () => {
                 player.villageActions--;
                 player.ores.copper -= reqCopper;
-                player.ores.iron -= reqIron;
+                player.refineStones -= reqRefineStone;
                 player.refines[eqName] = curLvl + 1;
                 alert(`🎉 精煉成功！[${eqName}] 已強化提升至 +${curLvl+1}！（屬性額外提升 15%）`);
                 updateForgeUI();
@@ -1052,6 +1109,9 @@ function loadGame() {
             if (data.shopSkills) shopSkills = data.shopSkills;
 
             if (!player.refines) player.refines = {};
+            if (!player.pickaxeLvl) player.pickaxeLvl = 0;
+            if (!player.refineStones) player.refineStones = 0;
+
             if (!player.equipmentSlots) {
                 player.equipmentSlots = { helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null };
             }

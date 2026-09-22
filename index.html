@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 屬性克制與裝備精煉升級版 v2.5</title>
+    <title>Py RPG - 精煉石與鎬子強化升級版 v2.6</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.5 (屬性與精煉版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.6 (鎬子與精煉石版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
@@ -50,8 +50,8 @@
 
             <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
             • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
-            • ⚡ <b>礦坑採礦</b> (耗 1 行動力)：隨機挖取銅、鐵、金、鑽石等稀有礦石。<br>
-            • 🔨 <b>鐵匠鋪</b>：支援神裝鍛造與<b>【✨ 裝備強化/精煉】 (+1~+5)</b>！<br>
+            • ⚡ <b>礦坑採礦</b>：升級鎬子 (+1~+5) 可大幅提升挖礦量與高階礦石率！<b>+3 以上鎬子可挖到【💎 精煉石】</b>！<br>
+            • 🔨 <b>鐵匠鋪</b>：支援神裝鍛造與<b>【✨ 裝備強化】(+1~+5)</b>！強化需要消耗精煉石。<br>
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予 10 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
@@ -148,6 +148,8 @@
             <button class="btn" onclick="rest()" id="btn-v-rest">⛪ 旅館休息 - 30 G</button>
             <button class="btn" id="btn-mine" onclick="mine()">⚡ 礦坑採礦</button>
         </div>
+        <button class="btn btn-secondary" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-bottom:8px;" onclick="upgradePickaxe()">🔨 升級採礦鎬子 (當前: <span id="pickaxe-lvl-tag">+0</span>)</button>
+        
         <div class="tab-grid">
             <button class="btn btn-secondary" onclick="showForge()" id="btn-v-forge">🔨 鐵匠鋪</button>
             <button class="btn btn-secondary" onclick="showEnchantHouse()" id="btn-v-magic">🔮 魔法屋</button>
@@ -180,39 +182,39 @@
 
     <!-- 魔法屋畫面 -->
     <div id="enchant-screen" class="hidden">
-        <h2 id="magic-house-title">🔮 魔法屋</h2>
+        <h2>🔮 魔法屋</h2>
         <div class="status-box" id="magic-status"></div>
         <h3 style="color:#70a1ff;" id="forge-enc-title">💎 武器魔法附魔 (消耗 10 顆附魔石 + 1 行動力)</h3>
         <div id="magic-items"></div>
-        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;" id="btn-magic-back">⬅️ 返回村莊</button>
+        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;">⬅️ 返回村莊</button>
     </div>
 
     <!-- 技能替換畫面 -->
     <div id="replace-skill-screen" class="hidden">
-        <h2 style="color:#f1c40f;" id="replace-title">⚠️ 技能欄位已滿 (最多4招)</h2>
-        <p style="color:#ccc; text-align:center; font-size:13px;" id="replace-sub">請選擇要被取代掉的舊技能：</p>
+        <h2>⚠️ 技能欄位已滿 (最多4招)</h2>
+        <p style="color:#ccc; text-align:center; font-size:13px;">請選擇要被取代掉的舊技能：</p>
         <div id="replace-skills-list"></div>
-        <button class="btn btn-secondary" onclick="showSkillShop()" id="btn-cancel-replace">❌ 取消學習</button>
+        <button class="btn btn-secondary" onclick="showSkillShop()">❌ 取消學習</button>
     </div>
 
     <!-- 角色面板畫面 -->
     <div id="stats-screen" class="hidden">
-        <h2 id="stats-title">📊 角色詳細面板</h2>
+        <h2>📊 角色詳細面板</h2>
         <div class="status-box" id="stats-content"></div>
-        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;" id="btn-stats-back">⬅️ 返回村莊</button>
+        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;">⬅️ 返回村莊</button>
     </div>
 
-    <!-- 鐵匠鋪畫面 (新增【精煉/強化】頁面) -->
+    <!-- 鐵匠鋪畫面 (頂部並列 5 個分頁選項，不再佔據大空間) -->
     <div id="forge-screen" class="hidden">
-        <h2 id="forge-title">🔨 鐵匠鋪神兵鍛造 & 精煉</h2>
+        <h2>🔨 鐵匠鋪神兵鍛造 & 精煉</h2>
         <div class="status-box" id="ore-status"></div>
-        <div class="forge-grid">
-            <button class="btn btn-tab" style="background: linear-gradient(180deg, #c0392b 0%, #641e16 100%);" onclick="switchForgeTab('warrior')">⚔️ 戰士武器</button>
-            <button class="btn btn-tab" style="background: linear-gradient(180deg, #8e44ad 0%, #4a235a 100%);" onclick="switchForgeTab('mage')">🔮 法師武器</button>
-            <button class="btn btn-tab" style="background: linear-gradient(180deg, #27ae60 0%, #145a32 100%);" onclick="switchForgeTab('archer')">🏹 射手武器</button>
-            <button class="btn btn-tab" style="background: linear-gradient(180deg, #2980b9 0%, #154360 100%);" onclick="switchForgeTab('armor')">🛡️ 共通防具</button>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1.2fr; gap: 4px; margin-bottom: 10px;">
+            <button class="btn btn-tab" style="background: linear-gradient(180deg, #c0392b 0%, #641e16 100%);" onclick="switchForgeTab('warrior')">⚔️戰士</button>
+            <button class="btn btn-tab" style="background: linear-gradient(180deg, #8e44ad 0%, #4a235a 100%);" onclick="switchForgeTab('mage')">🔮法師</button>
+            <button class="btn btn-tab" style="background: linear-gradient(180deg, #27ae60 0%, #145a32 100%);" onclick="switchForgeTab('archer')">🏹射手</button>
+            <button class="btn btn-tab" style="background: linear-gradient(180deg, #2980b9 0%, #154360 100%);" onclick="switchForgeTab('armor')">🛡️防具</button>
+            <button class="btn btn-tab" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f;" onclick="switchForgeTab('refine')">✨裝備精煉</button>
         </div>
-        <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-bottom:8px;" onclick="switchForgeTab('refine')">✨ 裝備強化 / 精煉 (+1~+5)</button>
         
         <div id="armor-sub-tabs" class="tab-grid hidden" style="margin-bottom:8px;">
             <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('helmet')">🪖 頭盔</button>
@@ -221,19 +223,19 @@
             <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('bracer')">🥊 手腕</button>
         </div>
         <div id="forge-items" style="max-height: 240px; overflow-y: auto;"></div>
-        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;" id="btn-forge-back">⬅️ 返回村莊</button>
+        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;">⬅️ 返回村莊</button>
     </div>
 
     <!-- 商店畫面 -->
     <div id="shop-screen" class="hidden">
-        <h2 id="shop-title">🏪 商店</h2>
+        <h2>🏪 商店</h2>
         <div class="status-box" id="shop-status"></div>
         <div id="shop-items"></div>
         <button class="btn btn-secondary" id="btn-refresh" onclick="refreshSkills()" style="display:none; background: linear-gradient(180deg, #d35400 0%, #7e3200 100%);">🔄 換一批技能 (100 G)</button>
-        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;" id="btn-shop-back">⬅️ 返回村莊</button>
+        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;">⬅️ 返回村莊</button>
     </div>
 
-    <!-- 成就畫面 (新增【一鍵領取】按鈕) -->
+    <!-- 成就畫面 -->
     <div id="achieve-screen" class="hidden">
         <h2>🏆 勇者成就系統 (50項大滿貫)</h2>
         <div class="status-box" id="achieve-status">達成各項偉業領取豐厚獎勵！</div>
@@ -244,7 +246,7 @@
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #8e44ad 0%, #4a235a 100%);" onclick="switchAchieveTab('enchant')">🔮 魔法附魔</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #27ae60 0%, #145a32 100%);" onclick="switchAchieveTab('wealth')">💰 冒險財富</button>
         </div>
-        <div id="achieve-items" style="max-height: 240px; overflow-y: auto;"></div>
+        <div id="achieve-items" style="max-height: 260px; overflow-y: auto;"></div>
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;">⬅️ 返回村莊</button>
     </div>
 </div>

@@ -1,8 +1,8 @@
-const SAVE_KEY = "pyrpg_save_github_v2.5_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v2.6_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const I18N = {
     zh: {
-        langName: "中文", subTitle: "版本 v2.5", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
+        langName: "中文", subTitle: "版本 v2.6", startG: "🎮 開始新遊戲", loadG: "📂 讀取存檔",
         classT: "請選擇你的職業", warB: "🛡️ 戰士 (特性: 高血量 | 初始 HP: 220 | MP: 60)", magB: "🔮 法師 (特性: 高魔力 | 初始 HP: 110 | MP: 220)", arcB: "🏹 射手 (特性: 高敏捷 | 初始 HP: 130 | MP: 90)",
         backMain: "⬅️ 返回主畫面", back: "⬅️ 返回村莊", cardT: "🔮 遇見神秘商人！", cardSub: "打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：",
         atkB: "⚔️ 普通攻擊", skillGridT: "✨ 技能快捷格 (最多4招)：",
@@ -23,7 +23,7 @@ const I18N = {
         saveSuccess: "💾 存檔成功！", loadSuccess: "📂 成功載入進度！", hpPotLabel: "生命藥水", mpPotLabel: "魔力藥水", noActions: "❌ 村莊行動力不足！"
     },
     en: {
-        langName: "English", subTitle: "Version v2.5", startG: "🎮 New Game", loadG: "📂 Load Game",
+        langName: "English", subTitle: "Version v2.6", startG: "🎮 New Game", loadG: "📂 Load Game",
         classT: "Choose Your Class", warB: "🛡️ Warrior (HP:220 | MP: 60)", magB: "🔮 Mage (HP:110 | MP: 220)", arcB: "🏹 Archer (HP:130 | MP: 90)",
         backMain: "⬅️ Return to Main Menu", back: "⬅️ Return to Village", cardT: "🔮 Mysterious Merchant!", cardSub: "Defeated Area Boss! Choose a card blessing:",
         atkB: "⚔️ Basic Attack", skillGridT: "✨ Skill Hotbars (Max 4):",
@@ -45,7 +45,6 @@ const I18N = {
     }
 };
 
-// 技能資料庫 (包含元素屬性 elem: 'flame' | 'frost' | 'thunder' | 'gale')
 const SKILLS = {
     // 通用 (11)
     "重擊": { nameEn: "Heavy Strike", type: "universal", elem: "none", cost: 50, mp: 5, mult: 1.5, cd: 0, descZh: "通用：1.5倍物理傷害" },
@@ -151,7 +150,6 @@ const ALL_EQUIPS_POOL = [
     { nameZh: "中級·精準長弩 (+28 攻擊 | +8% 暴擊率)", slot: "weapon", tier: "mid", job: "Archer", cost: 280, atk: 28, critRate: 8 }
 ];
 
-// 地圖怪物弱點元素定義 (weakness)
 const MAPS = {
     1: { nameZh: "🌲 微光森林", weakness: "flame", villageZh: "樹梢村", monstersZh: ["哥布林斥候", "史萊姆", "狂暴野狼"], bossZh: "哥布林千人將" },
     2: { nameZh: "❄️ 寒霜雪原", weakness: "flame", villageZh: "冰晶鎮", monstersZh: ["霜狼", "雪原獵手", "冰晶石傀儡"], bossZh: "雪原暴熊王" },
@@ -166,38 +164,39 @@ const MAPS = {
 };
 
 const CARDS_DATABASE = [
-    { id: "vampire", nameZh: "🩸 吸血鬼之吻", nameEn: "🩸 Vampire's Kiss", descZh: "攻擊時恢復傷害 15% HP", descEn: "15% Life Steal on Attack" },
-    { id: "berserk", nameZh: "🔥 狂暴之怒", nameEn: "🔥 Berserker Rage", descZh: "基礎攻擊力提升 25%", descEn: "Base Atk +25%" },
-    { id: "shield", nameZh: "🛡️ 鋼鐵意志", nameEn: "🛡️ Iron Will", descZh: "最大血量提升 80 點", descEn: "Max HP +80" },
-    { id: "holy_shield", nameZh: "✨ 神聖護身", nameEn: "✨ Divine Aura", descZh: "進入戰鬥獲得 60 護盾", descEn: "Gain 60 Shield in Battle" },
-    { id: "wind_step", nameZh: "🌀 疾風之步", nameEn: "🌀 Swift Step", descZh: "閃避率提升 15%", descEn: "Evasion +15%" },
-    { id: "mana_flow", nameZh: "💧 魔力源泉", nameEn: "💧 Mana Surge", descZh: "最大魔力提升 60 點", descEn: "Max MP +60" },
-    { id: "poison_blade", nameZh: "☠️ 劇毒之刃", nameEn: "☠️ Venom Blade", descZh: "攻擊附加 20% 中毒率", descEn: "+20% Poison Rate" },
-    { id: "crit_fury", nameZh: "💥 暴怒火花", nameEn: "💥 Critical Spark", descZh: "暴擊率提升 15%", descEn: "Crit Rate +15%" },
-    { id: "gold_bless", nameZh: "🌟 黃金祝福", nameEn: "🌟 Wealth Blessing", descZh: "戰鬥金幣收益提升 30%", descEn: "+30% Gold Drop" },
-    { id: "exp_master", nameZh: "📖 冒險天賦", nameEn: "📖 Adv Talent", descZh: "基礎傷害提升 15 點", descEn: "Base Dmg +15" },
-    { id: "titan_guard", nameZh: "🗿 金剛不壞", nameEn: "🗿 Titan Guard", descZh: "最大血量提升 120 點", descEn: "Max HP +120" },
-    { id: "shadow_revenge", nameZh: "🌑 暗影復仇", nameEn: "🌑 Shadow Vengeance", descZh: "暴擊傷害提升 30%", descEn: "Crit Dmg +30%" },
-    { id: "element_burst", nameZh: "🔮 元素爆發", nameEn: "🔮 Element Burst", descZh: "技能傷害效果提升 20%", descEn: "Skill Dmg +20%" },
-    { id: "hawkeye", nameZh: "🏹 鷹眼專注", nameEn: "🏹 Hawkeye Focus", descZh: "暴擊率 +10% | 閃避率 +8%", descEn: "Crit +10% | Evasion +8%" },
-    { id: "holy_revive", nameZh: "👼 聖光復甦", nameEn: "👼 Holy Light", descZh: "戰鬥獲勝自動恢復 30 HP", descEn: "Heal 30 HP on Victory" }
+    { id: "vampire", nameZh: "🩸 吸血鬼之吻", descZh: "攻擊時恢復傷害 15% HP" },
+    { id: "berserk", nameZh: "🔥 狂暴之怒", descZh: "基礎攻擊力提升 25%" },
+    { id: "shield", nameZh: "🛡️ 鋼鐵意志", descZh: "最大血量提升 80 點" },
+    { id: "holy_shield", nameZh: "✨ 神聖護身", descZh: "進入戰鬥獲得 60 護盾" },
+    { id: "wind_step", nameZh: "🌀 疾風之步", descZh: "閃避率提升 15%" },
+    { id: "mana_flow", nameZh: "💧 魔力源泉", descZh: "最大魔力提升 60 點" },
+    { id: "poison_blade", nameZh: "☠️ 劇毒之刃", descZh: "攻擊附加 20% 中毒率" },
+    { id: "crit_fury", nameZh: "💥 暴怒火花", descZh: "暴擊率提升 15%" },
+    { id: "gold_bless", nameZh: "🌟 黃金祝福", descZh: "戰鬥金幣收益提升 30%" },
+    { id: "exp_master", nameZh: "📖 冒險天賦", descZh: "基礎傷害提升 15 點" },
+    { id: "titan_guard", nameZh: "🗿 金剛不壞", descZh: "最大血量提升 120 點" },
+    { id: "shadow_revenge", nameZh: "🌑 暗影復仇", descZh: "暴擊傷害提升 30%" },
+    { id: "element_burst", nameZh: "🔮 元素爆發", descZh: "技能傷害效果提升 20%" },
+    { id: "hawkeye", nameZh: "🏹 鷹眼專注", descZh: "暴擊率 +10% | 閃避率 +8%" },
+    { id: "holy_revive", nameZh: "👼 聖光復甦", descZh: "戰鬥獲勝自動恢復 30 HP" }
 ];
 
+// 鐵匠鋪裝備與神裝 (完全寫死列出)
 const FORGE_RECIPES_DATABASE = [
     // ⚔️ 戰士武器
-    { category: "warrior", slot: "weapon", nameZh: "初級·青銅劍 (+15 攻擊)", nameEn: "Basic Bronze Sword (+15 Atk)", req: { copper: 5 }, job: "Warrior", tier: "basic", atk: 15 },
-    { category: "warrior", slot: "weapon", nameZh: "中級·刺客毒刃 (+35 攻擊 | +20% 中毒率)", nameEn: "Mid Poison Dagger (+35 Atk | +20% Poison)", req: { copper: 12, iron: 8 }, job: "Warrior", tier: "mid", atk: 35, poisonRate: 20 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·狂暴屠魔巨斧 (+70 攻擊 | +15% 暴擊率 | +30% 暴傷)", nameEn: "Adv Berserk Axe (+70 Atk | +15% Crit | +30% CritDmg)", req: { copper: 25, iron: 20, gold: 3 }, job: "Warrior", tier: "adv", atk: 70, critRate: 15, critDmg: 30 },
+    { category: "warrior", slot: "weapon", nameZh: "初級·青銅劍 (+15 攻擊)", req: { copper: 5 }, job: "Warrior", tier: "basic", atk: 15 },
+    { category: "warrior", slot: "weapon", nameZh: "中級·刺客毒刃 (+35 攻擊 | +20% 中毒率)", req: { copper: 12, iron: 8 }, job: "Warrior", tier: "mid", atk: 35, poisonRate: 20 },
+    { category: "warrior", slot: "weapon", nameZh: "高級·狂暴屠魔巨斧 (+70 攻擊 | +15% 暴擊率 | +30% 暴傷)", req: { copper: 25, iron: 20, gold: 3 }, job: "Warrior", tier: "adv", atk: 70, critRate: 15, critDmg: 30 },
 
     // 🔮 法師武器
-    { category: "mage", slot: "weapon", nameZh: "初級·學徒木杖 (+15 攻擊)", nameEn: "Basic Apprentice Wand (+15 Atk)", req: { copper: 5 }, job: "Mage", tier: "basic", atk: 15 },
-    { category: "mage", slot: "weapon", nameZh: "中級·秘銀符文權杖 (+35 攻擊 | +10% 暴擊率)", nameEn: "Mid Rune Scepter (+35 Atk | +10% Crit)", req: { copper: 12, iron: 8 }, job: "Mage", tier: "mid", atk: 35, critRate: 10 },
-    { category: "mage", slot: "weapon", nameZh: "高級·熾熱元素法杖 (+70 攻擊 | +25% 燃燒率 | +20% 暴傷)", nameEn: "Adv Flame Staff (+70 Atk | +25% Burn | +20% CritDmg)", req: { copper: 25, iron: 20, gold: 3 }, job: "Mage", tier: "adv", atk: 70, burnRate: 25, critDmg: 20 },
+    { category: "mage", slot: "weapon", nameZh: "初級·學徒木杖 (+15 攻擊)", req: { copper: 5 }, job: "Mage", tier: "basic", atk: 15 },
+    { category: "mage", slot: "weapon", nameZh: "中級·秘銀符文權杖 (+35 攻擊 | +10% 暴擊率)", req: { copper: 12, iron: 8 }, job: "Mage", tier: "mid", atk: 35, critRate: 10 },
+    { category: "mage", slot: "weapon", nameZh: "高級·熾熱元素法杖 (+70 攻擊 | +25% 燃燒率 | +20% 暴傷)", req: { copper: 25, iron: 20, gold: 3 }, job: "Mage", tier: "adv", atk: 70, burnRate: 25, critDmg: 20 },
 
     // 🏹 射手武器
-    { category: "archer", slot: "weapon", nameZh: "初級·短獵弓 (+14 攻擊)", nameEn: "Basic Short Bow (+14 Atk)", req: { copper: 5 }, job: "Archer", tier: "basic", atk: 14 },
-    { category: "archer", slot: "weapon", nameZh: "中級·追風神射弩 (+32 攻擊 | +10% 閃避率)", nameEn: "Mid Wind Crossbow (+32 Atk | +10% Evasion)", req: { copper: 12, iron: 8 }, job: "Archer", tier: "mid", atk: 32, evasion: 10 },
-    { category: "archer", slot: "weapon", nameZh: "高級·追魂神魔巨弩 (+80 攻擊 | +20% 暴擊率 | +50% 暴傷)", nameEn: "Adv Soul Crossbow (+80 Atk | +20% Crit | +50% CritDmg)", req: { copper: 25, iron: 20, gold: 5, diamond: 1 }, job: "Archer", tier: "adv", atk: 80, critRate: 20, critDmg: 50 },
+    { category: "archer", slot: "weapon", nameZh: "初級·短獵弓 (+14 攻擊)", req: { copper: 5 }, job: "Archer", tier: "basic", atk: 14 },
+    { category: "archer", slot: "weapon", nameZh: "中級·追風神射弩 (+32 攻擊 | +10% 閃避率)", req: { copper: 12, iron: 8 }, job: "Archer", tier: "mid", atk: 32, evasion: 10 },
+    { category: "archer", slot: "weapon", nameZh: "高級·追魂神魔巨弩 (+80 攻擊 | +20% 暴擊率 | +50% 暴傷)", req: { copper: 25, iron: 20, gold: 5, diamond: 1 }, job: "Archer", tier: "adv", atk: 80, critRate: 20, critDmg: 50 },
 
     // 🛡️ 防具
     { category: "armor", slot: "helmet", nameZh: "初級·鋼鐵頭盔 (+35 MaxHP)", req: { iron: 4 }, job: null, tier: "basic", hp: 35 },
@@ -218,19 +217,20 @@ const FORGE_RECIPES_DATABASE = [
 ];
 
 const WEAPON_ENCHANTS = [
-    { id: "flame", keyZh: "烈焰", keyEn: "Flame", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃燒 2 回合" },
-    { id: "vampire", keyZh: "吸血", keyEn: "Vampire", nameZh: "🩸 吸血附魔 (10 附魔石)", stoneReq: 10, descZh: "獲得 15% 傷害吸血" },
-    { id: "sharp", keyZh: "銳利", keyEn: "Sharp", nameZh: "⚡ 銳利附魔 (10 附魔石)", stoneReq: 10, descZh: "基礎攻擊力提升 25 點" },
-    { id: "frost", keyZh: "冰霜", keyEn: "Frost", nameZh: "❄️ 冰霜附魔 (10 附魔石)", stoneReq: 10, descZh: "20% 機率凍結敵人 1 回合" },
-    { id: "pierce", keyZh: "破甲", keyEn: "Pierce", nameZh: "🛡️ 破甲附魔 (10 附魔石)", stoneReq: 10, descZh: "無視防禦 +20 固定傷害" },
-    { id: "holy", keyZh: "聖光", keyEn: "Holy", nameZh: "✨ 聖光附魔 (10 附魔石)", stoneReq: 10, descZh: "對 BOSS / 魔王額外 +30% 傷害" },
-    { id: "storm", keyZh: "風暴", keyEn: "Storm", nameZh: "🌪️ 風暴附魔 (10 附魔石)", stoneReq: 10, descZh: "連擊機率提升 20%" },
-    { id: "poison", keyZh: "毒素", keyEn: "Poison", nameZh: "☠️ 毒素附魔 (10 附魔石)", stoneReq: 10, descZh: "敵人每回合受到 20 點毒傷" },
-    { id: "bless", keyZh: "祈願", keyEn: "Bless", nameZh: "🌟 祈願附魔 (10 附魔石)", stoneReq: 10, descZh: "戰鬥勝利獲得金幣量增加 25%" },
-    { id: "fury", keyZh: "暴怒", keyEn: "Fury", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
+    { id: "flame", keyZh: "烈焰", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃燒 2 回合" },
+    { id: "vampire", keyZh: "吸血", nameZh: "🩸 吸血附魔 (10 附魔石)", stoneReq: 10, descZh: "獲得 15% 傷害吸血" },
+    { id: "sharp", keyZh: "銳利", nameZh: "⚡ 銳利附魔 (10 附魔石)", stoneReq: 10, descZh: "基礎攻擊力提升 25 點" },
+    { id: "frost", keyZh: "冰霜", nameZh: "❄️ 冰霜附魔 (10 附魔石)", stoneReq: 10, descZh: "20% 機率凍結敵人 1 回合" },
+    { id: "pierce", keyZh: "破甲", nameZh: "🛡️ 破甲附魔 (10 附魔石)", stoneReq: 10, descZh: "無視防禦 +20 固定傷害" },
+    { id: "holy", keyZh: "聖光", nameZh: "✨ 聖光附魔 (10 附魔石)", stoneReq: 10, descZh: "對 BOSS / 魔王額外 +30% 傷害" },
+    { id: "storm", keyZh: "風暴", nameZh: "🌪️ 風暴附魔 (10 附魔石)", stoneReq: 10, descZh: "連擊機率提升 20%" },
+    { id: "poison", keyZh: "毒素", nameZh: "☠️ 毒素附魔 (10 附魔石)", stoneReq: 10, descZh: "敵人每回合受到 20 點毒傷" },
+    { id: "bless", keyZh: "祈願", nameZh: "🌟 祈願附魔 (10 附魔石)", stoneReq: 10, descZh: "戰鬥勝利獲得金幣量增加 25%" },
+    { id: "fury", keyZh: "暴怒", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
 ];
 
 const ACHIEVEMENTS_DATABASE = [
+    // ⚔️ 主線關卡 (15項)
     { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },
     { category: "stage", id: "stage_20", titleZh: "🏆 冰雪勇將", descZh: "擊敗第 2 區 BOSS (2-10)", reqType: "stage", reqVal: 20, gold: 300, stones: 3 },
     { category: "stage", id: "stage_30", titleZh: "🏆 沙漠霸主", descZh: "擊敗第 3 區 BOSS (3-10)", reqType: "stage", reqVal: 30, gold: 400, stones: 4 },
@@ -247,6 +247,7 @@ const ACHIEVEMENTS_DATABASE = [
     { category: "stage", id: "stage_win_60", titleZh: "⚔️ 戰神轉世", descZh: "累積勝場達到 60 次", reqType: "stage", reqVal: 60, gold: 800, stones: 8 },
     { category: "stage", id: "stage_win_90", titleZh: "⚔️ 百戰不殆", descZh: "累積勝場達到 90 次", reqType: "stage", reqVal: 90, gold: 1200, stones: 12 },
 
+    // ⛏️ 採礦鍛造 (15項)
     { category: "mine", id: "mine_1", titleZh: "⛏️ 採礦新手", descZh: "完成 1 次採礦", reqType: "mine", reqVal: 1, gold: 100, stones: 1 },
     { category: "mine", id: "mine_5", titleZh: "⛏️ 礦坑勤務員", descZh: "完成 5 次採礦", reqType: "mine", reqVal: 5, gold: 150, stones: 2 },
     { category: "mine", id: "mine_10", titleZh: "⛏️ 採礦大師", descZh: "完成 10 次採礦", reqType: "mine", reqVal: 10, gold: 250, stones: 3 },
@@ -263,6 +264,7 @@ const ACHIEVEMENTS_DATABASE = [
     { category: "mine", id: "equip_basic", titleZh: "🛡️ 基礎武裝", descZh: "裝備至少 1 件初級裝備", reqType: "equipCount", reqVal: 1, gold: 100, stones: 1 },
     { category: "mine", id: "equip_full", titleZh: "🛡️ 神裝加身", descZh: "裝備至少 5 件裝備", reqType: "equipCount", reqVal: 5, gold: 1000, stones: 10 },
 
+    // 🔮 魔法附魔 (10項)
     { category: "enchant", id: "enc_1", titleZh: "🔮 初次附魔", descZh: "完成 1 次武器魔法附魔", reqType: "enchantCount", reqVal: 1, gold: 300, stones: 3 },
     { category: "enchant", id: "enc_2", titleZh: "🔮 元素親和", descZh: "完成 2 次武器魔法附魔", reqType: "enchantCount", reqVal: 2, gold: 500, stones: 5 },
     { category: "enchant", id: "enc_3", titleZh: "🔮 附魔大師", descZh: "完成 3 次武器魔法附魔", reqType: "enchantCount", reqVal: 3, gold: 800, stones: 8 },
@@ -274,6 +276,7 @@ const ACHIEVEMENTS_DATABASE = [
     { category: "enchant", id: "enc_frost", titleZh: "❄️ 寒冰凍結", descZh: "獲得冰霜附魔", reqType: "hasEnchant", reqVal: "冰霜", gold: 300, stones: 3 },
     { category: "enchant", id: "enc_fury", titleZh: "💥 暴怒狂之", descZh: "獲得暴怒附魔", reqType: "hasEnchant", reqVal: "暴怒", gold: 300, stones: 3 },
 
+    // 💰 冒險財富 (10項)
     { category: "wealth", id: "gold_500", titleZh: "💰 第一桶金", descZh: "持有金幣達到 500 G", reqType: "gold", reqVal: 500, gold: 200, stones: 2 },
     { category: "wealth", id: "gold_2000", titleZh: "💰 村莊小富豪", descZh: "持有金幣達到 2,000 G", reqType: "gold", reqVal: 2000, gold: 500, stones: 5 },
     { category: "wealth", id: "gold_5000", titleZh: "💰 富甲一方", descZh: "持有金幣達到 5,000 G", reqType: "gold", reqVal: 5000, gold: 1000, stones: 8 },
