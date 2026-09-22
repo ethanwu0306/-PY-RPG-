@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 存讀檔修復與返回主選單版 v2.4</title>
+    <title>Py RPG - 屬性克制與裝備精煉升級版 v2.5</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.4 (完全體修復版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.5 (屬性與精煉版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
@@ -45,19 +45,19 @@
         <div class="status-box" style="height: 380px; overflow-y: auto; text-align: left; font-size: 12px;">
             <div class="section-header">⚔️ 一、核心冒險機制</div>
             • <b>關卡目標</b>：總共 10 大區域（100 小關），第 10 關為區域 BOSS，第 100 關為終極魔王路西法！<br>
-            • <b>戰鬥說明</b>：技能具備 CD 冷卻與持續性 BUFF/DEBUFF 狀態！受擊有震動與打擊浮動數字！<br><br>
+            • <b>屬性克制</b>：技能具備🔥火、❄️冰、⚡雷、🍃風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br>
+            • <b>戰鬥防禦</b>：點擊「🛡️ 防禦」當回合受傷減半並恢復 15 MP！BOSS 低血量會發動<b>狂暴化</b>！<br><br>
 
             <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
             • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
             • ⚡ <b>礦坑採礦</b> (耗 1 行動力)：隨機挖取銅、鐵、金、鑽石等稀有礦石。<br>
-            • 🔨 <b>鐵匠鋪</b> (耗 1 行動力)：<b>獨家鍛造高級神裝與武器！</b>支援部位與職業細分。<br>
+            • 🔨 <b>鐵匠鋪</b>：支援神裝鍛造與<b>【✨ 裝備強化/精煉】 (+1~+5)</b>！<br>
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予 10 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
-            • 🛠️ <b>裝備商店</b>：僅出售初級與中級現成裝備（不販售高級裝備）。<br>
-            • 📖 <b>技能商店</b>：隨機刷新所有職業技能， 100 金幣 換一批。<br>
-            • 🧪 <b>藥水商店</b>：購買生命藥水 (100 HP) 與魔力藥水 (50 MP)，戰鬥中隨時使用。<br>
-            • 🏆 <b>勇者成就</b>：50 項四大分類成就，達成即領大量金幣與附魔石！
+            • 🛠️ <b>裝備商店</b>：購買初級與中級現成裝備。<br>
+            • 📖 <b>技能商店</b>：刷新所有職業技能。<br>
+            • 🏆 <b>勇者成就</b>：50 項成就支援<b>【🎁 一鍵領取】與進度條顯示</b>！
         </div>
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回前一頁</button>
     </div>
@@ -97,8 +97,9 @@
         <div id="log-box"></div>
         <div class="tab-grid">
             <button class="btn" onclick="playerAttack()" id="btn-attack">⚔️ 普通攻擊</button>
-            <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#e67e22;" onclick="showInBattlePotions()" id="btn-potion-use">🧪 使用藥水</button>
+            <button class="btn btn-secondary" style="background: linear-gradient(180deg, #2980b9 0%, #154360 100%);" onclick="playerDefend()">🛡️ 戰鬥防禦 (減傷50% | +15 MP)</button>
         </div>
+        <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#e67e22;" onclick="showInBattlePotions()" id="btn-potion-use">🧪 使用藥水</button>
         <h3 style="margin: 8px 0 4px 0; color:#1abc9c; font-size:13px; text-align:left;" id="skill-grid-title">✨ 技能快捷格 (最多4招)：</h3>
         <div class="skill-grid" id="skill-buttons-container"></div>
     </div>
@@ -127,7 +128,7 @@
         <button class="btn btn-secondary" onclick="fallbackStage()" id="btn-fallback">⬅️ 退回上一關並回到村莊</button>
     </div>
 
-    <!-- 村莊畫面（新增頂部返回主選單按鈕） -->
+    <!-- 村莊畫面 -->
     <div id="village-screen" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="showMainMenu()">⬅️ 返回主畫面</button>
@@ -201,9 +202,9 @@
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;" id="btn-stats-back">⬅️ 返回村莊</button>
     </div>
 
-    <!-- 鐵匠鋪畫面 -->
+    <!-- 鐵匠鋪畫面 (新增【精煉/強化】頁面) -->
     <div id="forge-screen" class="hidden">
-        <h2 id="forge-title">🔨 鐵匠鋪神兵鍛造</h2>
+        <h2 id="forge-title">🔨 鐵匠鋪神兵鍛造 & 精煉</h2>
         <div class="status-box" id="ore-status"></div>
         <div class="forge-grid">
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #c0392b 0%, #641e16 100%);" onclick="switchForgeTab('warrior')">⚔️ 戰士武器</button>
@@ -211,6 +212,8 @@
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #27ae60 0%, #145a32 100%);" onclick="switchForgeTab('archer')">🏹 射手武器</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #2980b9 0%, #154360 100%);" onclick="switchForgeTab('armor')">🛡️ 共通防具</button>
         </div>
+        <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-bottom:8px;" onclick="switchForgeTab('refine')">✨ 裝備強化 / 精煉 (+1~+5)</button>
+        
         <div id="armor-sub-tabs" class="tab-grid hidden" style="margin-bottom:8px;">
             <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('helmet')">🪖 頭盔</button>
             <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('chest')">🛡️ 胸甲</button>
@@ -230,17 +233,18 @@
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;" id="btn-shop-back">⬅️ 返回村莊</button>
     </div>
 
-    <!-- 成就畫面 -->
+    <!-- 成就畫面 (新增【一鍵領取】按鈕) -->
     <div id="achieve-screen" class="hidden">
         <h2>🏆 勇者成就系統 (50項大滿貫)</h2>
         <div class="status-box" id="achieve-status">達成各項偉業領取豐厚獎勵！</div>
+        <button class="btn btn-action" style="margin-bottom:8px;" onclick="claimAllAchievements()">🎁 一鍵領取所有已達成成就獎勵</button>
         <div class="forge-grid">
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #c0392b 0%, #641e16 100%);" onclick="switchAchieveTab('stage')">⚔️ 主線關卡</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%);" onclick="switchAchieveTab('mine')">⛏️ 採礦鍛造</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #8e44ad 0%, #4a235a 100%);" onclick="switchAchieveTab('enchant')">🔮 魔法附魔</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #27ae60 0%, #145a32 100%);" onclick="switchAchieveTab('wealth')">💰 冒險財富</button>
         </div>
-        <div id="achieve-items" style="max-height: 260px; overflow-y: auto;"></div>
+        <div id="achieve-items" style="max-height: 240px; overflow-y: auto;"></div>
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;">⬅️ 返回村莊</button>
     </div>
 </div>
