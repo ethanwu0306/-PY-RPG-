@@ -12,57 +12,8 @@ let cardRefreshCount = 3;
 let pendingVictoryData = null;
 let curLang = "zh";
 
-function getSkillName(sKey) { return curLang === "zh" ? sKey : (SKILLS[sKey] ? SKILLS[sKey].nameEn : sKey); }
-function getItemName(item) { return curLang === "zh" ? item.nameZh : item.nameEn; }
+function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
-
-function toggleLanguage() { curLang = curLang === "zh" ? "en" : "zh"; applyLanguage(); }
-
-function applyLanguage() {
-    let t = I18N[curLang];
-    if(!t) return;
-    document.getElementById('btn-lang-toggle').innerText = "🌐 Language: " + t.langName;
-    document.getElementById('menu-sub').innerText = t.subTitle;
-    document.getElementById('btn-start').innerText = t.startG;
-    document.getElementById('btn-load').innerText = t.loadG;
-    document.getElementById('class-title').innerText = t.classT;
-    document.getElementById('btn-warrior').innerText = t.warB;
-    document.getElementById('btn-mage').innerText = t.magB;
-    document.getElementById('btn-archer').innerText = t.arcB;
-    document.getElementById('btn-class-back').innerText = t.backMain;
-    document.getElementById('card-title').innerText = t.cardT;
-    document.getElementById('card-sub').innerText = t.cardSub;
-    document.getElementById('btn-attack').innerText = t.atkB;
-    document.getElementById('skill-grid-title').innerText = t.skillGridT;
-    document.getElementById('btn-v-stats').innerText = t.vStats;
-    document.getElementById('btn-v-rest').innerText = t.vRest;
-    document.getElementById('btn-v-forge').innerText = t.vForge;
-    document.getElementById('btn-v-magic').innerText = t.vMagic;
-    document.getElementById('btn-v-equip').innerText = t.vEquip;
-    document.getElementById('btn-v-skill').innerText = t.vSkill;
-    document.getElementById('btn-v-potion').innerText = t.vPotion;
-    document.getElementById('btn-v-achieve').innerText = t.vAchieve;
-    document.getElementById('btn-v-save').innerText = t.vSave;
-    document.getElementById('btn-v-next').innerText = t.vNext;
-    document.getElementById('btn-stats-back').innerText = t.back;
-    document.getElementById('forge-title').innerText = t.forgeT;
-    document.getElementById('forge-craft-title').innerText = t.craftT;
-    document.getElementById('btn-forge-back').innerText = t.back;
-    document.getElementById('magic-house-title').innerText = t.magicT;
-    document.getElementById('forge-enc-title').innerText = t.encT;
-    document.getElementById('btn-magic-back').innerText = t.back;
-    document.getElementById('btn-refresh').innerText = t.refreshB;
-    document.getElementById('btn-shop-back').innerText = t.back;
-    document.getElementById('defeat-title').innerText = t.defeatT;
-    document.getElementById('defeat-sub').innerText = t.defeatSub;
-    document.getElementById('btn-retry').innerText = t.retryB;
-    document.getElementById('btn-fallback').innerText = t.fallbackB;
-    document.getElementById('replace-title').innerText = t.replaceT;
-    document.getElementById('replace-sub').innerText = t.replaceSub;
-    document.getElementById('btn-cancel-replace').innerText = t.cancelReplace;
-    document.getElementById('stats-title').innerText = t.statsT;
-    document.getElementById('shop-title').innerText = t.shopT;
-}
 
 function hideAll() { 
     ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen', 'transfer-save-screen', 'victory-modal-screen', 'equipment-screen'].forEach(id => {
@@ -79,7 +30,6 @@ function showMainMenu() {
     document.getElementById('main-menu').classList.remove('hidden'); 
     let ruleBtn = document.getElementById('btn-corner-rules');
     if (ruleBtn) ruleBtn.classList.remove('hidden');
-    applyLanguage(); 
     document.getElementById('btn-load').disabled = !localStorage.getItem(SAVE_KEY); 
 }
 
@@ -88,9 +38,9 @@ function showClassSelect() { hideAll(); document.getElementById('class-select').
 function initGame(jobCode) {
     let c = CLASSES[jobCode];
     player = {
-        jobCode: jobCode, jobName: curLang === "zh" ? c.nameZh : (c.nameEn || c.nameZh),
+        jobCode: jobCode, jobName: c.nameZh,
         hp: c.hp, maxHp: c.hp, mp: c.mp, maxMp: c.mp, shield: 0,
-        atkMin: c.min, atkMax: c.max, weapon: curLang === "zh" ? c.weaponZh : (c.weaponEn || c.weaponZh),
+        atkMin: c.min, atkMax: c.max, weapon: c.weaponZh,
         gold: 100, enchantStones: 0, villageActions: 5, maxVillageActions: 5, skills: ["重擊"], cards: [], 
         equips: [], 
         refines: {}, 
@@ -141,8 +91,7 @@ function spawnMonster() {
     }
 
     if (typeof drawMonsterVisual === "function") drawMonsterVisual(curMapId, isBoss || isFinal);
-    let t = I18N[curLang];
-    document.getElementById('log-box').innerHTML = t.battleStart + "\n";
+    document.getElementById('log-box').innerHTML = "戰鬥開始！\n";
     player.shield = 0; 
     player.skillCDs = {};
     player.isDefending = false;
@@ -176,20 +125,18 @@ function triggerScreenShake() {
 }
 
 function updateBattleUI() {
-    let t = I18N[curLang];
     let mapObj = (typeof MAPS !== "undefined" && MAPS[monster.mapId]) ? MAPS[monster.mapId] : { nameZh: "荒野" };
-    let mapName = curLang === "zh" ? mapObj.nameZh : (mapObj.nameEn || mapObj.nameZh);
-    let weaknessZh = { flame: "🔥火", frost: "❄️冰", thunder: "⚡雷", gale: "🍃風" }[mapObj.weakness] || "無";
+    let weaknessZh = { flame: "火", frost: "冰", thunder: "雷", gale: "風" }[mapObj.weakness] || "無";
 
-    document.getElementById('map-info').innerText = `${t.stage}: ${getStageString(defeatedCount)} ${mapName} (弱點: ${weaknessZh})`;
+    document.getElementById('map-info').innerText = `區域: ${getStageString(defeatedCount)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
     
-    let buffStr = player.buffTurns > 0 ? `🔥 狂暴中 (${player.buffTurns}T)` : "無";
-    if (player.isDefending) buffStr += " | 🛡️ 防禦防護中";
+    let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
+    if (player.isDefending) buffStr += " | 防禦防護中";
 
-    document.getElementById('player-status').innerText = `【${player.jobName}】HP: ${player.hp}/${player.maxHp} ${player.shield > 0 ? '(Shield:'+player.shield+')' : ''} | MP: ${player.mp}/${player.maxMp}\n🧪 ${t.hpPotLabel}: ${player.potions.hp}瓶 | ${t.mpPotLabel}: ${player.potions.mp}瓶`;
+    document.getElementById('player-status').innerText = `【${player.jobName}】HP: ${player.hp}/${player.maxHp} ${player.shield > 0 ? '(Shield:'+player.shield+')' : ''} | MP: ${player.mp}/${player.maxMp}\n🧪 生命藥水: ${player.potions.hp}瓶 | 魔力藥水: ${player.potions.mp}瓶`;
     
-    let encStr = (player.weaponEnchants && player.weaponEnchants.length > 0) ? player.weaponEnchants.join(' + ') : t.noEnc;
-    document.getElementById('buff-status').innerText = `${t.weapon}: [${player.weapon}] (${encStr})\nBUFF: ${buffStr} | ${t.cardsLabel}: ${player.cards.length > 0 ? player.cards.join(', ') : t.noCard}`;
+    let encStr = (player.weaponEnchants && player.weaponEnchants.length > 0) ? player.weaponEnchants.join(' + ') : "無附魔";
+    document.getElementById('buff-status').innerText = `武器: [${player.weapon}] (${encStr})\nBUFF: ${buffStr} | 卡片: ${player.cards.length > 0 ? player.cards.join(', ') : '無'}`;
     
     let rageTag = monster.isRaged ? " 🔥【二階段狂暴化中！】" : "";
     document.getElementById('monster-status').innerText = `【${monster.name}】HP: ${monster.hp}/${monster.maxHp}${rageTag}`;
@@ -203,25 +150,23 @@ function updateBattleUI() {
 function render4SkillButtons() {
     let container = document.getElementById('skill-buttons-container');
     container.innerHTML = "";
-    let t = I18N[curLang];
     for (let i = 0; i < 4; i++) {
         let btn = document.createElement('button');
         btn.className = "btn-skill";
         if (i < player.skills.length) {
             let sKey = player.skills[i];
             let sInfo = SKILLS[sKey] || { mp: 10, cd: 0 };
-            let displaySName = getSkillName(sKey);
             let cdRem = player.skillCDs[sKey] || 0;
             
             if (cdRem > 0) {
-                btn.innerText = `⏳ ${displaySName}\n(CD: ${cdRem}T)`;
+                btn.innerText = `⏳ ${sKey}\n(CD: ${cdRem}T)`;
                 btn.disabled = true;
             } else {
-                btn.innerText = `✨ ${displaySName}\n(${sInfo.mp} MP)`;
+                btn.innerText = `✨ ${sKey}\n(${sInfo.mp} MP)`;
                 btn.onclick = () => useSpecificSkill(sKey);
             }
         } else {
-            btn.innerText = `[${t.slotEmpty} ${i+1}]`;
+            btn.innerText = `[空格 ${i+1}]`;
             btn.disabled = true;
         }
         container.appendChild(btn);
@@ -240,12 +185,11 @@ function playerDefend() { executeTurn(null, true); }
 function useSpecificSkill(sKey) { executeTurn(sKey, false); }
 
 function showInBattlePotions() {
-    let p = player; let t = I18N[curLang];
     hideAll();
     document.getElementById('potion-select-screen').classList.remove('hidden');
-    document.getElementById('potion-select-status').innerText = `🧪 ${t.hpPotLabel}: ${p.potions.hp} 瓶\n🧪 ${t.mpPotLabel}: ${p.potions.mp} 瓶`;
-    document.getElementById('btn-use-hp-pot').disabled = (p.potions.hp <= 0);
-    document.getElementById('btn-use-mp-pot').disabled = (p.potions.mp <= 0);
+    document.getElementById('potion-select-status').innerText = `🧪 生命藥水: ${player.potions.hp} 瓶\n🧪 魔力藥水: ${player.potions.mp} 瓶`;
+    document.getElementById('btn-use-hp-pot').disabled = (player.potions.hp <= 0);
+    document.getElementById('btn-use-mp-pot').disabled = (player.potions.mp <= 0);
 }
 
 function cancelPotionSelect() {
@@ -272,7 +216,6 @@ function useBattlePotion(type) {
 }
 
 function executeTurn(skillKey, isDefendingAction) {
-    let t = I18N[curLang];
     if (player.hp <= 0) return;
 
     Object.keys(player.skillCDs).forEach(k => {
@@ -289,10 +232,10 @@ function executeTurn(skillKey, isDefendingAction) {
     if (isDefendingAction) {
         player.mp = Math.min(player.maxMp, player.mp + 15);
         log("🛡️ 進入防禦防護狀態！傷害減半並恢復 15 MP！", "log-skill");
-        spawnFloatingText("🛡️ 防禦", "heal");
+        spawnFloatingText("防禦", "heal");
     } else if (skillKey) {
         let sInfo = SKILLS[skillKey];
-        if (player.mp < sInfo.mp) { log(t.noMP); return; }
+        if (player.mp < sInfo.mp) { log("❌ MP 不足！"); return; }
         player.mp -= sInfo.mp;
         
         if (sInfo.cd > 0) player.skillCDs[skillKey] = sInfo.cd;
@@ -313,11 +256,11 @@ function executeTurn(skillKey, isDefendingAction) {
         if (typeof playSound === "function") playSound('skill', player.jobCode);
         triggerScreenShake();
         
-        let tag = isCounter ? "🔥克制 " : (isCrit ? "💥 " : "");
+        let tag = isCounter ? "克制 " : (isCrit ? "💥 " : "");
         spawnFloatingText(tag + dealtDmg, isCrit ? "crit" : "normal");
 
-        let counterMsg = isCounter ? " 🔥【屬性克制 1.5倍！】" : "";
-        log((isCrit ? "⚡【暴擊！】" : "") + t.skillLog.replace('{s}', getSkillName(skillKey)).replace('{d}', dealtDmg) + counterMsg, isCrit ? "log-crit" : "log-skill");
+        let counterMsg = isCounter ? " 【屬性克制 1.5倍！】" : "";
+        log((isCrit ? "⚡【暴擊！】" : "") + `施展【${skillKey}】，對敵人造成 ${dealtDmg} 點傷害！` + counterMsg, isCrit ? "log-crit" : "log-skill");
     } else {
         dealtDmg = randomAtk();
         if (player.buffTurns > 0) dealtDmg = Math.floor(dealtDmg * 1.25);
@@ -327,7 +270,7 @@ function executeTurn(skillKey, isDefendingAction) {
         if (typeof playSound === "function") playSound('hit', player.jobCode);
         triggerScreenShake();
         spawnFloatingText((isCrit ? "💥 " : "") + dealtDmg, isCrit ? "crit" : "normal");
-        log((isCrit ? "⚡【暴擊！】" : "") + t.attackLog.replace('{w}', player.weapon).replace('{d}', dealtDmg), isCrit ? "log-crit" : "");
+        log((isCrit ? "⚡【暴擊！】" : "") + `使用 [${player.weapon}] 攻擊，造成 ${dealtDmg} 點傷害！`, isCrit ? "log-crit" : "");
     }
 
     if ((monster.isBoss || monster.isFinal) && !monster.isRaged && (monster.hp / monster.maxHp) <= 0.30 && monster.hp > 0) {
@@ -335,7 +278,7 @@ function executeTurn(skillKey, isDefendingAction) {
         monster.min = Math.floor(monster.min * 1.4);
         monster.max = Math.floor(monster.max * 1.4);
         log("🔥【警告】BOSS 血量低於 30%，進入二階段狂暴狀態！攻擊力大幅提升！", "log-crit");
-        spawnFloatingText("🔥狂暴化!", "crit");
+        spawnFloatingText("狂暴化!", "crit");
     }
 
     if (monster.debuffTurns > 0) {
@@ -361,7 +304,7 @@ function executeTurn(skillKey, isDefendingAction) {
 
     if (Math.random() < (player.evasion / 100)) {
         log(`🌀 成功閃避了 ${monster.name} 的攻擊！`, "log-heal");
-        spawnFloatingText("🌀 Miss", "heal");
+        spawnFloatingText("Miss", "heal");
         updateBattleUI();
         return;
     }
@@ -428,10 +371,8 @@ function renderCardOptions() {
     
     shuffled.forEach(card => {
         let btn = document.createElement('button'); btn.className = "btn btn-card";
-        let cName = curLang === "zh" ? card.nameZh : card.nameEn;
-        let cDesc = curLang === "zh" ? card.descZh : card.descEn;
-        btn.innerHTML = `<b>${cName}</b><br><span style="font-size:12px; color:#ccc;">${cDesc}</span>`;
-        btn.onclick = () => { player.cards.push(cName); enterVillage(); };
+        btn.innerHTML = `<b>${card.nameZh}</b><br><span style="font-size:12px; color:#ccc;">${card.descZh}</span>`;
+        btn.onclick = () => { player.cards.push(card.nameZh); enterVillage(); };
         container.appendChild(btn);
     });
 
@@ -457,7 +398,6 @@ function rollRandomSkills() {
     shopSkills = shuffled.slice(0, 3);
 }
 
-// **重點修改：隨機裝備商店一次刷新 5 欄位（只包含初級與中級）**
 function rollRandomEquipShop() {
     let normalShopPool = ALL_EQUIPS_POOL.filter(eq => eq.tier !== 'adv');
     shopEquips = normalShopPool.sort(() => 0.5 - Math.random()).slice(0, 5);
@@ -471,7 +411,7 @@ function enterVillage() {
     if (Math.random() < 0.50) {
         let bonusGold = Math.floor(Math.random() * 21 + 80);
         player.gold += bonusGold;
-        villageNpcMsg = curLang === "zh" ? `🙋‍♂️ 遇到了熱心的村莊居民，獲得了 ${bonusGold} 金幣資助！` : `🙋‍♂️ Met a villager and received ${bonusGold} Gold!`;
+        villageNpcMsg = `🙋‍♂️ 遇到了熱心的村莊居民，獲得了 ${bonusGold} 金幣資助！`;
     } else villageNpcMsg = "";
 
     showVillage();
@@ -481,27 +421,24 @@ function showVillage() {
     hideAll(); 
     if (typeof setBattleBgm === "function") setBattleBgm(false);
     document.getElementById('village-screen').classList.remove('hidden');
-    let t = I18N[curLang];
     let curMapId = Math.min(Math.floor((defeatedCount - 1) / 10) + 1, 10);
     let mapObj = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { villageZh: "村莊" };
-    let vName = curLang === "zh" ? mapObj.villageZh : (mapObj.villageEn || mapObj.villageZh);
-    document.getElementById('village-title').innerText = `🏡 ${t.stage} ${curMapId}: ${vName}`;
+    document.getElementById('village-title').innerText = `🏡 區域 ${curMapId}: ${mapObj.villageZh}`;
     let npcBox = document.getElementById('npc-event-box');
     if (villageNpcMsg) { npcBox.innerText = villageNpcMsg; npcBox.style.display = "block"; } else npcBox.style.display = "none";
     updateVillageUI();
 }
 
 function updateVillageUI() {
-    let t = I18N[curLang];
     let act = player.villageActions;
     let pLvl = player.pickaxeLvl || 0;
     
-    document.getElementById('village-status').innerText = `${t.job}: ${player.jobName} | ${t.gold}: ${player.gold} G | 💎 ${t.stones}: ${player.enchantStones} | 💠 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ ${t.actionsLabel}: ${act}/${player.maxVillageActions}\n⛏️ 採礦鎬子等級: +${pLvl}`;
+    document.getElementById('village-status').innerText = `職業: ${player.jobName} | 金幣: ${player.gold} G | 💎 附魔石: ${player.enchantStones} | 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ 行動力: ${act}/5\n⛏️ 採礦鎬子等級: +${pLvl}`;
 
     document.getElementById('btn-v-rest').disabled = (player.gold < 30 || act <= 0);
     
     let btnMine = document.getElementById('btn-mine');
-    btnMine.innerText = act <= 0 ? t.actionDone : `${t.mineBtnTxt}`;
+    btnMine.innerText = act <= 0 ? "⚡ 行動力耗盡" : "⚡ 礦坑採礦";
     btnMine.disabled = (act <= 0);
 
     document.getElementById('btn-v-forge').disabled = (act <= 0);
@@ -513,29 +450,29 @@ function updateVillageUI() {
 function showPlayerStats() {
     hideAll(); 
     document.getElementById('stats-screen').classList.remove('hidden');
-    let p = player; let t = I18N[curLang];
-    let encStr = (p.weaponEnchants && p.weaponEnchants.length > 0) ? p.weaponEnchants.join(' + ') : t.noEnc;
-    let cardStr = p.cards.length > 0 ? p.cards.join(', ') : t.noCard;
-    let skillStr = p.skills.map(getSkillName).join(', ');
+    let p = player;
+    let encStr = (p.weaponEnchants && p.weaponEnchants.length > 0) ? p.weaponEnchants.join(' + ') : "無附魔";
+    let cardStr = p.cards.length > 0 ? p.cards.join(', ') : "無";
+    let skillStr = p.skills.join(', ');
 
     let html = `
-        <b>【${t.job}: ${p.jobName}】</b> | ${t.stage}: ${getStageString(defeatedCount)}<br>
-        ${t.gold}: ${p.gold} G | 💎 ${t.stones}: ${p.enchantStones} | 💠 精煉石: ${p.refineStones || 0}<br>
+        <b>【職業: ${p.jobName}】</b> | 區域: ${getStageString(defeatedCount)}<br>
+        金幣: ${p.gold} G | 💎 附魔石: ${p.enchantStones} | 精煉石: ${p.refineStones || 0}<br>
         ⛏️ 採礦鎬子強化等級: <b>+${p.pickaxeLvl || 0}</b><br>
-        🗡️ 當前武器: <b>[${p.equipmentSlots.weapon || p.weapon}]</b> (${encStr})<br>
-        🪖 當前頭盔: <b>[${p.equipmentSlots.helmet || '無'}]</b> | 🛡️ 當前胸甲: <b>[${p.equipmentSlots.chest || '無'}]</b><br>
-        🦵 當前腿甲: <b>[${p.equipmentSlots.leggings || '無'}]</b> | 🥊 手腕1/2: <b>[${p.equipmentSlots.bracer1 || '無'}] / [${p.equipmentSlots.bracer2 || '無'}]</b><br><br>
+        當前武器: <b>[${p.equipmentSlots.weapon || p.weapon}]</b> (${encStr})<br>
+        當前頭盔: <b>[${p.equipmentSlots.helmet || '無'}]</b> | 當前胸甲: <b>[${p.equipmentSlots.chest || '無'}]</b><br>
+        當前腿甲: <b>[${p.equipmentSlots.leggings || '無'}]</b> | 手腕1/2: <b>[${p.equipmentSlots.bracer1 || '無'}] / [${p.equipmentSlots.bracer2 || '無'}]</b><br><br>
         <b>⚔️ 戰鬥面板屬性：</b><br>
         ❤️ HP: ${p.hp} / ${p.maxHp} | 💧 MP: ${p.mp} / ${p.maxMp}<br>
-        🗡️ ${t.atkLabel}: ${p.atkMin} ~ ${p.atkMax}<br>
+        🗡️ 攻擊力: ${p.atkMin} ~ ${p.atkMax}<br>
         ⚡ 暴擊率: ${p.critRate}% | 💥 暴擊傷害: ${p.critDmg}% | 🌀 閃避率: ${p.evasion}%<br><br>
-        ${t.skillsLabel}: ${skillStr}<br>
-        ${t.cardsLabel}: ${cardStr}
+        技能: ${skillStr}<br>
+        卡片: ${cardStr}
     `;
     document.getElementById('stats-content').innerHTML = html;
 }
 
-// 🛡️ 獨立部位裝備穿脫管理系統
+// 🛡️ 獨立部位裝備穿脫管理系統（完全不顯示 Icon 圖示）
 function showEquipmentScreen() {
     hideAll();
     document.getElementById('equipment-screen').classList.remove('hidden');
@@ -548,12 +485,12 @@ function updateEquipmentUI() {
     
     summaryBox.innerHTML = `
         <b>目前穿戴裝備欄位狀態：</b><br>
-        🪖 <b>[頭盔]</b>：${slots.helmet ? `<b>${slots.helmet}</b> <button onclick="unequipSlot('helmet')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
-        🛡️ <b>[胸甲]</b>：${slots.chest ? `<b>${slots.chest}</b> <button onclick="unequipSlot('chest')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
-        🦵 <b>[腿甲]</b>：${slots.leggings ? `<b>${slots.leggings}</b> <button onclick="unequipSlot('leggings')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
-        🥊 <b>[手腕 1]</b>：${slots.bracer1 ? `<b>${slots.bracer1}</b> <button onclick="unequipSlot('bracer1')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
-        🥊 <b>[手腕 2]</b>：${slots.bracer2 ? `<b>${slots.bracer2}</b> <button onclick="unequipSlot('bracer2')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
-        🗡️ <b>[武器]</b>：${slots.weapon ? `<b>${slots.weapon}</b> <button onclick="unequipSlot('weapon')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : `<span style="color:#888;">[基本預設: ${player.weapon}]</span>`}
+        <b>[頭盔]</b>：${slots.helmet ? `<b>${slots.helmet}</b> <button onclick="unequipSlot('helmet')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        <b>[胸甲]</b>：${slots.chest ? `<b>${slots.chest}</b> <button onclick="unequipSlot('chest')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        <b>[腿甲]</b>：${slots.leggings ? `<b>${slots.leggings}</b> <button onclick="unequipSlot('leggings')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        <b>[手腕 1]</b>：${slots.bracer1 ? `<b>${slots.bracer1}</b> <button onclick="unequipSlot('bracer1')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        <b>[手腕 2]</b>：${slots.bracer2 ? `<b>${slots.bracer2}</b> <button onclick="unequipSlot('bracer2')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : '<span style="color:#888;">[空位]</span>'}<br>
+        <b>[武器]</b>：${slots.weapon ? `<b>${slots.weapon}</b> <button onclick="unequipSlot('weapon')" style="padding:2px 8px; font-size:11px; cursor:pointer;">❌ 卸下</button>` : `<span style="color:#888;">[基本預設: ${player.weapon}]</span>`}
     `;
 
     renderEquipmentBagList();
@@ -648,12 +585,10 @@ function getSlotNameZh(slotKey) {
     return names[slotKey] || slotKey;
 }
 
-// -------------------------------------------------------------
-// ⛏️ 採礦機制
-// -------------------------------------------------------------
+function updateMineUI() { updateVillageUI(); }
+
 function mine() {
-    if (player.villageActions <= 0) { alert(I18N[curLang].noActions); return; }
-    let t = I18N[curLang];
+    if (player.villageActions <= 0) { alert("❌ 村莊行動力不足！"); return; }
     player.villageActions--;
     player.mineCount = (player.mineCount || 0) + 1;
     
@@ -666,13 +601,13 @@ function mine() {
     let gotMsg = "";
 
     if (rand < (0.72 - highOreRateBonus)) { 
-        player.ores.copper += count; gotMsg = `🥉 ${t.copper} x${count}`; 
+        player.ores.copper += count; gotMsg = `🥉 銅 x${count}`; 
     } else if (rand < (0.94 - highOreRateBonus/2)) { 
-        player.ores.iron += count; gotMsg = `🥈 ${t.iron} x${count}`; 
+        player.ores.iron += count; gotMsg = `🥈 鐵 x${count}`; 
     } else if (rand < 0.98) { 
-        player.ores.gold += count; gotMsg = `🥇 ${t.goldOre} x${count}`; 
+        player.ores.gold += count; gotMsg = `🥇 金 x${count}`; 
     } else { 
-        player.ores.diamond += count; gotMsg = `💎 ${t.diamond} x${count}`; 
+        player.ores.diamond += count; gotMsg = `💎 鑽石 x${count}`; 
     }
 
     let refineStoneRate = 0;
@@ -686,19 +621,18 @@ function mine() {
         gotRefineStone = true;
     }
 
-    let refineStoneMsg = gotRefineStone ? "\n✨ 鎬子神威發揮！幸運額外採集到了 1 顆【💠 精煉石】！" : "";
-    alert(`⛏️ 採礦成功！獲得 ${gotMsg}${refineStoneMsg}\n(${t.actionsLabel}: ${player.villageActions}/${player.maxVillageActions})`);
+    let refineStoneMsg = gotRefineStone ? "\n✨ 鎬子神威發揮！幸運額外採集到了 1 顆【精煉石】！" : "";
+    alert(`⛏️ 採礦成功！獲得 ${gotMsg}${refineStoneMsg}\n(村莊行動力: ${player.villageActions}/${player.maxVillageActions})`);
     updateVillageUI();
 }
 
 function rest() {
-    let t = I18N[curLang];
-    if (player.villageActions <= 0) { alert(t.noActions); return; }
+    if (player.villageActions <= 0) { alert("❌ 村莊行動力不足！"); return; }
     if (player.gold >= 30) {
         player.gold -= 30; player.hp = player.maxHp; player.mp = player.maxMp;
         player.villageActions--;
-        alert(t.restSuccess); showVillage();
-    } else alert(t.noGold);
+        alert("✨ 狀態完全恢復！(消耗 1 行動力)"); showVillage();
+    } else alert("❌ 金幣不足！");
 }
 
 function returnToVillage() { showVillage(); }
@@ -763,10 +697,7 @@ function updateAchieveUI() {
         let progressTxt = typeof ach.reqVal === 'number' ? ` [ ${Math.min(curVal, ach.reqVal)} / ${ach.reqVal} ]` : "";
 
         let btn = document.createElement('button'); btn.className = "btn";
-        let title = curLang === "zh" ? ach.titleZh : ach.titleEn;
-        let desc = curLang === "zh" ? ach.descZh : ach.descEn;
-
-        btn.innerText = `${title} - ${desc}${progressTxt} (獎勵: ${ach.gold}G / ${ach.stones}💎)`;
+        btn.innerText = `${ach.titleZh} - ${ach.descZh}${progressTxt} (獎勵: ${ach.gold}G / ${ach.stones}💎)`;
 
         if (isDone) {
             btn.innerText += " [已領取]";
@@ -822,7 +753,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪神兵鍛造 & ✨ 裝備精煉 & ⛏️ 升級鎬子
+// 🔨 鐵匠鋪高級神兵鍛造 & ✨ 精煉 & ⛏️ 升級鎬子
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -847,9 +778,9 @@ function switchForgeArmorTab(slot) {
 }
 
 function updateForgeUI() {
-    let p = player; let t = I18N[curLang];
+    let p = player;
     let act = p.villageActions;
-    document.getElementById('ore-status').innerText = `${t.weapon}: [${p.weapon}]\n${t.ores}: ${t.copper}:${p.ores.copper} | ${t.iron}:${p.ores.iron} | ${t.goldOre}:${p.ores.gold} | ${t.diamond}:${p.ores.diamond} | 💠精煉石:${p.refineStones || 0}\n⛏️ 鎬子等級: +${p.pickaxeLvl || 0} | ⚡ 行動力: ${act}/5`;
+    document.getElementById('ore-status').innerText = `武器: [${p.weapon}]\n礦石: 銅:${p.ores.copper} | 鐵:${p.ores.iron} | 金:${p.ores.gold} | 鑽石:${p.ores.diamond} | 精煉石:${p.refineStones || 0}\n⛏️ 鎬子等級: +${p.pickaxeLvl || 0} | ⚡ 行動力: ${act}/5`;
     let forgeBox = document.getElementById('forge-items'); forgeBox.innerHTML = "";
     
     if (currentForgeTab === 'refine') {
@@ -877,20 +808,20 @@ function updateForgeUI() {
         let btn = document.createElement('button'); btn.className = "btn";
         
         let reqArr = [];
-        if (recipe.req.copper) reqArr.push(`${t.copper}x${recipe.req.copper}`);
-        if (recipe.req.iron) reqArr.push(`${t.iron}x${recipe.req.iron}`);
-        if (recipe.req.gold) reqArr.push(`${t.goldOre}x${recipe.req.gold}`);
-        if (recipe.req.diamond) reqArr.push(`${t.diamond}x${recipe.req.diamond}`);
+        if (recipe.req.copper) reqArr.push(`銅x${recipe.req.copper}`);
+        if (recipe.req.iron) reqArr.push(`鐵x${recipe.req.iron}`);
+        if (recipe.req.gold) reqArr.push(`金x${recipe.req.gold}`);
+        if (recipe.req.diamond) reqArr.push(`鑽石x${recipe.req.diamond}`);
         
         btn.innerText = `${getItemName(recipe)} (${reqArr.join(', ')})` + getStatDiffText(recipe);
-        if (bought) { btn.innerText += ` [${t.alreadyCrafted}]`; btn.disabled = true; }
-        else if (wrongJob) { btn.innerText += ` [${t.wrongJob}]`; btn.disabled = true; }
+        if (bought) { btn.innerText += ` [已打造]`; btn.disabled = true; }
+        else if (wrongJob) { btn.innerText += ` [職業不符]`; btn.disabled = true; }
         else if (!canCraft || !hasAction) { btn.disabled = true; }
         else {
             btn.onclick = () => {
                 p.villageActions--;
                 Object.keys(recipe.req).forEach(k => p.ores[k] -= recipe.req[k]); p.equips.push(getItemName(recipe));
-                alert(t.craftSuccess.replace('{i}', getItemName(recipe)) + " (已存入背包，請至裝備管理頁面穿戴)"); updateForgeUI();
+                alert(`成功打造【${getItemName(recipe)}】！` + " (已存入背包，請至裝備管理頁面穿戴)"); updateForgeUI();
             };
         }
         forgeBox.appendChild(btn);
@@ -924,7 +855,7 @@ function renderPickaxeUpgradeUI() {
             if (reqGold > 0) player.ores.gold -= reqGold;
             player.pickaxeLvl = curLvl + 1;
 
-            let unlockStoneMsg = (curLvl + 1 >= 3) ? `\n🎉 鎬子升至 +${curLvl+1}！已解鎖採礦時可挖到【💠 精煉石】能力！` : "";
+            let unlockStoneMsg = (curLvl + 1 >= 3) ? `\n🎉 鎬子升至 +${curLvl+1}！已解鎖採礦時可挖到【精煉石】能力！` : "";
             alert(`🔨 鎬子升級成功！當前等級: +${curLvl+1}${unlockStoneMsg}`);
             updateForgeUI();
         };
@@ -954,7 +885,7 @@ function renderEquipmentRefineList() {
             let reqRefineStone = (curLvl + 1);
             let canRefine = (player.ores.copper >= reqCopper && (player.refineStones || 0) >= reqRefineStone && player.villageActions > 0);
 
-            btn.innerText = `✨ 精煉升級: ${eqName} (+${curLvl} ➡️ +${curLvl+1}) (需求: 銅x${reqCopper}, 💠精煉石x${reqRefineStone})`;
+            btn.innerText = `✨ 精煉升級: ${eqName} (+${curLvl} ➡️ +${curLvl+1}) (需求: 銅x${reqCopper}, 精煉石x${reqRefineStone})`;
             btn.disabled = !canRefine;
 
             btn.onclick = () => {
@@ -978,28 +909,25 @@ function allOresEnough(p, req) {
 
 function showEnchantHouse() { hideAll(); document.getElementById('enchant-screen').classList.remove('hidden'); updateEnchantHouseUI(); }
 function updateEnchantHouseUI() {
-    let p = player; let t = I18N[curLang];
+    let p = player;
     let act = p.villageActions;
-    document.getElementById('magic-status').innerText = `${t.weapon}: [${p.weapon}]\n💎 ${t.stones}: ${p.enchantStones} 顆\n⚡ 行動力: ${act}/5`;
+    document.getElementById('magic-status').innerText = `武器: [${p.weapon}]\n💎 附魔石: ${p.enchantStones} 顆\n⚡ 行動力: ${act}/5`;
     let enchantBox = document.getElementById('magic-items'); enchantBox.innerHTML = "";
     WEAPON_ENCHANTS.forEach(enc => {
-        let encKey = curLang === "zh" ? enc.keyZh : enc.keyEn;
-        let encName = curLang === "zh" ? enc.nameZh : enc.nameEn;
-        let encDesc = curLang === "zh" ? enc.descZh : enc.descEn;
-        let hasEnc = p.weaponEnchants.includes(encKey);
+        let hasEnc = p.weaponEnchants.includes(enc.keyZh);
         let enoughStone = p.enchantStones >= enc.stoneReq;
         let hasAction = act > 0;
         let btn = document.createElement('button'); btn.className = "btn btn-secondary";
-        btn.innerText = `${encName} - ${encDesc}`;
+        btn.innerText = `${enc.nameZh} - ${enc.descZh}`;
         
-        if (hasEnc) { btn.innerText += ` [${t.alreadyCrafted}]`; btn.disabled = true; }
+        if (hasEnc) { btn.innerText += ` [已打造]`; btn.disabled = true; }
         else if (!enoughStone || !hasAction) { btn.disabled = true; }
         else {
             btn.onclick = () => {
                 p.villageActions--;
-                p.enchantStones -= enc.stoneReq; p.weaponEnchants.push(encKey);
+                p.enchantStones -= enc.stoneReq; p.weaponEnchants.push(enc.keyZh);
                 if (enc.id === "sharp") { p.atkMin += 25; p.atkMax += 25; }
-                alert(t.enchantSuccess.replace('{e}', encKey)); updateEnchantHouseUI();
+                alert(`消耗 10 顆附魔石與 1 行動力，成功完成【${enc.keyZh}附魔】！`); updateEnchantHouseUI();
             };
         }
         enchantBox.appendChild(btn);
@@ -1015,8 +943,7 @@ function showEquipShop() {
 }
 
 function updateEquipShopUI() {
-    let t = I18N[curLang];
-    document.getElementById('shop-status').innerText = `${t.gold}: ${player.gold} G | ${t.job}: ${player.jobName}`;
+    document.getElementById('shop-status').innerText = `金幣: ${player.gold} G | 職業: ${player.jobName}`;
     let container = document.getElementById('shop-items'); container.innerHTML = "";
     
     document.getElementById('btn-refresh-equip').disabled = (player.gold < 100);
@@ -1027,13 +954,13 @@ function updateEquipShopUI() {
         let enoughGold = player.gold >= item.cost;
         let btn = document.createElement('button'); btn.className = "btn";
         btn.innerText = `${getItemName(item)} (${item.cost} G)` + getStatDiffText(item);
-        if (bought) { btn.innerText += ` [${t.alreadyEquipped}]`; btn.disabled = true; }
-        else if (wrongJob) { btn.innerText += ` [${t.wrongJob}]`; btn.disabled = true; }
+        if (bought) { btn.innerText += ` [已裝備]`; btn.disabled = true; }
+        else if (wrongJob) { btn.innerText += ` [職業不符]`; btn.disabled = true; }
         else if (!enoughGold) { btn.disabled = true; }
         else {
             btn.onclick = () => {
                 player.gold -= item.cost; player.equips.push(getItemName(item));
-                alert(t.equipSuccess.replace('{i}', getItemName(item)) + " (已存入背包，請至裝備管理頁面穿戴)"); updateEquipShopUI();
+                alert(`成功購買【${getItemName(item)}】！` + " (已存入背包，請至裝備管理頁面穿戴)"); updateEquipShopUI();
             };
         }
         container.appendChild(btn);
@@ -1041,16 +968,14 @@ function updateEquipShopUI() {
 }
 
 function refreshEquipShop() {
-    let t = I18N[curLang];
     if (player.gold >= 100) {
         player.gold -= 100; rollRandomEquipShop(); alert("🔄 裝備商店已刷新！(消耗 100 G)"); updateEquipShopUI();
-    } else alert(t.noGold);
+    } else alert("❌ 金幣不足！");
 }
 
 function showSkillShop() { hideAll(); document.getElementById('shop-screen').classList.remove('hidden'); document.getElementById('btn-refresh').style.display = "block"; document.getElementById('btn-refresh-equip').style.display = "none"; updateSkillShopUI(); }
 function updateSkillShopUI() {
-    let t = I18N[curLang];
-    document.getElementById('shop-status').innerText = `${t.gold}: ${player.gold} G | Skills: ${player.skills.length}/4`;
+    document.getElementById('shop-status').innerText = `金幣: ${player.gold} G | Skills: ${player.skills.length}/4`;
     let container = document.getElementById('shop-items'); container.innerHTML = "";
     
     document.getElementById('btn-refresh').disabled = (player.gold < 100);
@@ -1060,13 +985,11 @@ function updateSkillShopUI() {
         let learned = player.skills.includes(sKey);
         let wrongJob = (sInfo.type !== "universal" && sInfo.type !== player.jobCode);
         let enoughGold = player.gold >= sInfo.cost;
-        let displaySName = getSkillName(sKey);
-        let displayDesc = curLang === "zh" ? sInfo.descZh : sInfo.descEn;
         let btn = document.createElement('button'); btn.className = "btn";
-        btn.innerText = `${displaySName} (${sInfo.cost} G) - ${displayDesc}`;
+        btn.innerText = `${sKey} (${sInfo.cost} G) - ${sInfo.descZh}`;
         
-        if (learned) { btn.innerText += ` [${t.learned}]`; btn.disabled = true; }
-        else if (wrongJob) { btn.innerText += ` [${t.wrongJob}]`; btn.disabled = true; }
+        if (learned) { btn.innerText += ` [已學會]`; btn.disabled = true; }
+        else if (wrongJob) { btn.innerText += ` [職業不符]`; btn.disabled = true; }
         else if (!enoughGold) { btn.disabled = true; }
         else btn.onclick = () => attemptBuySkill(sKey, sInfo.cost);
         container.appendChild(btn);
@@ -1074,10 +997,9 @@ function updateSkillShopUI() {
 }
 
 function attemptBuySkill(sKey, cost) {
-    let t = I18N[curLang];
     if (player.skills.length < 4) {
         player.gold -= cost; player.skills.push(sKey);
-        alert(t.learnSuccess.replace('{s}', getSkillName(sKey))); updateSkillShopUI();
+        alert(`成功學會【${sKey}】！`); updateSkillShopUI();
     } else {
         pendingSkillToLearn = { key: sKey, cost: cost };
         showReplaceSkillScreen();
@@ -1089,34 +1011,32 @@ function showReplaceSkillScreen() {
     let container = document.getElementById('replace-skills-list'); container.innerHTML = "";
     player.skills.forEach((oldKey, idx) => {
         let btn = document.createElement('button'); btn.className = "btn";
-        btn.innerText = `[${getSkillName(oldKey)}] ➡️ [${getSkillName(pendingSkillToLearn.key)}]`;
+        btn.innerText = `[${oldKey}] ➡️ [${pendingSkillToLearn.key}]`;
         btn.onclick = () => executeReplaceSkill(idx);
         container.appendChild(btn);
     });
 }
 
 function executeReplaceSkill(replaceIndex) {
-    let t = I18N[curLang];
     let oldKey = player.skills[replaceIndex];
     player.gold -= pendingSkillToLearn.cost;
     player.skills[replaceIndex] = pendingSkillToLearn.key;
-    alert(t.forgetSkill.replace('{o}', getSkillName(oldKey)).replace('{n}', getSkillName(pendingSkillToLearn.key)));
+    alert(`已忘記【${oldKey}】，並成功學會【${pendingSkillToLearn.key}】！`);
     pendingSkillToLearn = null;
     showSkillShop();
 }
 
 function refreshSkills() {
-    let t = I18N[curLang];
     if (player.gold >= 100) {
-        player.gold -= 100; rollRandomSkills(); alert(t.refreshB); updateSkillShopUI();
-    } else alert(t.noGold);
+        player.gold -= 100; rollRandomSkills(); alert("🔄 換一批技能 (100 G)"); updateSkillShopUI();
+    } else alert("❌ 金幣不足！");
 }
 
 function saveGame() { 
     try {
         let saveData = { player: player, defeatedCount: defeatedCount, shopEquips: shopEquips, shopSkills: shopSkills };
         localStorage.setItem(SAVE_KEY, JSON.stringify(saveData)); 
-        alert(I18N[curLang].saveSuccess + "\n(存檔Key已寫入 GitHub Pages 專屬隔離區)"); 
+        alert("💾 存檔成功！\n(存檔Key已寫入 GitHub Pages 專屬隔離區)"); 
     } catch(e) {
         alert("❌ 儲存失敗！您的瀏覽器可能停用了 LocalStorage 功能。");
     }
@@ -1144,7 +1064,7 @@ function loadGame() {
             if (!player.ores) player.ores = { copper: 0, iron: 0, gold: 0, diamond: 0 };
             if (!player.potions) player.potions = { hp: 1, mp: 1 };
             
-            alert(I18N[curLang].loadSuccess + "\n(存檔載入成功！)"); 
+            alert("📂 成功載入進度！"); 
             showVillage(); 
         } else {
             alert("⚠️ 找不到本地存檔，請確認您已在本頁面存檔過，或使用【跨裝置代碼匯入】進度。");

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 鐵匠鋪專屬高級與5欄裝備商店版 v2.7</title>
+    <title>Py RPG - 鐵匠鋪全高級武器防具擴充版 v2.9</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,10 +14,9 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.7 (高級獨佔與商店擴充版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.9 (鐵匠鋪全防具10種擴充版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
-            <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
             <button class="btn btn-secondary" id="btn-load" onclick="startBGM(); loadGame();">📂 讀取本地存檔</button>
             <button class="btn btn-secondary" style="background:#7d3c98;" onclick="showTransferSave()">📋 跨裝置存檔備份與匯入</button>
@@ -45,19 +44,19 @@
         <div class="status-box" style="height: 380px; overflow-y: auto; text-align: left; font-size: 12px;">
             <div class="section-header">⚔️ 一、核心冒險機制</div>
             • <b>關卡目標</b>：總共 10 大區域（100 小關），第 10 關為區域 BOSS，第 100 關為終極魔王路西法！<br>
-            • <b>屬性克制</b>：技能具備🔥火、❄️冰、⚡雷、🍃風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br>
-            • <b>戰鬥防禦</b>：點擊「🛡️ 防禦」當回合受傷減半並恢復 15 MP！BOSS 低血量會發動<b>狂暴化</b>！<br><br>
+            • <b>屬性克制</b>：技能具備火、冰、雷、風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br>
+            • <b>戰鬥防禦</b>：點擊「防禦」當回合受傷減半並恢復 15 MP！BOSS 低血量會發動<b>狂暴化</b>！<br><br>
 
             <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
             • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
-            • ⚡ <b>礦坑採礦</b>：升級鎬子 (+1~+5) 可大幅提升挖礦量與高階礦石率！<b>+3 以上鎬子可挖到【💎 精煉石】</b>！<br>
-            • 🔨 <b>鐵匠鋪</b>：<b>獨家專屬打造高級神裝、神兵與升級鎬子、裝備精煉</b>！<br>
+            • ⚡ <b>礦坑採礦</b>：升級鎬子 (+1~+5) 可大幅提升挖礦量與高階礦石率！<b>+3 以上鎬子可挖到精煉石</b>！<br>
+            • 🔨 <b>鐵匠鋪</b>：<b>獨家專屬打造各職業 10 種高級武器與各部位 10 種高級防具！</b><br>
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予 10 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
             • 🛠️ <b>裝備商店 (5欄位)</b>：出售初級與中級現成裝備（不販售高級裝備），支援 100 G 換一批！<br>
             • 📖 <b>技能商店</b>：刷新所有職業技能。<br>
-            • 🏆 <b>勇者成就</b>：50 項成就支援<b>【🎁 一鍵領取】與進度條顯示</b>！
+            • 🏆 <b>勇者成就</b>：50 項成就支援<b>一鍵領取與進度條顯示</b>！
         </div>
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回前一頁</button>
     </div>
@@ -65,9 +64,9 @@
     <!-- 職業選擇畫面 -->
     <div id="class-select" class="hidden">
         <h2 id="class-title">請選擇你的職業</h2>
-        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">🛡️ 戰士 (特性: 高血量 | 初始 HP: 220 | MP: 60)</button>
-        <button class="btn" onclick="initGame('Mage')" id="btn-mage">🔮 法師 (特性: 高魔力 | 初始 HP: 110 | MP: 220)</button>
-        <button class="btn" onclick="initGame('Archer')" id="btn-archer">🏹 射手 (特性: 高敏捷 | 初始 HP: 130 | MP: 90)</button>
+        <button class="btn" onclick="initGame('Warrior')" id="btn-warrior">戰士 (特性: 高血量 | 初始 HP: 220 | MP: 60)</button>
+        <button class="btn" onclick="initGame('Mage')" id="btn-mage">法師 (特性: 高魔力 | 初始 HP: 110 | MP: 220)</button>
+        <button class="btn" onclick="initGame('Archer')" id="btn-archer">射手 (特性: 高敏捷 | 初始 HP: 130 | MP: 90)</button>
         <button class="btn btn-secondary" onclick="showMainMenu()" id="btn-class-back">⬅️ 返回主畫面</button>
     </div>
 
@@ -128,7 +127,7 @@
         <button class="btn btn-secondary" onclick="fallbackStage()" id="btn-fallback">⬅️ 退回上一關並回到村莊</button>
     </div>
 
-    <!-- 村莊畫面 (移除了龐大的鎬子按鈕) -->
+    <!-- 村莊畫面 -->
     <div id="village-screen" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="showMainMenu()">⬅️ 返回主畫面</button>
@@ -202,7 +201,7 @@
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;">⬅️ 返回村莊</button>
     </div>
 
-    <!-- 鐵匠鋪畫面 (新增⛏️升級鎬子頁面分頁，簡潔並列) -->
+    <!-- 鐵匠鋪畫面 -->
     <div id="forge-screen" class="hidden">
         <h2>🔨 鐵匠鋪高級神裝與精煉</h2>
         <div class="status-box" id="ore-status"></div>
@@ -216,16 +215,16 @@
         </div>
         
         <div id="armor-sub-tabs" class="tab-grid hidden" style="margin-bottom:8px;">
-            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('helmet')">🪖 頭盔</button>
-            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('chest')">🛡️ 胸甲</button>
-            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('leggings')">🦵 腿甲</button>
-            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('bracer')">🥊 手腕</button>
+            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('helmet')">頭盔</button>
+            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('chest')">胸甲</button>
+            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('leggings')">腿甲</button>
+            <button class="btn btn-tab" style="background:#34495e;" onclick="switchForgeArmorTab('bracer')">手腕</button>
         </div>
         <div id="forge-items" style="max-height: 240px; overflow-y: auto;"></div>
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;">⬅️ 返回村莊</button>
     </div>
 
-    <!-- 裝備/技能商店畫面 (新增 100G 換一批裝備) -->
+    <!-- 商店畫面 -->
     <div id="shop-screen" class="hidden">
         <h2>🏪 商店</h2>
         <div class="status-box" id="shop-status"></div>
