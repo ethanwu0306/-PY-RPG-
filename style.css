@@ -59,9 +59,9 @@ body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0
     background: #222;
     border: 1px solid #444;
     border-radius: 4px;
-    height: 10px;
+    height: 8px;
     width: 100%;
-    margin-top: 4px;
+    margin-top: 3px;
     overflow: hidden;
 }
 
@@ -72,6 +72,7 @@ body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0
 }
 .bar-inner.hp { background: linear-gradient(90deg, #e74c3c, #2ecc71); }
 .bar-inner.mp { background: linear-gradient(90deg, #2980b9, #3498db); }
+.bar-inner.exp { background: linear-gradient(90deg, #f39c12, #f1c40f); }
 .bar-inner.m-hp { background: linear-gradient(90deg, #c0392b, #e74c3c); }
 
 .unit-stats-text {

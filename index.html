@@ -11,10 +11,10 @@
 <div id="game-container">
     <button id="btn-corner-rules" class="btn-rules-corner" onclick="showGameGuide()">📖 遊玩規則與介紹</button>
 
-    <!-- 主選單畫面 (版本簡化) -->
+    <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.1</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.2</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -44,6 +44,7 @@
         <div class="status-box" style="height: 380px; overflow-y: auto; text-align: left; font-size: 12px;">
             <div class="section-header">⚔️ 一、核心冒險機制</div>
             • <b>關卡目標</b>：總共 10 大區域（100 小關），第 10 關為區域 BOSS，第 100 關為終極魔王路西法！<br>
+            • <b>經驗升級</b>：戰鬥勝利獲得 EXP 升級（最高 50 級）！<b>達到 Lv.20 可解鎖轉職試煉</b>！<br>
             • <b>屬性克制</b>：技能具備火、冰、雷、風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br>
             • <b>戰鬥防禦</b>：點擊「防禦」當回合受傷減半並恢復 15 MP！BOSS 低血量會發動<b>狂暴化</b>！<br><br>
 
@@ -56,6 +57,7 @@
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
             • 🛠️ <b>裝備商店</b>：出售初級與中級現成裝備，支援 100 G 換一批！<br>
             • 📖 <b>技能商店</b>：刷新所有職業技能。<br>
+            • 🌳 <b>職業分支圖</b>：可在村莊查看所有二階轉職分支與強大加成！<br>
             • 🏆 <b>勇者成就</b>：50 項成就支援<b>一鍵領取與進度條顯示</b>！
         </div>
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回前一頁</button>
@@ -78,23 +80,24 @@
         <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-top:10px;" id="btn-refresh-card" onclick="refreshCardSelection()">🔄 刷新卡片 (消耗 1 顆附魔石 | 剩餘 3 次)</button>
     </div>
 
-    <!-- 戰鬥畫面 -->
+    <!-- 戰鬥畫面 (新增 EXP 經驗條) -->
     <div id="battle-screen" class="hidden">
         <h3 id="map-info">區域: 1-1</h3>
         
         <div class="battle-arena-box">
             <div class="arena-unit">
                 <canvas id="player-avatar-canvas" width="120" height="120"></canvas>
-                <div class="bar-outer"><div id="player-hp-bar" class="bar-inner hp"></div></div>
-                <div class="bar-outer"><div id="player-mp-bar" class="bar-inner mp"></div></div>
-                <div id="player-status-text" class="unit-stats-text">HP: 100 | MP: 30</div>
+                <div class="bar-outer" title="HP"><div id="player-hp-bar" class="bar-inner hp"></div></div>
+                <div class="bar-outer" title="MP"><div id="player-mp-bar" class="bar-inner mp"></div></div>
+                <div class="bar-outer" title="EXP"><div id="player-exp-bar" class="bar-inner exp"></div></div>
+                <div id="player-status-text" class="unit-stats-text">Lv.1 | HP: 100/100</div>
             </div>
             
             <div class="arena-vs">VS</div>
             
             <div class="arena-unit">
                 <canvas id="monster-canvas" width="120" height="120"></canvas>
-                <div class="bar-outer"><div id="monster-hp-bar" class="bar-inner m-hp"></div></div>
+                <div class="bar-outer" title="Monster HP"><div id="monster-hp-bar" class="bar-inner m-hp"></div></div>
                 <div id="monster-status-text" class="unit-stats-text">敵人 HP: 50</div>
                 <div id="floating-text-container"></div>
             </div>
@@ -122,6 +125,20 @@
         <button class="btn btn-action" onclick="confirmVictoryModal()">✨ 進入村莊整備</button>
     </div>
 
+    <!-- 轉職分支選擇視窗 -->
+    <div id="job-advance-screen" class="hidden">
+        <h2 style="color:#f1c40f;">👑 恭喜通過試煉！請選擇轉職分支</h2>
+        <p style="text-align:center; color:#ccc; font-size:12px;">轉職後將解鎖專屬二階屬性與強大加成（不可更改）：</p>
+        <div id="job-advance-options"></div>
+    </div>
+
+    <!-- 職業樹預覽視窗 -->
+    <div id="job-tree-screen" class="hidden">
+        <h2>全職業天賦分支圖</h2>
+        <div class="status-box" id="job-tree-content" style="max-height:300px; overflow-y:auto; text-align:left; font-size:12px; line-height:1.7;"></div>
+        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;">⬅️ 返回村莊</button>
+    </div>
+
     <!-- 藥水選單畫面 -->
     <div id="potion-select-screen" class="hidden">
         <h2>🧪 請選擇要使用的藥水</h2>
@@ -139,13 +156,17 @@
         <button class="btn btn-secondary" onclick="fallbackStage()" id="btn-fallback">⬅️ 退回上一關並回到村莊</button>
     </div>
 
-    <!-- 村莊畫面 -->
+    <!-- 村莊畫面 (新增左下角職業分支圖 & 轉職試煉入口) -->
     <div id="village-screen" class="hidden">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
             <button class="btn btn-secondary" style="width:auto; margin:0; padding:6px 12px; font-size:12px;" onclick="showMainMenu()">⬅️ 返回主畫面</button>
         </div>
         <h2 id="village-title" style="margin-top:0;">🏡 歡迎來到村莊</h2>
         <div class="status-box" id="village-status"></div>
+        
+        <!-- 20等轉職試煉入口按鈕 -->
+        <button id="btn-job-trial" class="btn hidden" style="background: linear-gradient(180deg, #f39c12 0%, #965b00 100%); border-color:#f1c40f; margin-bottom:8px;" onclick="startJobAdvanceTrial()">👑 挑戰【一階轉職試煉 BOSS】 (Lv.20 解鎖)</button>
+
         <div id="npc-event-box" style="display:none; background:#196f3d; border:1px solid #2ecc71; color:white; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; text-align:center;"></div>
         
         <div class="tab-grid">
@@ -172,11 +193,13 @@
             <button class="btn btn-secondary" onclick="showPotionShop()" id="btn-v-potion">🧪 藥水商店</button>
             <button class="btn btn-secondary" onclick="showAchievements()" id="btn-v-achieve">🏆 勇者成就</button>
         </div>
-        
-        <div style="margin-top:10px;">
-            <button class="btn btn-secondary" onclick="saveGame()" id="btn-v-save">💾 儲存進度 (快速鍵)</button>
-            <button class="btn btn-action" onclick="startNextBattle()" id="btn-v-next">⚔️ 踏上征途 (下一戰)</button>
+
+        <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn btn-secondary" style="width:40%; font-size:11px; background:#4a235a; border-color:#bb8fce;" onclick="showJobTree()">🌳 職業天賦分支圖</button>
+            <button class="btn btn-secondary" style="width:60%;" onclick="saveGame()" id="btn-v-save">💾 儲存進度</button>
         </div>
+        
+        <button class="btn btn-action" style="margin-top:8px;" onclick="startNextBattle()" id="btn-v-next">⚔️ 踏上征途 (下一戰)</button>
     </div>
 
     <!-- 獨立部位裝備管理 UI -->

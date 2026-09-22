@@ -1,4 +1,38 @@
-const SAVE_KEY = "pyrpg_save_github_v3.1_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v3.2_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+
+// 6 大二階轉職分支數據與屬性加成
+const JOB_ADVANCEMENTS = {
+    Warrior: [
+        {
+            id: "BerserkerLord", nameZh: "狂戰士", descZh: "專精高爆發與吸血戰鬥！",
+            hp: 150, mp: 0, atk: 35, critRate: 10, critDmg: 30, evasion: 0
+        },
+        {
+            id: "Paladin", nameZh: "聖騎士", descZh: "極致生存防禦與神聖護盾！",
+            hp: 300, mp: 80, atk: 15, critRate: 0, critDmg: 0, evasion: 5
+        }
+    ],
+    Mage: [
+        {
+            id: "ElementEmperor", nameZh: "元素法師", descZh: "毀滅性的多元素極限魔攻！",
+            hp: 80, mp: 200, atk: 40, critRate: 10, critDmg: 25, evasion: 0
+        },
+        {
+            id: "Necromancer", nameZh: "死靈巫師", descZh: "掌握持續毒傷與生命吸取！",
+            hp: 180, mp: 120, atk: 25, critRate: 5, critDmg: 0, evasion: 5
+        }
+    ],
+    Archer: [
+        {
+            id: "SoulSniper", nameZh: "狙擊手", descZh: "遠距離致命暴擊一擊必殺！",
+            hp: 100, mp: 40, atk: 45, critRate: 15, critDmg: 50, evasion: 5
+        },
+        {
+            id: "GaleRanger", nameZh: "疾風游俠", descZh: "高閃避與極致連續射擊！",
+            hp: 120, mp: 60, atk: 30, critRate: 5, critDmg: 15, evasion: 15
+        }
+    ]
+};
 
 const SKILLS = {
     // 通用 (11)

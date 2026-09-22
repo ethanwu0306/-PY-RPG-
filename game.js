@@ -10,12 +10,17 @@ let pendingSkillToLearn = null;
 let villageNpcMsg = "";
 let cardRefreshCount = 3;
 let pendingVictoryData = null;
+let isJobTrialBattle = false; // 是否為轉職試煉 BOSS 戰
 
 function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
 
+function getMaxExp(lvl) {
+    return Math.floor(80 * Math.pow(1.15, lvl - 1));
+}
+
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'guide-screen', 'transfer-save-screen', 'victory-modal-screen', 'equipment-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -37,23 +42,15 @@ function showClassSelect() { hideAll(); document.getElementById('class-select').
 function initGame(jobCode) {
     let c = CLASSES[jobCode];
     player = {
-        jobCode: jobCode, jobName: c.nameZh,
+        jobCode: jobCode, jobName: c.nameZh, baseJobCode: jobCode,
+        level: 1, exp: 0, maxExp: getMaxExp(1), isAdvanced: false, advancedJobId: null,
         hp: c.hp, maxHp: c.hp, mp: c.mp, maxMp: c.mp, shield: 0,
         atkMin: c.min, atkMax: c.max, weapon: c.weaponZh,
         gold: 100, enchantStones: 0, villageActions: 5, maxVillageActions: 5, skills: ["重擊"], cards: [], 
-        equips: [], 
-        refines: {}, 
-        pickaxeLvl: 0, 
-        refineStones: 0, 
-        shopRefreshCount: 0, 
-        restCount: 0, 
+        equips: [], refines: {}, pickaxeLvl: 0, refineStones: 0, shopRefreshCount: 0, restCount: 0, 
         
-        equipmentSlots: {
-            helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null
-        },
-
-        weaponEnchants: [],
-        ores: { copper: 0, iron: 0, gold: 0, diamond: 0 },
+        equipmentSlots: { helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null },
+        weaponEnchants: [], ores: { copper: 0, iron: 0, gold: 0, diamond: 0 },
         potions: { hp: 1, mp: 1 }, mineCount: 0, achieved: [],
         
         critRate: c.critRate, critDmg: c.critDmg, evasion: c.evasion,
@@ -63,12 +60,14 @@ function initGame(jobCode) {
         skillCDs: {}, buffTurns: 0, debuffTurns: 0, isDefending: false
     };
     defeatedCount = 0;
+    isJobTrialBattle = false;
     startNextBattle();
 }
 
 function startNextBattle() {
     defeatedCount++; 
     hideAll(); 
+    isJobTrialBattle = false;
     document.getElementById('battle-screen').classList.remove('hidden');
     if (typeof setBattleBgm === "function") setBattleBgm(true);
     spawnMonster();
@@ -81,19 +80,40 @@ function spawnMonster() {
     let mapData = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { nameZh: "微光森林", bossZh: "區域頭目", monstersZh: ["哥布林斥候"] };
 
     if (isFinal) { 
-        monster = { name: "👑 滅世魔王·路西法", hp: 3500, maxHp: 3500, min: 80, max: 120, reward: 2000, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
+        monster = { name: "👑 滅世魔王·路西法", hp: 3500, maxHp: 3500, min: 80, max: 120, reward: 2000, expReward: 800, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
     } else if (isBoss) { 
         let reward = Math.floor(Math.random() * 31 + 80);
-        monster = { name: `👑 ${mapData.bossZh}`, hp: 500 + defeatedCount * 25, maxHp: 500 + defeatedCount * 25, min: 25 + curMapId * 7, max: 45 + curMapId * 9, reward: reward, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
+        monster = { name: `👑 ${mapData.bossZh}`, hp: 500 + defeatedCount * 25, maxHp: 500 + defeatedCount * 25, min: 25 + curMapId * 7, max: 45 + curMapId * 9, reward: reward, expReward: 150 + defeatedCount * 10, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
     } else { 
         let reward = Math.floor(Math.random() * 11 + 40);
         let mName = mapData.monstersZh[Math.floor(Math.random() * mapData.monstersZh.length)];
-        monster = { name: mName, hp: 120 + defeatedCount * 16, maxHp: 120 + defeatedCount * 16, min: 12 + defeatedCount * 3, max: 22 + defeatedCount * 4, reward: reward, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
+        monster = { name: mName, hp: 120 + defeatedCount * 16, maxHp: 120 + defeatedCount * 16, min: 12 + defeatedCount * 3, max: 22 + defeatedCount * 4, reward: reward, expReward: 40 + defeatedCount * 5, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
     }
 
     drawAvatarAndMonsterVisuals(curMapId, isBoss || isFinal);
     document.getElementById('log-box').innerHTML = "戰鬥開始！\n";
     player.shield = 0; 
+    player.skillCDs = {};
+    player.isDefending = false;
+    render4SkillButtons();
+    updateBattleUI();
+}
+
+function startJobAdvanceTrial() {
+    hideAll();
+    isJobTrialBattle = true;
+    document.getElementById('battle-screen').classList.remove('hidden');
+    if (typeof setBattleBgm === "function") setBattleBgm(true);
+
+    monster = {
+        name: `👑 【轉職試煉者】${player.jobName}之影`,
+        hp: 1200, maxHp: 1200, min: 45, max: 70, reward: 500, expReward: 300,
+        isFinal: false, isBoss: true, mapId: 5, debuffTurns: 0, isRaged: false
+    };
+
+    drawAvatarAndMonsterVisuals(5, true);
+    document.getElementById('log-box').innerHTML = "⚔️ 進入一階轉職試煉！擊敗【轉職試煉者】以證明你的實力！\n";
+    player.shield = 0;
     player.skillCDs = {};
     player.isDefending = false;
     render4SkillButtons();
@@ -106,14 +126,14 @@ function drawAvatarAndMonsterVisuals(mapId, isBoss) {
         let ctx = pCanvas.getContext('2d');
         ctx.clearRect(0, 0, 120, 120);
         
-        ctx.fillStyle = player.jobCode === 'Warrior' ? '#e74c3c' : (player.jobCode === 'Mage' ? '#9b59b6' : '#2ecc71');
+        ctx.fillStyle = player.baseJobCode === 'Warrior' ? '#e74c3c' : (player.baseJobCode === 'Mage' ? '#9b59b6' : '#2ecc71');
         ctx.beginPath(); ctx.arc(60, 45, 25, 0, Math.PI * 2); ctx.fill();
         ctx.fillRect(40, 70, 40, 40);
         
         ctx.fillStyle = '#f1c40f';
-        if (player.jobCode === 'Warrior') { ctx.fillRect(80, 50, 20, 5); ctx.fillRect(20, 60, 15, 25); }
-        else if (player.jobCode === 'Mage') { ctx.fillRect(85, 30, 6, 60); ctx.fillStyle='#00ffff'; ctx.beginPath(); ctx.arc(88, 25, 8, 0, Math.PI*2); ctx.fill(); }
-        else if (player.jobCode === 'Archer') { ctx.strokeStyle='#d35400'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(80, 70, 20, -Math.PI/2, Math.PI/2); ctx.stroke(); }
+        if (player.baseJobCode === 'Warrior') { ctx.fillRect(80, 50, 20, 5); ctx.fillRect(20, 60, 15, 25); }
+        else if (player.baseJobCode === 'Mage') { ctx.fillRect(85, 30, 6, 60); ctx.fillStyle='#00ffff'; ctx.beginPath(); ctx.arc(88, 25, 8, 0, Math.PI*2); ctx.fill(); }
+        else if (player.baseJobCode === 'Archer') { ctx.strokeStyle='#d35400'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(80, 70, 20, -Math.PI/2, Math.PI/2); ctx.stroke(); }
     }
 
     let mCanvas = document.getElementById('monster-canvas');
@@ -156,20 +176,22 @@ function updateBattleUI() {
     let mapObj = (typeof MAPS !== "undefined" && MAPS[monster.mapId]) ? MAPS[monster.mapId] : { nameZh: "荒野" };
     let weaknessZh = { flame: "🔥火", frost: "❄️冰", thunder: "⚡雷", gale: "🍃風" }[mapObj.weakness] || "無";
 
-    document.getElementById('map-info').innerText = `區域: ${getStageString(defeatedCount)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
+    document.getElementById('map-info').innerText = isJobTrialBattle ? "👑 一階轉職試煉戰" : `區域: ${getStageString(defeatedCount)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
     
     let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
     if (player.isDefending) buffStr += " | 防禦防護中";
 
     let pHpPct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
     let pMpPct = Math.max(0, Math.min(100, (player.mp / player.maxMp) * 100));
+    let pExpPct = Math.max(0, Math.min(100, (player.exp / player.maxExp) * 100));
     let mHpPct = Math.max(0, Math.min(100, (monster.hp / monster.maxHp) * 100));
 
     let pHpBar = document.getElementById('player-hp-bar'); if(pHpBar) pHpBar.style.width = pHpPct + "%";
     let pMpBar = document.getElementById('player-mp-bar'); if(pMpBar) pMpBar.style.width = pMpPct + "%";
+    let pExpBar = document.getElementById('player-exp-bar'); if(pExpBar) pExpBar.style.width = pExpPct + "%";
     let mHpBar = document.getElementById('monster-hp-bar'); if(mHpBar) mHpBar.style.width = mHpPct + "%";
 
-    document.getElementById('player-status-text').innerText = `【${player.jobName}】HP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp}`;
+    document.getElementById('player-status-text').innerText = `Lv.${player.level} 【${player.jobName}】HP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp}`;
     
     let rageTag = monster.isRaged ? " 🔥【二階段狂暴化！】" : "";
     document.getElementById('monster-status-text').innerText = `【${monster.name}】HP: ${monster.hp}/${monster.maxHp}${rageTag}`;
@@ -330,11 +352,31 @@ function executeTurn(skillKey, isDefendingAction) {
 
     if (monster.hp <= 0) {
         if (typeof playSound === "function") playSound('victory', player.jobCode);
-        let gotStone = Math.random() < 0.10;
-        if (gotStone) player.enchantStones++;
+        
+        // 戰鬥勝利獲取 EXP 與等級提升
+        let expGained = monster.expReward || 50;
+        player.exp += expGained;
         player.gold += monster.reward;
 
-        showVictoryModal(monster.name, monster.reward, gotStone);
+        let levelUpMsg = "";
+        while (player.exp >= player.maxExp && player.level < 50) {
+            player.exp -= player.maxExp;
+            player.level++;
+            player.maxExp = getMaxExp(player.level);
+            player.maxHp += 20; player.hp = player.maxHp;
+            player.maxMp += 10; player.mp = player.maxMp;
+            player.atkMin += 4; player.atkMax += 6;
+            levelUpMsg += `<br><span style="color:#f1c40f; font-weight:bold;">🎉 等級提升至 Lv.${player.level}！基礎屬性大幅增加！</span>`;
+        }
+
+        let gotStone = Math.random() < 0.10;
+        if (gotStone) player.enchantStones++;
+
+        if (isJobTrialBattle) {
+            showJobAdvanceSelectScreen();
+        } else {
+            showVictoryModal(monster.name, monster.reward, expGained, gotStone, levelUpMsg);
+        }
         return;
     }
 
@@ -370,13 +412,47 @@ function executeTurn(skillKey, isDefendingAction) {
     updateBattleUI();
 }
 
-function showVictoryModal(mName, rewardGold, gotStone) {
+function showVictoryModal(mName, rewardGold, expGained, gotStone, levelUpMsg) {
     hideAll();
     pendingVictoryData = { gotStone: gotStone };
     let content = document.getElementById('victory-modal-content');
     let stoneMsg = gotStone ? "<br><span style='color:#70a1ff;'>💎 幸運額外獲得了 1 顆【附魔石】！</span>" : "";
-    content.innerHTML = `⚔️ 成功擊敗了 <b>${mName}</b>！<br>🪙 獲得金幣獎勵：<b>+${rewardGold} G</b>${stoneMsg}`;
+    content.innerHTML = `⚔️ 成功擊敗了 <b>${mName}</b>！<br>🪙 獲得金幣：<b>+${rewardGold} G</b> | ⭐ 獲得 EXP：<b>+${expGained}</b>${stoneMsg}${levelUpMsg}`;
     document.getElementById('victory-modal-screen').classList.remove('hidden');
+}
+
+function showJobAdvanceSelectScreen() {
+    hideAll();
+    document.getElementById('job-advance-screen').classList.remove('hidden');
+    let container = document.getElementById('job-advance-options');
+    container.innerHTML = "";
+
+    let options = JOB_ADVANCEMENTS[player.baseJobCode] || [];
+    options.forEach(opt => {
+        let btn = document.createElement('button');
+        btn.className = "btn";
+        btn.style.margin = "8px 0";
+        btn.innerHTML = `<b>${opt.nameZh}</b><br><span style="font-size:12px; color:#ccc;">${opt.descZh}</span>`;
+        btn.onclick = () => selectJobAdvancement(opt);
+        container.appendChild(btn);
+    });
+}
+
+function selectJobAdvancement(advOption) {
+    player.isAdvanced = true;
+    player.advancedJobId = advOption.id;
+    player.jobName = advOption.nameZh;
+
+    // 套用轉職屬性加成
+    player.maxHp += advOption.hp; player.hp += advOption.hp;
+    player.maxMp += advOption.mp; player.mp += advOption.mp;
+    player.atkMin += advOption.atk; player.atkMax += advOption.atk;
+    player.critRate += advOption.critRate;
+    player.critDmg += advOption.critDmg;
+    player.evasion += advOption.evasion;
+
+    alert(`🎉 轉職成功！恭喜成為【${advOption.nameZh}】！獲得極致二階屬性加成！`);
+    enterVillage();
 }
 
 function confirmVictoryModal() {
@@ -460,6 +536,17 @@ function showVillage() {
     let curMapId = Math.min(Math.floor((defeatedCount - 1) / 10) + 1, 10);
     let mapObj = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { villageZh: "村莊" };
     document.getElementById('village-title').innerText = `🏡 區域 ${curMapId}: ${mapObj.villageZh}`;
+    
+    // 檢查是否顯示 20等轉職試煉入口
+    let trialBtn = document.getElementById('btn-job-trial');
+    if (trialBtn) {
+        if (player.level >= 20 && !player.isAdvanced) {
+            trialBtn.classList.remove('hidden');
+        } else {
+            trialBtn.classList.add('hidden');
+        }
+    }
+
     let npcBox = document.getElementById('npc-event-box');
     if (villageNpcMsg) { npcBox.innerText = villageNpcMsg; npcBox.style.display = "block"; } else npcBox.style.display = "none";
     updateVillageUI();
@@ -469,7 +556,7 @@ function updateVillageUI() {
     let act = player.villageActions;
     let pLvl = player.pickaxeLvl || 0;
     
-    document.getElementById('village-status').innerText = `職業: ${player.jobName} | 金幣: ${player.gold} G | 💎 附魔石: ${player.enchantStones} | 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ 行動力: ${act}/5\n⛏️ 採礦鎬子等級: +${pLvl}`;
+    document.getElementById('village-status').innerText = `Lv.${player.level || 1} 【${player.jobName}】 | EXP: ${player.exp}/${player.maxExp}\n金幣: ${player.gold} G | 💎 附魔石: ${player.enchantStones} | 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ 行動力: ${act}/5\n⛏️ 採礦鎬子等級: +${pLvl}`;
 
     document.getElementById('btn-v-rest').disabled = (player.gold < 30 || act <= 0);
     
@@ -483,6 +570,24 @@ function updateVillageUI() {
     checkBloodDanger();
 }
 
+function showJobTree() {
+    hideAll();
+    document.getElementById('job-tree-screen').classList.remove('hidden');
+    let container = document.getElementById('job-tree-content');
+    
+    let html = "<b>全職業二階轉職天賦圖鑑：</b><br><br>";
+    Object.keys(JOB_ADVANCEMENTS).forEach(jobKey => {
+        let jobZh = CLASSES[jobKey].nameZh;
+        html += `<span style="color:#f1c40f; font-weight:bold;">▶ 【${jobZh}】轉職分支：</span><br>`;
+        JOB_ADVANCEMENTS[jobKey].forEach(adv => {
+            html += `• <b>${adv.nameZh}</b>：${adv.descZh}<br>`;
+            html += `<span style="color:#aaa; font-size:11px;">&nbsp;&nbsp;加成：HP+${adv.hp} | MP+${adv.mp} | 攻擊+${adv.atk} | 暴擊率+${adv.critRate}% | 閃避率+${adv.evasion}%</span><br>`;
+        });
+        html += "<br>";
+    });
+    container.innerHTML = html;
+}
+
 function showPlayerStats() {
     hideAll(); 
     document.getElementById('stats-screen').classList.remove('hidden');
@@ -492,7 +597,8 @@ function showPlayerStats() {
     let skillStr = p.skills.join(', ');
 
     let html = `
-        <b>【職業: ${p.jobName}】</b> | 區域: ${getStageString(defeatedCount)}<br>
+        <b>【等級: Lv.${p.level || 1}】</b> (EXP: ${p.exp} / ${p.maxExp})<br>
+        <b>【職業: ${p.jobName}】</b> ${p.isAdvanced ? '<span style="color:#2ecc71;">[二階轉職完成]</span>' : '<span style="color:#888;">[一階]</span>'}<br>
         金幣: ${p.gold} G | 💎 附魔石: ${p.enchantStones} | 精煉石: ${p.refineStones || 0}<br>
         ⛏️ 採礦鎬子強化等級: <b>+${p.pickaxeLvl || 0}</b><br>
         當前武器: <b>[${p.equipmentSlots.weapon || p.weapon}]</b> (${encStr})<br>
@@ -609,7 +715,7 @@ function unequipSlot(slotKey) {
     }
 
     player.equipmentSlots[slotKey] = null;
-    if (slotKey === 'weapon') player.weapon = CLASSES[player.jobCode].weaponZh;
+    if (slotKey === 'weapon') player.weapon = CLASSES[player.baseJobCode || player.jobCode].weaponZh;
 
     alert(`❌ 已成功將【${getSlotNameZh(slotKey)}】部位的 [${eqName}] 卸下！`);
     updateEquipmentUI();
@@ -636,13 +742,13 @@ function mine() {
     let gotMsg = "";
 
     if (rand < (0.72 - highOreRateBonus)) { 
-        player.ores.copper += count; gotMsg = `🥉 銅 x${count}`; 
+        player.ores.copper += count; gotMsg = `銅 x${count}`; 
     } else if (rand < (0.94 - highOreRateBonus/2)) { 
-        player.ores.iron += count; gotMsg = `🥈 鐵 x${count}`; 
+        player.ores.iron += count; gotMsg = `鐵 x${count}`; 
     } else if (rand < 0.98) { 
-        player.ores.gold += count; gotMsg = `🥇 金 x${count}`; 
+        player.ores.gold += count; gotMsg = `金 x${count}`; 
     } else { 
-        player.ores.diamond += count; gotMsg = `💎 鑽石 x${count}`; 
+        player.ores.diamond += count; gotMsg = `鑽石 x${count}`; 
     }
 
     let refineStoneRate = 0;
@@ -795,7 +901,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪高級神兵鍛造 & ✨ 精煉 & ⛏️ 升級鎬子
+// 🔨 鐵匠鋪高級神兵鍛造 & 精煉 & 升級鎬子
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -844,7 +950,7 @@ function updateForgeUI() {
 
     recipeList.forEach(recipe => {
         let bought = p.equips.includes(getItemName(recipe));
-        let wrongJob = (recipe.job && recipe.job !== p.jobCode);
+        let wrongJob = (recipe.job && recipe.job !== p.jobCode && recipe.job !== p.baseJobCode);
         let canCraft = allOresEnough(p, recipe.req);
         let hasAction = act > 0;
         let btn = document.createElement('button'); btn.className = "btn";
@@ -992,7 +1098,7 @@ function updateEquipShopUI() {
 
     shopEquips.forEach(item => {
         let bought = player.equips.includes(getItemName(item));
-        let wrongJob = (item.job && item.job !== player.jobCode);
+        let wrongJob = (item.job && item.job !== player.jobCode && item.job !== player.baseJobCode);
         let enoughGold = player.gold >= item.cost;
         let btn = document.createElement('button'); btn.className = "btn";
         btn.innerText = `${getItemName(item)} (${item.cost} G)` + getStatDiffText(item);
@@ -1028,7 +1134,7 @@ function updateSkillShopUI() {
     shopSkills.forEach(sKey => {
         let sInfo = SKILLS[sKey];
         let learned = player.skills.includes(sKey);
-        let wrongJob = (sInfo.type !== "universal" && sInfo.type !== player.jobCode);
+        let wrongJob = (sInfo.type !== "universal" && sInfo.type !== player.jobCode && sInfo.type !== player.baseJobCode);
         let enoughGold = player.gold >= sInfo.cost;
         let btn = document.createElement('button'); btn.className = "btn";
         btn.innerText = `${sKey} (${sInfo.cost} G) - ${sInfo.descZh}`;
@@ -1099,6 +1205,11 @@ function loadGame() {
             if (data.shopEquips) shopEquips = data.shopEquips;
             if (data.shopSkills) shopSkills = data.shopSkills;
 
+            if (!player.level) player.level = 1;
+            if (!player.exp) player.exp = 0;
+            if (!player.maxExp) player.maxExp = getMaxExp(1);
+            if (!player.baseJobCode) player.baseJobCode = player.jobCode;
+
             if (!player.refines) player.refines = {};
             if (!player.pickaxeLvl) player.pickaxeLvl = 0;
             if (!player.refineStones) player.refineStones = 0;
@@ -1126,7 +1237,7 @@ function loadGame() {
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {
-    const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen'];
+    const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen'];
     for (let id of screens) {
         let el = document.getElementById(id);
         if (el && !el.classList.contains('hidden')) {
