@@ -19,8 +19,9 @@ function getMaxExp(lvl) {
     return Math.floor(80 * Math.pow(1.15, lvl - 1));
 }
 
+// 隱藏所有視窗畫面
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -353,7 +354,6 @@ function executeTurn(skillKey, isDefendingAction) {
     if (monster.hp <= 0) {
         if (typeof playSound === "function") playSound('victory', player.jobCode);
         
-        // 戰鬥勝利獲取 EXP 與等級提升
         let expGained = monster.expReward || 50;
         player.exp += expGained;
         player.gold += monster.reward;
@@ -443,7 +443,6 @@ function selectJobAdvancement(advOption) {
     player.advancedJobId = advOption.id;
     player.jobName = advOption.nameZh;
 
-    // 套用轉職屬性加成
     player.maxHp += advOption.hp; player.hp += advOption.hp;
     player.maxMp += advOption.mp; player.mp += advOption.mp;
     player.atkMin += advOption.atk; player.atkMax += advOption.atk;
@@ -537,7 +536,6 @@ function showVillage() {
     let mapObj = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { villageZh: "村莊" };
     document.getElementById('village-title').innerText = `🏡 區域 ${curMapId}: ${mapObj.villageZh}`;
     
-    // 檢查是否顯示 20等轉職試煉入口
     let trialBtn = document.getElementById('btn-job-trial');
     if (trialBtn) {
         if (player.level >= 20 && !player.isAdvanced) {
@@ -575,7 +573,7 @@ function showJobTree() {
     document.getElementById('job-tree-screen').classList.remove('hidden');
     let container = document.getElementById('job-tree-content');
     
-    let html = "<b>全職業二階轉職天賦圖鑑：</b><br><br>";
+    let html = "<b>🌳 全職業二階轉職天賦圖鑑 (Lv.20 可解鎖試煉)：</b><br><br>";
     Object.keys(JOB_ADVANCEMENTS).forEach(jobKey => {
         let jobZh = CLASSES[jobKey].nameZh;
         html += `<span style="color:#f1c40f; font-weight:bold;">▶ 【${jobZh}】轉職分支：</span><br>`;
@@ -742,13 +740,13 @@ function mine() {
     let gotMsg = "";
 
     if (rand < (0.72 - highOreRateBonus)) { 
-        player.ores.copper += count; gotMsg = `銅 x${count}`; 
+        player.ores.copper += count; gotMsg = `🥉 銅 x${count}`; 
     } else if (rand < (0.94 - highOreRateBonus/2)) { 
-        player.ores.iron += count; gotMsg = `鐵 x${count}`; 
+        player.ores.iron += count; gotMsg = `🥈 鐵 x${count}`; 
     } else if (rand < 0.98) { 
-        player.ores.gold += count; gotMsg = `金 x${count}`; 
+        player.ores.gold += count; gotMsg = `🥇 金 x${count}`; 
     } else { 
-        player.ores.diamond += count; gotMsg = `鑽石 x${count}`; 
+        player.ores.diamond += count; gotMsg = `💎 鑽石 x${count}`; 
     }
 
     let refineStoneRate = 0;
@@ -1234,10 +1232,13 @@ function loadGame() {
     }
 }
 
+// 📖 遊玩規則彈窗控制機制（修復重疊 BUG）
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {
     const screens = ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen'];
+    
+    // 找出目前正在顯示的視窗 ID 並記錄
     for (let id of screens) {
         let el = document.getElementById(id);
         if (el && !el.classList.contains('hidden')) {
@@ -1245,15 +1246,16 @@ function showGameGuide() {
             break;
         }
     }
-    hideAll();
-    document.getElementById('guide-screen').classList.remove('hidden');
+    
+    hideAll(); // 先把所有視窗隱藏
+    document.getElementById('guide-screen').classList.remove('hidden'); // 再單獨開啟指南視窗
 }
 
 function hideGameGuide() {
-    hideAll();
+    hideAll(); // 關閉指南時，先隱藏所有視窗（包含指南本身）
     let prevEl = document.getElementById(previousScreenBeforeGuide);
     if (prevEl) {
-        prevEl.classList.remove('hidden');
+        prevEl.classList.remove('hidden'); // 只還原上一頁視窗
     } else {
         showMainMenu();
     }
