@@ -1,4 +1,4 @@
-const SAVE_KEY = "pyrpg_save_github_v2.9_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v3.0_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const SKILLS = {
     // 通用 (11)
@@ -87,7 +87,6 @@ const CLASSES = {
     "Archer": { nameZh: "射手", hp: 130, mp: 90, min: 25, max: 35, weaponZh: "獵人長弓", critRate: 15, critDmg: 150, evasion: 20 }
 };
 
-// 隨機裝備商店池（全數過濾排除高級 tier: "adv" 裝備）
 const ALL_EQUIPS_POOL = [
     { nameZh: "初級·鋼鐵頭盔 (+30 MaxHP)", slot: "helmet", tier: "basic", cost: 60, hp: 30 },
     { nameZh: "初級·皮質面甲 (+25 HP | +15 MP)", slot: "helmet", tier: "basic", cost: 65, hp: 25, mp: 15 },
@@ -141,9 +140,8 @@ const CARDS_DATABASE = [
     { id: "holy_revive", nameZh: "👼 聖光復甦", descZh: "戰鬥獲勝自動恢復 30 HP" }
 ];
 
-// **鐵匠鋪專屬鍛造庫：包含 10 種戰士武器、10 種法師武器、10 種射手武器、10 種頭盔、10 種胸甲、10 種腿甲、10 種手腕（完全列出）**
 const FORGE_RECIPES_DATABASE = [
-    // ⚔️ 戰士高級武器 (10種)
+    // ⚔️ 戰士高級神兵 (10/10/10)
     { category: "warrior", slot: "weapon", nameZh: "高級·狂暴屠魔巨斧 (+70 攻擊 | +15% 暴擊率 | +30% 暴傷)", req: { copper: 25, iron: 20, gold: 3 }, job: "Warrior", tier: "adv", atk: 70, critRate: 15, critDmg: 30 },
     { category: "warrior", slot: "weapon", nameZh: "高級·龍怒屠龍寶刀 (+140 攻擊 | +30% 暴擊率 | +40% 暴傷)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Warrior", tier: "adv", atk: 140, critRate: 30, critDmg: 40 },
     { category: "warrior", slot: "weapon", nameZh: "高級·泰坦破天巨錘 (+180 攻擊 | +40% 暴傷 | +10% 閃避)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Warrior", tier: "adv", atk: 180, critDmg: 40, evasion: 10 },
@@ -155,7 +153,7 @@ const FORGE_RECIPES_DATABASE = [
     { category: "warrior", slot: "weapon", nameZh: "高級·無雙混沌屠魔劍 (+320 攻擊 | +45% 暴擊率 | +25% 閃避)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Warrior", tier: "adv", atk: 320, critRate: 45, evasion: 25 },
     { category: "warrior", slot: "weapon", nameZh: "高級·終極神怒崩天神刃 (+380 攻擊 | +50% 暴擊率 | +80% 暴傷)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Warrior", tier: "adv", atk: 380, critRate: 50, critDmg: 80 },
 
-    // 🔮 法師高級武器 (10種)
+    // 🔮 法師高級神兵 (10種)
     { category: "mage", slot: "weapon", nameZh: "高級·熾熱元素法杖 (+70 攻擊 | +25% 燃燒率 | +20% 暴傷)", req: { copper: 25, iron: 20, gold: 3 }, job: "Mage", tier: "adv", atk: 70, burnRate: 25, critDmg: 20 },
     { category: "mage", slot: "weapon", nameZh: "高級·星空星爆聖權杖 (+150 攻擊 | +35% 暴傷 | +20% 燃燒)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Mage", tier: "adv", atk: 150, critDmg: 35, burnRate: 20 },
     { category: "mage", slot: "weapon", nameZh: "高級·虛空毀滅奧術魔杖 (+190 攻擊 | +30% 暴擊率 | +25% 毒傷)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Mage", tier: "adv", atk: 190, critRate: 30, poisonRate: 25 },
@@ -241,6 +239,7 @@ const WEAPON_ENCHANTS = [
     { id: "fury", keyZh: "暴怒", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
 ];
 
+// 全 50 項成就資料（完整不省略）
 const ACHIEVEMENTS_DATABASE = [
     // ⚔️ 主線關卡 (15項)
     { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },

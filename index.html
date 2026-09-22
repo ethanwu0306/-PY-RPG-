@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 鐵匠鋪全高級武器防具擴充版 v2.9</title>
+    <title>Py RPG - 全代碼圖像與精美UI重製版 v3.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.9 (鐵匠鋪全防具10種擴充版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.0 (視覺繪圖重製版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -50,11 +50,11 @@
             <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
             • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
             • ⚡ <b>礦坑採礦</b>：升級鎬子 (+1~+5) 可大幅提升挖礦量與高階礦石率！<b>+3 以上鎬子可挖到精煉石</b>！<br>
-            • 🔨 <b>鐵匠鋪</b>：<b>獨家專屬打造各職業 10 種高級武器與各部位 10 種高級防具！</b><br>
+            • 🔨 <b>鐵匠鋪</b>：<b>獨家專屬打造高級神裝、神兵與升級鎬子、裝備精煉</b>！<br>
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予 10 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
-            • 🛠️ <b>裝備商店 (5欄位)</b>：出售初級與中級現成裝備（不販售高級裝備），支援 100 G 換一批！<br>
+            • 🛠️ <b>裝備商店 (5欄位)</b>：出售初級與中級現成裝備，支援 100 G 換一批！<br>
             • 📖 <b>技能商店</b>：刷新所有職業技能。<br>
             • 🏆 <b>勇者成就</b>：50 項成就支援<b>一鍵領取與進度條顯示</b>！
         </div>
@@ -78,19 +78,32 @@
         <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-top:10px;" id="btn-refresh-card" onclick="refreshCardSelection()">🔄 刷新卡片 (消耗 1 顆附魔石 | 剩餘 3 次)</button>
     </div>
 
-    <!-- 戰鬥畫面 -->
+    <!-- 戰鬥對決畫面 (繪圖版雙 Canvas 對決) -->
     <div id="battle-screen" class="hidden">
         <h3 id="map-info">區域: 1-1</h3>
-        <div class="status-box">
-            <div id="player-status">玩家 HP: 100 | MP: 30</div>
-            <div id="buff-status" style="color:#f1c40f; font-size:12px;">狀態: 無</div>
-            <div id="monster-status" style="color:#e74c3c; margin-top:4px;">敵人 HP: 50</div>
-            <div id="monster-debuff-status" style="color:#e67e22; font-size:11px;"></div>
-        </div>
         
-        <div class="monster-canvas-box" style="position:relative;">
-            <canvas id="monster-canvas" width="140" height="120"></canvas>
-            <div id="floating-text-container"></div>
+        <!-- 玩家與怪物繪圖對決區 -->
+        <div class="battle-arena-box">
+            <div class="arena-unit">
+                <canvas id="player-avatar-canvas" width="120" height="120"></canvas>
+                <div class="bar-outer"><div id="player-hp-bar" class="bar-inner hp"></div></div>
+                <div class="bar-outer"><div id="player-mp-bar" class="bar-inner mp"></div></div>
+                <div id="player-status-text" class="unit-stats-text">HP: 100 | MP: 30</div>
+            </div>
+            
+            <div class="arena-vs">VS</div>
+            
+            <div class="arena-unit">
+                <canvas id="monster-canvas" width="120" height="120"></canvas>
+                <div class="bar-outer"><div id="monster-hp-bar" class="bar-inner m-hp"></div></div>
+                <div id="monster-status-text" class="unit-stats-text">敵人 HP: 50</div>
+                <div id="floating-text-container"></div>
+            </div>
+        </div>
+
+        <div class="status-box" style="margin-top:8px;">
+            <div id="buff-status" style="color:#f1c40f; font-size:12px;">狀態: 無</div>
+            <div id="monster-debuff-status" style="color:#e67e22; font-size:11px;"></div>
         </div>
 
         <div id="log-box"></div>

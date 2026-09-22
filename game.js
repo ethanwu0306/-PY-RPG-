@@ -10,7 +10,6 @@ let pendingSkillToLearn = null;
 let villageNpcMsg = "";
 let cardRefreshCount = 3;
 let pendingVictoryData = null;
-let curLang = "zh";
 
 function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
@@ -90,13 +89,41 @@ function spawnMonster() {
         monster = { name: mName, hp: 120 + defeatedCount * 16, maxHp: 120 + defeatedCount * 16, min: 12 + defeatedCount * 3, max: 22 + defeatedCount * 4, reward: reward, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
     }
 
-    if (typeof drawMonsterVisual === "function") drawMonsterVisual(curMapId, isBoss || isFinal);
+    drawAvatarAndMonsterVisuals(curMapId, isBoss || isFinal);
     document.getElementById('log-box').innerHTML = "戰鬥開始！\n";
     player.shield = 0; 
     player.skillCDs = {};
     player.isDefending = false;
     render4SkillButtons();
     updateBattleUI();
+}
+
+// 動態 Canvas 繪製：玩家職業與怪物圖像
+function drawAvatarAndMonsterVisuals(mapId, isBoss) {
+    let pCanvas = document.getElementById('player-avatar-canvas');
+    if (pCanvas) {
+        let ctx = pCanvas.getContext('2d');
+        ctx.clearRect(0, 0, 120, 120);
+        
+        ctx.fillStyle = player.jobCode === 'Warrior' ? '#e74c3c' : (player.jobCode === 'Mage' ? '#9b59b6' : '#2ecc71');
+        ctx.beginPath(); ctx.arc(60, 45, 25, 0, Math.PI * 2); ctx.fill();
+        ctx.fillRect(40, 70, 40, 40);
+        
+        ctx.fillStyle = '#f1c40f';
+        if (player.jobCode === 'Warrior') { ctx.fillRect(80, 50, 20, 5); ctx.fillRect(20, 60, 15, 25); }
+        else if (player.jobCode === 'Mage') { ctx.fillRect(85, 30, 6, 60); ctx.fillStyle='#00ffff'; ctx.beginPath(); ctx.arc(88, 25, 8, 0, Math.PI*2); ctx.fill(); }
+        else if (player.jobCode === 'Archer') { ctx.strokeStyle='#d35400'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(80, 70, 20, -Math.PI/2, Math.PI/2); ctx.stroke(); }
+    }
+
+    let mCanvas = document.getElementById('monster-canvas');
+    if (mCanvas) {
+        let ctx = mCanvas.getContext('2d');
+        ctx.clearRect(0, 0, 120, 120);
+        let mColor = isBoss ? '#f39c12' : '#e74c3c';
+        ctx.fillStyle = mColor;
+        ctx.beginPath(); ctx.arc(60, 60, isBoss ? 35 : 25, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#000'; ctx.fillRect(48, 50, 8, 8); ctx.fillRect(64, 50, 8, 8);
+    }
 }
 
 function checkBloodDanger() {
@@ -126,20 +153,29 @@ function triggerScreenShake() {
 
 function updateBattleUI() {
     let mapObj = (typeof MAPS !== "undefined" && MAPS[monster.mapId]) ? MAPS[monster.mapId] : { nameZh: "荒野" };
-    let weaknessZh = { flame: "火", frost: "冰", thunder: "雷", gale: "風" }[mapObj.weakness] || "無";
+    let weaknessZh = { flame: "🔥火", frost: "❄️冰", thunder: "⚡雷", gale: "🍃風" }[mapObj.weakness] || "無";
 
     document.getElementById('map-info').innerText = `區域: ${getStageString(defeatedCount)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
     
     let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
     if (player.isDefending) buffStr += " | 防禦防護中";
 
-    document.getElementById('player-status').innerText = `【${player.jobName}】HP: ${player.hp}/${player.maxHp} ${player.shield > 0 ? '(Shield:'+player.shield+')' : ''} | MP: ${player.mp}/${player.maxMp}\n🧪 生命藥水: ${player.potions.hp}瓶 | 魔力藥水: ${player.potions.mp}瓶`;
+    // 更新即時視覺動態血條 & 魔條
+    let pHpPct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
+    let pMpPct = Math.max(0, Math.min(100, (player.mp / player.maxMp) * 100));
+    let mHpPct = Math.max(0, Math.min(100, (monster.hp / monster.maxHp) * 100));
+
+    let pHpBar = document.getElementById('player-hp-bar'); if(pHpBar) pHpBar.style.width = pHpPct + "%";
+    let pMpBar = document.getElementById('player-mp-bar'); if(pMpBar) pMpBar.style.width = pMpPct + "%";
+    let mHpBar = document.getElementById('monster-hp-bar'); if(mHpBar) mHpBar.style.width = mHpPct + "%";
+
+    document.getElementById('player-status-text').innerText = `【${player.jobName}】HP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp}`;
+    
+    let rageTag = monster.isRaged ? " 🔥【二階段狂暴化！】" : "";
+    document.getElementById('monster-status-text').innerText = `【${monster.name}】HP: ${monster.hp}/${monster.maxHp}${rageTag}`;
     
     let encStr = (player.weaponEnchants && player.weaponEnchants.length > 0) ? player.weaponEnchants.join(' + ') : "無附魔";
     document.getElementById('buff-status').innerText = `武器: [${player.weapon}] (${encStr})\nBUFF: ${buffStr} | 卡片: ${player.cards.length > 0 ? player.cards.join(', ') : '無'}`;
-    
-    let rageTag = monster.isRaged ? " 🔥【二階段狂暴化中！】" : "";
-    document.getElementById('monster-status').innerText = `【${monster.name}】HP: ${monster.hp}/${monster.maxHp}${rageTag}`;
     
     let mDebuffTxt = monster.debuffTurns > 0 ? `⚠️ 怪物負面狀態: 衰弱/流血 (${monster.debuffTurns}T)` : "";
     document.getElementById('monster-debuff-status').innerText = mDebuffTxt;
