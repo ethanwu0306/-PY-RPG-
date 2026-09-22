@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Py RPG - 模組化旗艦版 v1.4</title>
+    <title>Py RPG - 2.0 次世代戰鬥與背包升級版</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v1.4</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v2.0 (完全體)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn btn-lang" onclick="toggleLanguage()" id="btn-lang-toggle">🌐 語言 / Language: 中文</button>
@@ -45,7 +45,7 @@
         <div class="status-box" style="height: 380px; overflow-y: auto; text-align: left; font-size: 12px;">
             <div class="section-header">⚔️ 一、核心冒險機制</div>
             • <b>關卡目標</b>：總共 10 大區域（100 小關），第 10 關為區域 BOSS，第 100 關為終極魔王路西法！<br>
-            • <b>戰鬥說明</b>：使用普通攻擊或 4 格快捷技能攻打敵人。擊敗 BOSS 可獲得神秘祝福卡片。<br><br>
+            • <b>戰鬥說明</b>：技能具備 CD 冷卻與持續性 BUFF/DEBUFF 狀態！受擊有震動與打擊浮動數字！<br><br>
 
             <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
             • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
@@ -53,15 +53,9 @@
             • 🔨 <b>鐵匠鋪</b> (耗 1 行動力)：分類為戰士武器、法師武器、弓箭手武器與共通防具裝備。<br>
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予烈焰、吸血、凍結、破甲等 10 種魔法效果。<br><br>
 
-            <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
-            • 🛠️ <b>裝備商店</b>：隨機購買現成武器防具。<br>
-            • 📖 <b>技能商店</b>：隨機刷新所有職業技能， 100 金幣 換一批。<br>
-            • 🧪 <b>藥水商店</b>：購買生命藥水 (100 HP) 與魔力藥水 (50 MP)，戰鬥中隨時使用。<br>
-            • 🏆 <b>勇者成就</b>：50 項四大分類成就，達成即領大量金幣與附魔石！<br><br>
-
-            <div class="section-header">💾 四、存檔與讀檔說明</div>
-            • <b>本地自動存檔</b>：在村莊點擊「💾 儲存進度」後，進度會自動儲存在目前瀏覽器中。<br>
-            • <b>跨裝置存檔</b>：使用「📋 跨裝置存檔備份與匯入」複製代碼備份，可在任何電腦/手機隨時貼上還原！
+            <div class="section-header">🎒 三、背包與裝備系統</div>
+            • 隨時點擊「📊 角色詳細面板」，可以在背包中自由裝備或脫下武器與防具！<br>
+            • 高階技能擁有冷卻回合，請合理搭配普通攻擊與狀態技能。<br>
         </div>
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回主畫面</button>
     </div>
@@ -75,7 +69,7 @@
         <button class="btn btn-secondary" onclick="showMainMenu()" id="btn-class-back">⬅️ 返回主畫面</button>
     </div>
 
-    <!-- 卡片選擇畫面 -->
+    <!-- 神秘商人卡片選擇畫面 -->
     <div id="card-screen" class="hidden">
         <h2 id="card-title">🔮 遇見神秘商人！</h2>
         <p style="color:#ccc; text-align:center; font-size: 13px;" id="card-sub">打敗區域 BOSS，獲得神秘祝福！請選擇一張卡片：</p>
@@ -83,17 +77,19 @@
         <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f; margin-top:10px;" id="btn-refresh-card" onclick="refreshCardSelection()">🔄 刷新卡片 (消耗 1 顆附魔石 | 剩餘 3 次)</button>
     </div>
 
-    <!-- 戰鬥畫面 -->
+    <!-- 戰鬥畫面（包含動態特效 Canvas 疊加） -->
     <div id="battle-screen" class="hidden">
         <h3 id="map-info">區域: 1-1</h3>
         <div class="status-box">
             <div id="player-status">玩家 HP: 100 | MP: 30</div>
-            <div id="buff-status" style="color:#f1c40f; font-size:12px;">已獲得卡片: 無</div>
+            <div id="buff-status" style="color:#f1c40f; font-size:12px;">狀態: 無</div>
             <div id="monster-status" style="color:#e74c3c; margin-top:4px;">敵人 HP: 50</div>
+            <div id="monster-debuff-status" style="color:#e67e22; font-size:11px;"></div>
         </div>
         
-        <div class="monster-canvas-box">
+        <div class="monster-canvas-box" style="position:relative;">
             <canvas id="monster-canvas" width="140" height="120"></canvas>
+            <div id="floating-text-container"></div>
         </div>
 
         <div id="log-box"></div>
@@ -101,8 +97,16 @@
             <button class="btn" onclick="playerAttack()" id="btn-attack">⚔️ 普通攻擊</button>
             <button class="btn" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#e67e22;" onclick="showInBattlePotions()" id="btn-potion-use">🧪 使用藥水</button>
         </div>
-        <h3 style="margin: 8px 0 4px 0; color:#1abc9c; font-size:13px; text-align:left;" id="skill-grid-title">✨ 技能快捷格 (最多4招)：</h3>
+        <h3 style="margin: 8px 0 4px 0; color:#1abc9c; font-size:13px; text-align:left;" id="skill-grid-title">✨ 技能快捷格 (最多4招 | 含 CD 機制)：</h3>
         <div class="skill-grid" id="skill-buttons-container"></div>
+    </div>
+
+    <!-- 自訂戰鬥勝利結算視窗 (In-Game Result Screen) -->
+    <div id="victory-modal-screen" class="hidden">
+        <h2 style="color:#2ecc71;">🎉 戰鬥勝利！</h2>
+        <div class="status-box" id="victory-modal-content" style="text-align:center; font-size:14px; line-height:1.8;">
+        </div>
+        <button class="btn btn-action" onclick="confirmVictoryModal()">✨ 進入村莊整備</button>
     </div>
 
     <!-- 藥水選單畫面 -->
@@ -128,7 +132,7 @@
         <div class="status-box" id="village-status"></div>
         <div id="npc-event-box" style="display:none; background:#196f3d; border:1px solid #2ecc71; color:white; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; text-align:center;"></div>
         
-        <button class="btn" onclick="showPlayerStats()" style="background: linear-gradient(180deg, #7d3c98 0%, #4a235a 100%); border-color:#af7ac5;" id="btn-v-stats">📊 查看角色詳細面板</button>
+        <button class="btn" onclick="showPlayerStats()" style="background: linear-gradient(180deg, #7d3c98 0%, #4a235a 100%); border-color:#af7ac5;" id="btn-v-stats">📊 查看角色面板與🎒背包裝備</button>
         
         <div class="section-header">🏰 城鎮設施 (消耗 1 行動力)</div>
         <div class="tab-grid">
@@ -173,11 +177,13 @@
         <button class="btn btn-secondary" onclick="showSkillShop()" id="btn-cancel-replace">❌ 取消學習</button>
     </div>
 
-    <!-- 角色面板畫面 -->
+    <!-- 角色面板與背包管理畫面 -->
     <div id="stats-screen" class="hidden">
-        <h2 id="stats-title">📊 角色詳細面板</h2>
+        <h2 id="stats-title">📊 角色面板 & 🎒 背包裝備</h2>
         <div class="status-box" id="stats-content"></div>
-        <button class="btn btn-secondary" onclick="returnToVillage()" id="btn-stats-back">⬅️ 返回村莊</button>
+        <div class="section-header">🎒 背包物品（點擊裝備或卸下）</div>
+        <div id="inventory-list" style="max-height: 160px; overflow-y: auto;"></div>
+        <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;" id="btn-stats-back">⬅️ 返回村莊</button>
     </div>
 
     <!-- 鐵匠鋪畫面 -->
@@ -218,7 +224,6 @@
     </div>
 </div>
 
-<!-- 依序載入副程式 JS 檔案 -->
 <script src="data.js"></script>
 <script src="audio.js"></script>
 <script src="game.js"></script>
