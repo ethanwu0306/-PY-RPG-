@@ -95,6 +95,16 @@ function playSound(type, jobCode) {
         osc.frequency.linearRampToValueAtTime(600, now + 0.25);
         gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
         osc.start(now); osc.stop(now + 0.25);
+    } else if (type === 'buff') {
+        osc.type = 'sine'; osc.frequency.setValueAtTime(350, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.3);
+        gain.gain.setValueAtTime(0.25, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now); osc.stop(now + 0.3);
+    } else if (type === 'debuff') {
+        osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.35);
+        gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now); osc.stop(now + 0.35);
     } else if (type === 'victory') {
         osc.type = 'sine'; osc.frequency.setValueAtTime(523, now);
         osc.frequency.setValueAtTime(659, now + 0.1);

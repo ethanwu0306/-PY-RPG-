@@ -56,10 +56,7 @@ function initGame(jobCode) {
         gold: 100, enchantStones: 0, villageActions: 5, maxVillageActions: 5, skills: ["重擊"], cards: [], 
         equips: [], refines: {}, pickaxeLvl: 0, refineStones: 0, shopRefreshCount: 0, restCount: 0, 
         
-        towerFloor: 1,
-        artifactFrags: 0,
-        luciferFrags: 0,
-
+        towerFloor: 1, artifactFrags: 0, luciferFrags: 0,
         equipmentSlots: { helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null },
         weaponEnchants: [], ores: { copper: 0, iron: 0, gold: 0, diamond: 0 },
         potions: { hp: 1, mp: 1 }, mineCount: 0, achieved: [],
@@ -68,7 +65,7 @@ function initGame(jobCode) {
         poisonRate: 0, burnRate: 0, freezeRate: 0,
         poisonRes: 0, burnRes: 0, frostRes: 0, darkRes: 0,
         
-        skillCDs: {}, buffTurns: 0, debuffTurns: 0, isDefending: false
+        skillCDs: {}, buffTurns: 0, currentBuffName: "", debuffTurns: 0, isDefending: false, playerDebuffTurns: 0, playerDebuffName: ""
     };
     defeatedCount = 0;
     maxReachedStage = 1;
@@ -110,7 +107,7 @@ function startTowerFloorChallenge() {
         min: Math.floor((60 + floor * 15) * towerHardMult), max: Math.floor((90 + floor * 22) * towerHardMult),
         reward: 400 + floor * 50, expReward: 220 + floor * 30,
         isFinal: false, isBoss: isFloorBoss, mapId: Math.min(10, Math.floor(floor / 5) + 1),
-        debuffTurns: 0, isRaged: false
+        debuffTurns: 0, currentDebuffName: "", buffTurns: 0, currentBuffName: "", isRaged: false
     };
 
     drawAvatarAndMonsterVisuals(monster.mapId, isFloorBoss);
@@ -150,7 +147,7 @@ function handleEventChoice(action) {
             alert("✨ 神清氣爽！神奇的井水為你將 HP 與 MP 全部恢復填滿！");
         } else {
             player.hp = Math.floor(player.hp * 0.80);
-            alert("🤮 哎呀！井水似乎不太乾淨，肚子一陣絞痛扣除 20% 血量！強制進入戰鬥！");
+            alert("🤮 哎呀！井水處理不潔，肚子一陣絞痛扣除 20% 血量！強制進入戰鬥！");
             enterBattleAfterEvent();
             return;
         }
@@ -230,20 +227,22 @@ function spawnMonster() {
     let chapterHardMult = (stageNum >= 51) ? 1.8 : 1.0;
 
     if (isFinal) { 
-        monster = { name: "👑 滅世魔王·路西法", hp: 12000, maxHp: 12000, min: 220, max: 320, reward: 5000, expReward: 2000, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
+        monster = { name: "👑 滅世魔王·路西法", hp: 12000, maxHp: 12000, min: 220, max: 320, reward: 5000, expReward: 2000, isFinal: true, mapId: 10, debuffTurns: 0, currentDebuffName: "", buffTurns: 0, currentBuffName: "", isRaged: false }; 
     } else if (isBoss) { 
         let reward = Math.floor(Math.random() * 31 + 80);
-        monster = { name: `👑 ${mapData.bossZh}`, hp: Math.floor((900 + stageNum * 55) * chapterHardMult), maxHp: Math.floor((900 + stageNum * 55) * chapterHardMult), min: Math.floor((45 + curMapId * 15) * chapterHardMult), max: Math.floor((75 + curMapId * 20) * chapterHardMult), reward: reward, expReward: 200 + stageNum * 15, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false, isBoss: true }; 
+        monster = { name: `👑 ${mapData.bossZh}`, hp: Math.floor((900 + stageNum * 55) * chapterHardMult), maxHp: Math.floor((900 + stageNum * 55) * chapterHardMult), min: Math.floor((45 + curMapId * 15) * chapterHardMult), max: Math.floor((75 + curMapId * 20) * chapterHardMult), reward: reward, expReward: 200 + stageNum * 15, isFinal: false, mapId: curMapId, debuffTurns: 0, currentDebuffName: "", buffTurns: 0, currentBuffName: "", isRaged: false, isBoss: true }; 
     } else { 
         let reward = Math.floor(Math.random() * 11 + 40);
         let mName = mapData.monstersZh[Math.floor(Math.random() * mapData.monstersZh.length)];
-        monster = { name: mName, hp: Math.floor((220 + stageNum * 38) * chapterHardMult), maxHp: Math.floor((220 + stageNum * 38) * chapterHardMult), min: Math.floor((20 + stageNum * 6) * chapterHardMult), max: Math.floor((35 + stageNum * 9) * chapterHardMult), reward: reward, expReward: 60 + stageNum * 8, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
+        monster = { name: mName, hp: Math.floor((220 + stageNum * 38) * chapterHardMult), maxHp: Math.floor((220 + stageNum * 38) * chapterHardMult), min: Math.floor((20 + stageNum * 6) * chapterHardMult), max: Math.floor((35 + stageNum * 9) * chapterHardMult), reward: reward, expReward: 60 + stageNum * 8, isFinal: false, mapId: curMapId, debuffTurns: 0, currentDebuffName: "", buffTurns: 0, currentBuffName: "", isRaged: false }; 
     }
 
     drawAvatarAndMonsterVisuals(curMapId, isBoss || isFinal);
     document.getElementById('log-box').innerHTML = "戰鬥開始！\n";
     player.skillCDs = {};
     player.isDefending = false;
+    player.buffTurns = 0;
+    player.playerDebuffTurns = 0;
     render4SkillButtons();
     updateBattleUI();
 }
@@ -277,7 +276,7 @@ function startJobAdvanceTrial() {
         min: Math.floor(player.atkMin * 1.1), max: Math.floor(player.atkMax * 1.1),
         critRate: player.critRate,
         reward: 1000, expReward: 800,
-        isFinal: false, isBoss: true, mapId: nextTier * 2, debuffTurns: 0, isRaged: false
+        isFinal: false, isBoss: true, mapId: nextTier * 2, debuffTurns: 0, currentDebuffName: "", buffTurns: 0, currentBuffName: "", isRaged: false
     };
 
     drawAvatarAndMonsterVisuals(nextTier * 2, true);
@@ -351,8 +350,13 @@ function updateBattleUI() {
 
     document.getElementById('map-info').innerText = `${titleText} (弱點: ${weaknessZh})`;
     
-    let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
-    if (player.isDefending) buffStr += " | 防禦防護中";
+    let pBuffStr = player.buffTurns > 0 ? `${player.currentBuffName || "狂暴/增益"} (剩 ${player.buffTurns} 回合)` : "無";
+    if (player.shield > 0) pBuffStr += ` | 🛡️ 護盾: ${player.shield}`;
+    if (player.isDefending) pBuffStr += " | 防禦減傷中";
+    if (player.playerDebuffTurns > 0) pBuffStr += ` | ⚠️ 負面: ${player.playerDebuffName || "衰弱"} (剩 ${player.playerDebuffTurns} 回合)`;
+
+    let mDebuffTxt = monster.debuffTurns > 0 ? `⚠️ 敵方 DEBUFF: ${monster.currentDebuffName || "衰弱/持續傷害"} (剩 ${monster.debuffTurns} 回合)` : "敵方 DEBUFF: 無";
+    if (monster.buffTurns > 0) mDebuffTxt += ` | 🔥 敵方 BUFF: ${monster.currentBuffName || "狂暴"} (剩 ${monster.buffTurns} 回合)`;
 
     let pHpPct = Math.max(0, Math.min(100, (player.hp / player.maxHp) * 100));
     let pMpPct = Math.max(0, Math.min(100, (player.mp / player.maxMp) * 100));
@@ -369,10 +373,7 @@ function updateBattleUI() {
     let rageTag = monster.isRaged ? " 🔥【二階段狂暴化！】" : "";
     document.getElementById('monster-status-text').innerText = `【${monster.name}】HP: ${monster.hp}/${monster.maxHp}${rageTag}`;
     
-    let encStr = (player.weaponEnchants && player.weaponEnchants.length > 0) ? player.weaponEnchants.join(' + ') : "無附魔";
-    document.getElementById('buff-status').innerText = `武器: [${player.weapon}] (${encStr})\nBUFF: ${buffStr} | 卡片: ${player.cards.length > 0 ? player.cards.join(', ') : '無'}`;
-    
-    let mDebuffTxt = monster.debuffTurns > 0 ? `⚠️ 怪物負面狀態: 衰弱/流血 (${monster.debuffTurns}T)` : "";
+    document.getElementById('buff-status').innerText = `玩家 BUFF: ${pBuffStr}`;
     document.getElementById('monster-debuff-status').innerText = mDebuffTxt;
 
     checkBloodDanger();
@@ -453,6 +454,8 @@ function executeTurn(skillKey, isDefendingAction) {
         if (player.skillCDs[k] > 0) player.skillCDs[k]--;
     });
     if (player.buffTurns > 0) player.buffTurns--;
+    if (player.playerDebuffTurns > 0) player.playerDebuffTurns--;
+    if (monster.buffTurns > 0) monster.buffTurns--;
 
     player.isDefending = isDefendingAction;
 
@@ -479,9 +482,22 @@ function executeTurn(skillKey, isDefendingAction) {
         if (player.buffTurns > 0) dealtDmg = Math.floor(dealtDmg * 1.25);
         if (isCrit) dealtDmg = Math.floor(dealtDmg * (player.critDmg / 100));
         
-        if (sInfo.shield) player.shield += sInfo.shield;
-        if (sInfo.buffTurn) player.buffTurns = sInfo.buffTurn;
-        if (sInfo.debuffTurn) monster.debuffTurns = sInfo.debuffTurn;
+        if (sInfo.shield) {
+            player.shield += sInfo.shield;
+            if (typeof playSound === "function") playSound('buff');
+        }
+        if (sInfo.buffTurn) {
+            player.buffTurns = sInfo.buffTurn;
+            player.currentBuffName = sInfo.buffName || "增益狀態";
+            if (typeof playSound === "function") playSound('buff');
+            log(`✨ 獲得了 BUFF：【${player.currentBuffName}】！`, "log-skill");
+        }
+        if (sInfo.debuffTurn) {
+            monster.debuffTurns = sInfo.debuffTurn;
+            monster.currentDebuffName = sInfo.debuffName || "負面狀態";
+            if (typeof playSound === "function") playSound('debuff');
+            log(`☠️ 對敵方施加了 DEBUFF：【${monster.currentDebuffName}】！`, "log-dmg");
+        }
 
         monster.hp -= dealtDmg;
         if (typeof playSound === "function") playSound('skill', player.jobCode);
@@ -513,11 +529,11 @@ function executeTurn(skillKey, isDefendingAction) {
     }
 
     if (monster.debuffTurns > 0) {
-        let dotDmg = 15;
+        let dotDmg = 25;
         monster.hp -= dotDmg;
         monster.debuffTurns--;
         spawnFloatingText(`☠️ ${dotDmg}`, "debuff");
-        log(`☠️ 怪物受到持續流血/毒傷，扣除 ${dotDmg} 點 HP！`, "log-dmg");
+        log(`☠️ 怪物受到持續 DEBUFF (${monster.currentDebuffName}) 傷害，扣除 ${dotDmg} 點 HP！`, "log-dmg");
     }
 
     render4SkillButtons();
@@ -596,19 +612,32 @@ function executeTurn(skillKey, isDefendingAction) {
         if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
         player.hp -= mDmg;
         log(`⚡ 【試煉BOSS】複製並施展了你的【${randSkillKey}】，造成 ${mDmg} 點試煉傷害！`, "log-crit");
-    } else {
+    } else if (enemyActionRand < 0.18) {
+        monster.buffTurns = 2;
+        monster.currentBuffName = "狂熱咆哮 (攻擊+20%)";
+        if (typeof playSound === "function") playSound('buff');
+        log(`🔥 ${monster.name} 發動技能【狂熱咆哮】，進入 BUFF 狀態！`, "log-crit");
+    } else if (enemyActionRand < 0.35) {
+        player.playerDebuffTurns = 2;
+        player.playerDebuffName = "劇毒爪擊 (每回合扣除 20 HP)";
         mDmg = Math.floor(Math.random() * (monster.max - monster.min + 1) + monster.min);
         if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
+        player.hp -= mDmg;
+        if (typeof playSound === "function") playSound('debuff');
+        log(`☠️ ${monster.name} 施展【劇毒爪擊】，造成 ${mDmg} 點傷害並對你施加【劇毒 2回合】！`, "log-dmg");
+    } else {
+        mDmg = Math.floor(Math.random() * (monster.max - monster.min + 1) + monster.min);
+        if (monster.buffTurns > 0) mDmg = Math.floor(mDmg * 1.20);
+        if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
+        player.hp -= mDmg;
+        log(`🩸 ${monster.name} 反擊，造成 ${mDmg} 點傷害`, "log-dmg");
+    }
 
-        if (enemyActionRand < 0.15) {
-            mDmg = Math.floor(mDmg * 1.5);
-            if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
-            player.hp -= mDmg;
-            log(`🩸 ${monster.name} 施展【猛烈重擊】，造成 ${mDmg} 點傷害！`, "log-crit");
-        } else {
-            player.hp -= mDmg;
-            log(`🩸 ${monster.name} 反擊，造成 ${mDmg} 點傷害`, "log-dmg");
-        }
+    if (player.playerDebuffTurns > 0) {
+        let pDotDmg = 20;
+        player.hp -= pDotDmg;
+        spawnFloatingText(`☠️ -${pDotDmg}`, "debuff");
+        log(`☠️ 你受到了 DEBUFF 詛咒效果，損失 ${pDotDmg} 點 HP！`, "log-dmg");
     }
 
     if (player.hp <= 0) {
@@ -1312,13 +1341,11 @@ function updateForgeUI() {
         recipeList = FORGE_RECIPES_DATABASE.filter(r => r.category === currentForgeTab);
     }
 
-    // 映射按鈕頁籤至英文代碼
     const tabMap = { warrior: 'Warrior', mage: 'Mage', archer: 'Archer' };
 
     recipeList.forEach(recipe => {
         let bought = p.equips.includes(getItemName(recipe));
         
-        // 🔒 精準匹配基礎職業
         let isJobMatch = true;
         if (recipe.job) {
             isJobMatch = (recipe.job === p.baseJobCode) || (recipe.job === p.jobCode) || (tabMap[currentForgeTab] === recipe.job);
