@@ -26,7 +26,7 @@ function getMaxExp(lvl) {
 }
 
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen', 'event-screen', 'map-select-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen', 'guide-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -840,6 +840,11 @@ function updateVillageUI() {
     let act = player.villageActions;
     let pLvl = player.pickaxeLvl || 0;
     
+    // **防護機制：若金幣為 NaN 則自動修復為數字 100**
+    if (typeof player.gold !== "number" || isNaN(player.gold)) {
+        player.gold = 100;
+    }
+
     document.getElementById('village-status').innerText = `Lv.${player.level || 1} 【${player.jobName}】 (${player.jobTier || 1}階) | EXP: ${player.exp}/${player.maxExp}\n金幣: ${player.gold} G | 💎 附魔石: ${player.enchantStones} | 精煉石: ${player.refineStones || 0}\n🧩 神器碎片: ${player.artifactFrags || 0} | 👑 路西法碎片: ${player.luciferFrags || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ 行動力: ${act}/5\n⛏️ 採礦鎬子等級: +${pLvl}`;
 
     document.getElementById('btn-v-rest').disabled = (player.gold < 30 || act <= 0);
@@ -854,7 +859,6 @@ function updateVillageUI() {
     checkBloodDanger();
 }
 
-// 🌳 職業天賦分支圖 (卡片式階梯 UI，獨立清爽)
 function showJobTree(jobKey) {
     hideAll();
     document.getElementById('job-tree-screen').classList.remove('hidden');
@@ -1211,7 +1215,8 @@ function updateAchieveUI() {
         } else {
             btn.onclick = () => {
                 player.achieved.push(ach.id);
-                player.gold += ach.gold;
+                // 🔒 安全轉型相加，防止 NaN
+                player.gold += Number(ach.gold) || 100;
                 if (ach.stones) player.enchantStones += ach.stones;
                 alert(`🏆 領取成就成功！獲得 ${ach.gold} 金幣${ach.stones ? " 與 " + ach.stones + " 顆附魔石" : ""}！`);
                 updateAchieveUI();
@@ -1243,7 +1248,8 @@ function claimAllAchievements() {
             let canClaim = (curVal >= ach.reqVal) || (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal));
             if (canClaim) {
                 player.achieved.push(ach.id);
-                player.gold += ach.gold;
+                // 🔒 安全轉型相加
+                player.gold += Number(ach.gold) || 100;
                 if (ach.stones) player.enchantStones += ach.stones;
                 claimedCount++;
             }
@@ -1637,6 +1643,7 @@ function loadGame() {
             if (data.shopEquips) shopEquips = data.shopEquips;
             if (data.shopSkills) shopSkills = data.shopSkills;
 
+            // 🔒 雙重防護：若載入後金幣為 NaN 則恢復為 100 G
             if (typeof player.gold !== "number" || isNaN(player.gold)) {
                 player.gold = 100;
             }
@@ -1674,7 +1681,7 @@ function loadGame() {
     }
 }
 
-// 📖 遊玩規則指南控制機制 (使用隔離重置模式)
+// 📖 遊玩規則指南控制機制 (獨立彈窗模式)
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {
@@ -1688,16 +1695,12 @@ function showGameGuide() {
         }
     }
     
-    // 強制先將所有主畫面組件隱藏
     hideAll(); 
     document.getElementById('guide-screen').classList.remove('hidden'); 
 }
 
 function hideGameGuide() {
-    // 先把指南視窗本身隱藏
     document.getElementById('guide-screen').classList.add('hidden');
-    
-    // 單獨還原上一個畫面的顯示
     let prevEl = document.getElementById(previousScreenBeforeGuide);
     if (prevEl) {
         prevEl.classList.remove('hidden'); 

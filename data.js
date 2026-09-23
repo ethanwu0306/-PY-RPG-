@@ -1,4 +1,4 @@
-const SAVE_KEY = "pyrpg_save_github_v5.3_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v5.4_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const CLASS_ARTIFACTS_DATABASE = {
     "狂戰士": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂戰士", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
@@ -180,7 +180,7 @@ const SKILLS = {
     "流星雨": { type: "Mage", elem: "flame", cost: 400, mp: 32, mult: 4.5, cd: 3, descZh: "火屬：4.5倍流星打擊" },
     "末日審判": { type: "Mage", elem: "flame", cost: 450, mp: 35, mult: 4.9, cd: 4, descZh: "火屬：4.9倍末日魔攻" },
     "虛空風暴": { type: "Mage", elem: "thunder", cost: 480, mp: 38, mult: 5.2, cd: 4, descZh: "雷屬：5.2倍虛空打擊" },
-    "超新星爆發": { type: "Mage", elem: "flame", cost: 520, mp: 40, mult: 5.6, cd: 4, descZh: "法師：5.6倍極限爆破" },
+    "超新星爆發": { type: "Mage", elem: "flame", cost: 520, mp: 40, mult: 5.6, cd: 4, descZh: "火屬：5.6倍極限爆破" },
     "太陽耀斑": { type: "Mage", elem: "flame", cost: 350, mp: 27, mult: 4.1, cd: 3, descZh: "火屬：4.1倍強光打擊" },
     "黑洞吞噬": { type: "Mage", elem: "none", cost: 430, mp: 33, mult: 4.7, cd: 3, descZh: "法師：4.7倍黑洞魔法" },
     "混沌滅世破": { type: "Mage", elem: "thunder", cost: 490, mp: 37, mult: 5.4, cd: 4, descZh: "雷屬：5.4倍混沌毀滅魔攻" },
@@ -268,105 +268,7 @@ const CARDS_DATABASE = [
     { id: "holy_revive", nameZh: "👼 聖光復甦", descZh: "戰鬥獲勝自動恢復 30 HP" }
 ];
 
-const FORGE_RECIPES_DATABASE = [
-    // ⚔️ 戰士高級神兵 (10種)
-    { category: "warrior", slot: "weapon", nameZh: "高級·狂暴屠魔巨斧 (+70 攻擊 | +15% 暴擊率 | +30% 暴傷)", req: { copper: 25, iron: 20, gold: 3 }, job: "Warrior", tier: "adv", atk: 70, critRate: 15, critDmg: 30 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·龍怒屠龍寶刀 (+140 攻擊 | +30% 暴擊率 | +40% 暴傷)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Warrior", tier: "adv", atk: 140, critRate: 30, critDmg: 40 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·泰坦破天巨錘 (+180 攻擊 | +40% 暴傷 | +10% 閃避)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Warrior", tier: "adv", atk: 180, critDmg: 40, evasion: 10 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·霸王毀滅重劍 (+200 攻擊 | +25% 暴擊率 | +20% 中毒)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Warrior", tier: "adv", atk: 200, critRate: 25, poisonRate: 20 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·雷霆破陣巨長槍 (+220 攻擊 | +35% 暴擊率 | +15% 閃避)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Warrior", tier: "adv", atk: 220, critRate: 35, evasion: 15 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·滅世死神巨鐮 (+240 攻擊 | +50% 暴傷 | +25% 燃燒)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Warrior", tier: "adv", atk: 240, critDmg: 50, burnRate: 25 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·聖光開山寶劍 (+260 攻擊 | +40% 暴擊率 | +20% 閃避)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Warrior", tier: "adv", atk: 260, critRate: 40, evasion: 20 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·阿修羅雙刃刀 (+280 攻擊 | +60% 暴傷 | +30% 中毒)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Warrior", tier: "adv", atk: 280, critDmg: 60, poisonRate: 30 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·無雙混沌屠魔劍 (+320 攻擊 | +45% 暴擊率 | +25% 閃避)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Warrior", tier: "adv", atk: 320, critRate: 45, evasion: 25 },
-    { category: "warrior", slot: "weapon", nameZh: "高級·終極神怒崩天神刃 (+380 攻擊 | +50% 暴擊率 | +80% 暴傷)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Warrior", tier: "adv", atk: 380, critRate: 50, critDmg: 80 },
-
-    // 🔮 法師高級神兵 (10種)
-    { category: "mage", slot: "weapon", nameZh: "高級·熾熱元素法杖 (+70 攻擊 | +25% 燃燒率 | +20% 暴傷)", req: { copper: 25, iron: 20, gold: 3 }, job: "Mage", tier: "adv", atk: 70, burnRate: 25, critDmg: 20 },
-    { category: "mage", slot: "weapon", nameZh: "高級·星空星爆聖權杖 (+150 攻擊 | +35% 暴傷 | +20% 燃燒)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Mage", tier: "adv", atk: 150, critDmg: 35, burnRate: 20 },
-    { category: "mage", slot: "weapon", nameZh: "高級·虛空毀滅奧術魔杖 (+190 攻擊 | +30% 暴擊率 | +25% 毒傷)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Mage", tier: "adv", atk: 190, critRate: 30, poisonRate: 25 },
-    { category: "mage", slot: "weapon", nameZh: "高級·超新星極限權杖 (+210 攻擊 | +40% 暴傷 | +15% 閃避)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Mage", tier: "adv", atk: 210, critDmg: 40, evasion: 15 },
-    { category: "mage", slot: "weapon", nameZh: "高級·絕對零度極寒法杖 (+230 攻擊 | +35% 暴擊率 | +20% 閃避)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Mage", tier: "adv", atk: 230, critRate: 35, evasion: 20 },
-    { category: "mage", slot: "weapon", nameZh: "高級·末日審判黑洞權杖 (+250 攻擊 | +50% 暴傷 | +30% 燃燒)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Mage", tier: "adv", atk: 250, critDmg: 50, burnRate: 30 },
-    { category: "mage", slot: "weapon", nameZh: "高級·創世神聖光輝魔杖 (+270 攻擊 | +40% 暴擊率 | +25% 閃避)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Mage", tier: "adv", atk: 270, critRate: 40, evasion: 25 },
-    { category: "mage", slot: "weapon", nameZh: "高級·混沌元素滅世權杖 (+290 攻擊 | +60% 暴傷 | +30% 毒傷)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Mage", tier: "adv", atk: 290, critDmg: 60, poisonRate: 30 },
-    { category: "mage", slot: "weapon", nameZh: "高級·流星天罰大魔導法杖 (+330 攻擊 | +45% 暴擊率 | +30% 閃避)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Mage", tier: "adv", atk: 330, critRate: 45, evasion: 30 },
-    { category: "mage", slot: "weapon", nameZh: "高級·終極神怒創世至尊魔杖 (+390 攻擊 | +55% 暴擊率 | +85% 暴傷)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Mage", tier: "adv", atk: 390, critRate: 55, critDmg: 85 },
-
-    // 🏹 射手高級神兵 (10種)
-    { category: "archer", slot: "weapon", nameZh: "高級·追魂神魔巨弩 (+80 攻擊 | +20% 暴擊率 | +50% 暴傷)", req: { copper: 25, iron: 20, gold: 5, diamond: 1 }, job: "Archer", tier: "adv", atk: 80, critRate: 20, critDmg: 50 },
-    { category: "archer", slot: "weapon", nameZh: "高級·貫星連擊神天弩 (+145 攻擊 | +25% 暴擊率 | +20% 閃避)", req: { copper: 40, iron: 32, gold: 10, diamond: 3 }, job: "Archer", tier: "adv", atk: 145, critRate: 25, evasion: 20 },
-    { category: "archer", slot: "weapon", nameZh: "高級·神怒貫穿天罰弓 (+185 攻擊 | +35% 暴擊率 | +60% 暴傷)", req: { copper: 50, iron: 40, gold: 12, diamond: 4 }, job: "Archer", tier: "adv", atk: 185, critRate: 35, critDmg: 60 },
-    { category: "archer", slot: "weapon", nameZh: "高級·影舞幻影滅世弓 (+205 攻擊 | +30% 閃避 | +30% 暴擊率)", req: { copper: 55, iron: 45, gold: 15, diamond: 5 }, job: "Archer", tier: "adv", atk: 205, evasion: 30, critRate: 30 },
-    { category: "archer", slot: "weapon", nameZh: "高級·爆裂天火神威弩 (+225 攻擊 | +30% 燃燒 | +45% 暴傷)", req: { copper: 60, iron: 50, gold: 18, diamond: 6 }, job: "Archer", tier: "adv", atk: 225, burnRate: 30, critDmg: 45 },
-    { category: "archer", slot: "weapon", nameZh: "高級·毒龍噬魂神箭弩 (+245 攻擊 | +35% 毒傷 | +25% 暴擊率)", req: { copper: 65, iron: 55, gold: 20, diamond: 7 }, job: "Archer", tier: "adv", atk: 245, poisonRate: 35, critRate: 25 },
-    { category: "archer", slot: "weapon", nameZh: "高級·疾風穿雲聖光弓 (+265 攻擊 | +35% 閃避 | +50% 暴傷)", req: { copper: 70, iron: 60, gold: 22, diamond: 8 }, job: "Archer", tier: "adv", atk: 265, evasion: 35, critDmg: 50 },
-    { category: "archer", slot: "weapon", nameZh: "高級·阿修羅破天神箭弩 (+285 攻擊 | +40% 暴擊率 | +65% 暴傷)", req: { copper: 75, iron: 65, gold: 25, diamond: 9 }, job: "Archer", tier: "adv", atk: 285, critRate: 40, critDmg: 65 },
-    { category: "archer", slot: "weapon", nameZh: "高級·混沌滅世神箭弓 (+325 攻擊 | +40% 閃避 | +35% 暴擊率)", req: { copper: 80, iron: 70, gold: 28, diamond: 10 }, job: "Archer", tier: "adv", atk: 325, evasion: 40, critRate: 35 },
-    { category: "archer", slot: "weapon", nameZh: "高級·終極天罰滅世神尊弩 (+385 攻擊 | +50% 暴擊率 | +90% 暴傷)", req: { copper: 100, iron: 85, gold: 35, diamond: 15 }, job: "Archer", tier: "adv", atk: 385, critRate: 50, critDmg: 90 },
-
-    // 🪖 高級頭盔 (10種)
-    { category: "armor", slot: "helmet", nameZh: "高級·精鋼防爆戰盔 (+120 MaxHP)", req: { iron: 15, gold: 2 }, job: null, tier: "adv", hp: 120 },
-    { category: "armor", slot: "helmet", nameZh: "高級·泰坦聖光盔 (+180 MaxHP | +8% 閃避)", req: { copper: 20, iron: 15, gold: 3 }, job: null, tier: "adv", hp: 180, evasion: 8 },
-    { category: "armor", slot: "helmet", nameZh: "高級·法王聖光神冠 (+150 MaxHP | +220 MP | +10% 閃避)", req: { copper: 25, iron: 18, gold: 5 }, job: null, tier: "adv", hp: 150, mp: 220, evasion: 10 },
-    { category: "armor", slot: "helmet", nameZh: "高級·暗影隱匿頭面 (+140 MaxHP | +15% 閃避)", req: { copper: 22, iron: 16, gold: 4 }, job: null, tier: "adv", hp: 140, evasion: 15 },
-    { category: "armor", slot: "helmet", nameZh: "高級·龍鱗防護重盔 (+250 MaxHP)", req: { iron: 25, gold: 6, diamond: 2 }, job: null, tier: "adv", hp: 250 },
-    { category: "armor", slot: "helmet", nameZh: "高級·風暴天行者冠 (+200 MaxHP | +100 MP)", req: { copper: 30, gold: 8, diamond: 2 }, job: null, tier: "adv", hp: 200, mp: 100 },
-    { category: "armor", slot: "helmet", nameZh: "高級·阿修羅戰神面甲 (+300 MaxHP | +12% 閃避)", req: { iron: 35, gold: 10, diamond: 3 }, job: null, tier: "adv", hp: 300, evasion: 12 },
-    { category: "armor", slot: "helmet", nameZh: "高級·元素掌控至尊冠 (+220 MaxHP | +300 MP)", req: { copper: 35, gold: 12, diamond: 4 }, job: null, tier: "adv", hp: 220, mp: 300 },
-    { category: "armor", slot: "helmet", nameZh: "高級·混沌破滅頭盔 (+400 MaxHP | +15% 閃避)", req: { iron: 45, gold: 15, diamond: 5 }, job: null, tier: "adv", hp: 400, evasion: 15 },
-    { category: "armor", slot: "helmet", nameZh: "高級·不朽神聖至尊頭盔 (+600 MaxHP | +400 MP | +20% 閃避)", req: { copper: 60, iron: 50, gold: 20, diamond: 8 }, job: null, tier: "adv", hp: 600, mp: 400, evasion: 20 },
-
-    // 🛡️ 高級胸甲 (10種)
-    { category: "armor", slot: "chest", nameZh: "高級·黑曜石鎖子甲 (+220 MaxHP | +15% 閃避率 | +20% 抗暗影)", req: { copper: 20, iron: 15, gold: 3 }, job: null, tier: "adv", hp: 220, evasion: 15, darkRes: 20 },
-    { category: "armor", slot: "chest", nameZh: "高級·泰坦防衛重甲 (+350 MaxHP)", req: { iron: 25, gold: 5 }, job: null, tier: "adv", hp: 350 },
-    { category: "armor", slot: "chest", nameZh: "高級·秘銀大魔法師長袍 (+200 MaxHP | +250 MP)", req: { copper: 25, gold: 6 }, job: null, tier: "adv", hp: 200, mp: 250 },
-    { category: "armor", slot: "chest", nameZh: "高級·龍鱗巨龍胸甲 (+500 MaxHP | +10% 閃避)", req: { iron: 35, gold: 8, diamond: 2 }, job: null, tier: "adv", hp: 500, evasion: 10 },
-    { category: "armor", slot: "chest", nameZh: "高級·疾風追影皮甲 (+300 MaxHP | +20% 閃避)", req: { copper: 35, gold: 8, diamond: 2 }, job: null, tier: "adv", hp: 300, evasion: 20 },
-    { category: "armor", slot: "chest", nameZh: "高級·聖光開山重鎧 (+650 MaxHP)", req: { iron: 45, gold: 12, diamond: 4 }, job: null, tier: "adv", hp: 650 },
-    { category: "armor", slot: "chest", nameZh: "高級·元素創世祭司袍 (+350 MaxHP | +400 MP)", req: { copper: 45, gold: 12, diamond: 4 }, job: null, tier: "adv", hp: 350, mp: 400 },
-    { category: "armor", slot: "chest", nameZh: "高級·阿修羅破天戰甲 (+800 MaxHP | +15% 閃避)", req: { iron: 55, gold: 15, diamond: 6 }, job: null, tier: "adv", hp: 800, evasion: 15 },
-    { category: "armor", slot: "chest", nameZh: "高級·混沌滅世戰鎧 (+1000 MaxHP | +20% 閃避)", req: { copper: 65, iron: 55, gold: 20, diamond: 8 }, job: null, tier: "adv", hp: 1000, evasion: 20 },
-    { category: "armor", slot: "chest", nameZh: "高級·不朽神聖至尊鎧甲 (+1500 MaxHP | +30% 閃避率)", req: { copper: 80, iron: 70, gold: 25, diamond: 10 }, job: null, tier: "adv", hp: 1500, evasion: 30 },
-
-    // 🦵 高級腿甲 (10種)
-    { category: "armor", slot: "leggings", nameZh: "高級·追影天行腿甲 (+150 MaxHP | +15% 閃避)", req: { copper: 20, iron: 12, gold: 3 }, job: null, tier: "adv", hp: 150, evasion: 15 },
-    { category: "armor", slot: "leggings", nameZh: "高級·泰坦護脛 (+220 MaxHP)", req: { iron: 20, gold: 4 }, job: null, tier: "adv", hp: 220 },
-    { category: "armor", slot: "leggings", nameZh: "高級·賢者符文長褲 (+120 MaxHP | +150 MP)", req: { copper: 20, gold: 4 }, job: null, tier: "adv", hp: 120, mp: 150 },
-    { category: "armor", slot: "leggings", nameZh: "高級·龍鱗重型護腿 (+320 MaxHP)", req: { iron: 28, gold: 6, diamond: 2 }, job: null, tier: "adv", hp: 320 },
-    { category: "armor", slot: "leggings", nameZh: "高級·疾風幻影腿甲 (+200 MaxHP | +20% 閃避)", req: { copper: 28, gold: 6, diamond: 2 }, job: null, tier: "adv", hp: 200, evasion: 20 },
-    { category: "armor", slot: "leggings", nameZh: "高級·聖光護脛 (+450 MaxHP)", req: { iron: 38, gold: 10, diamond: 3 }, job: null, tier: "adv", hp: 450 },
-    { category: "armor", slot: "leggings", nameZh: "高級·元素掌控法褲 (+250 MaxHP | +300 MP)", req: { copper: 38, gold: 10, diamond: 3 }, job: null, tier: "adv", hp: 250, mp: 300 },
-    { category: "armor", slot: "leggings", nameZh: "高級·阿修羅雙刃護腿 (+550 MaxHP | +15% 閃避)", req: { iron: 48, gold: 12, diamond: 5 }, job: null, tier: "adv", hp: 550, evasion: 15 },
-    { category: "armor", slot: "leggings", nameZh: "高級·混沌破滅腿甲 (+700 MaxHP | +20% 閃避)", req: { copper: 58, iron: 48, gold: 15, diamond: 6 }, job: null, tier: "adv", hp: 700, evasion: 20 },
-    { category: "armor", slot: "leggings", nameZh: "高級·不朽神聖至尊腿甲 (+1000 MaxHP | +25% 閃避)", req: { copper: 70, iron: 60, gold: 20, diamond: 8 }, job: null, tier: "adv", hp: 1000, evasion: 25 },
-
-    // 🥊 高級手腕 (10種)
-    { category: "armor", slot: "bracer", nameZh: "高級·阿修羅破天護腕 (+50 攻擊 | +10% 暴擊率)", req: { copper: 18, iron: 15, gold: 2 }, job: null, tier: "adv", atk: 50, critRate: 10 },
-    { category: "armor", slot: "bracer", nameZh: "高級·泰坦力量護手 (+70 攻擊)", req: { iron: 20, gold: 4 }, job: null, tier: "adv", atk: 70 },
-    { category: "armor", slot: "bracer", nameZh: "高級·魔導詠唱護腕 (+30 攻擊 | +150 MP)", req: { copper: 20, gold: 4 }, job: null, tier: "adv", atk: 30, mp: 150 },
-    { category: "armor", slot: "bracer", nameZh: "高級·鷹眼精準護手 (+85 攻擊 | +12% 暴擊率)", req: { copper: 25, gold: 6, diamond: 2 }, job: null, tier: "adv", atk: 85, critRate: 12 },
-    { category: "armor", slot: "bracer", nameZh: "高級·龍爪爆裂護腕 (+110 攻擊 | +15% 暴擊率)", req: { iron: 30, gold: 8, diamond: 3 }, job: null, tier: "adv", atk: 110, critRate: 15 },
-    { category: "armor", slot: "bracer", nameZh: "高級·聖光裁決護手 (+130 攻擊)", req: { iron: 38, gold: 10, diamond: 4 }, job: null, tier: "adv", atk: 130 },
-    { category: "armor", slot: "bracer", nameZh: "高級·元素尊者護腕 (+60 攻擊 | +300 MP)", req: { copper: 38, gold: 10, diamond: 4 }, job: null, tier: "adv", atk: 60, mp: 300 },
-    { category: "armor", slot: "bracer", nameZh: "高級·影武者疾風護手 (+160 攻擊 | +18% 暴擊率)", req: { copper: 48, gold: 12, diamond: 5 }, job: null, tier: "adv", atk: 160, critRate: 18 },
-    { category: "armor", slot: "bracer", nameZh: "高級·混沌毀滅護手 (+200 攻擊 | +20% 暴擊率)", req: { iron: 58, gold: 15, diamond: 6 }, job: null, tier: "adv", atk: 200, critRate: 20 },
-    { category: "armor", slot: "bracer", nameZh: "高級·不朽神聖至尊護手 (+260 攻擊 | +25% 暴擊率 | +200 MP)", req: { copper: 70, iron: 60, gold: 20, diamond: 8 }, job: null, tier: "adv", atk: 260, critRate: 25, mp: 200 }
-];
-
-const WEAPON_ENCHANTS = [
-    { id: "flame", keyZh: "烈焰", nameZh: "🔥 烈焰附魔 (10 附魔石)", stoneReq: 10, descZh: "+15 傷害 + 燃燒 2 回合" },
-    { id: "vampire", keyZh: "吸血", nameZh: "🩸 吸血附魔 (10 附魔石)", stoneReq: 10, descZh: "獲得 15% 傷害吸血" },
-    { id: "sharp", keyZh: "銳利", nameZh: "⚡ 銳利附魔 (10 附魔石)", stoneReq: 10, descZh: "基礎攻擊力提升 25 點" },
-    { id: "frost", keyZh: "冰霜", nameZh: "❄️ 冰霜附魔 (10 附魔石)", stoneReq: 10, descZh: "20% 機率凍結敵人 1 回合" },
-    { id: "pierce", keyZh: "破甲", nameZh: "🛡️ 破甲附魔 (10 附魔石)", stoneReq: 10, descZh: "無視防禦 +20 固定傷害" },
-    { id: "holy", keyZh: "聖光", nameZh: "✨ 聖光附魔 (10 附魔石)", stoneReq: 10, descZh: "對 BOSS / 魔王額外 +30% 傷害" },
-    { id: "storm", keyZh: "風暴", nameZh: "🌪️ 風暴附魔 (10 附魔石)", stoneReq: 10, descZh: "連擊機率提升 20%" },
-    { id: "poison", keyZh: "毒素", nameZh: "☠️ 毒素附魔 (10 附魔石)", stoneReq: 10, descZh: "敵人每回合受到 20 點毒傷" },
-    { id: "bless", keyZh: "祈願", nameZh: "🌟 祈願附魔 (10 附魔石)", stoneReq: 10, descZh: "戰鬥勝利獲得金幣量增加 25%" },
-    { id: "fury", keyZh: "暴怒", nameZh: "💥 暴怒附魔 (10 附魔石)", stoneReq: 10, descZh: "暴擊率提升 20%" }
-];
-
+// 50 項成就資料庫 (成就獎勵純數字防錯)
 const ACHIEVEMENTS_DATABASE = [
     // ⚔️ 主線關卡 (15項)
     { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 100, stones: 1 },
@@ -418,7 +320,7 @@ const ACHIEVEMENTS_DATABASE = [
     { category: "wealth", id: "gold_500", titleZh: "💰 第一桶金", descZh: "持有金幣達到 500 G", reqType: "gold", reqVal: 500, gold: 100, stones: 0 },
     { category: "wealth", id: "gold_2000", titleZh: "💰 村莊小富豪", descZh: "持有金幣達到 2,000 G", reqType: "gold", reqVal: 2000, gold: 100, stones: 0 },
     { category: "wealth", id: "gold_5000", titleZh: "💰 富甲一方", descZh: "持有金幣達到 5,000 G", reqType: "gold", reqVal: 5000, gold: 100, stones: 1 },
-    { category: "wealth", id: "gold_10000", titleZh: "💰 富可敵國", descZh: "持有金幣達到 10,000 G", reqType: "gold", reqVal: 100, stones: 1 },
+    { category: "wealth", id: "gold_10000", titleZh: "💰 富可敵國", descZh: "持有金幣達到 10,000 G", reqType: "gold", reqVal: 10000, gold: 100, stones: 1 },
     { category: "wealth", id: "skill_2", titleZh: "📖 技能入門", descZh: "學會 2 招技能", reqType: "skillCount", reqVal: 2, gold: 100, stones: 0 },
     { category: "wealth", id: "skill_4", titleZh: "📖 技能滿載", descZh: "學滿 4 招技能", reqType: "skillCount", reqVal: 4, gold: 100, stones: 1 },
     { category: "wealth", id: "potion_hp", titleZh: "🧪 生命保障", descZh: "持有 5 瓶生命藥水", reqType: "potHp", reqVal: 5, gold: 100, stones: 0 },
