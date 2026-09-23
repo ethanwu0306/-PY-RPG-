@@ -1,6 +1,14 @@
-const SAVE_KEY = "pyrpg_save_github_v3.7_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v5.1_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
-// 5 大冒險突發奇遇事件庫
+const CLASS_ARTIFACTS_DATABASE = {
+    "狂暴領主": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂暴領主", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
+    "聖騎士": { nameZh: "不朽聖光·泰坦天盾劍", slot: "weapon", job: "聖騎士", atk: 280, hp: 800, critRate: 10, reqFrags: 5 },
+    "元素法皇": { nameZh: "創世天火·極光混沌杖", slot: "weapon", job: "元素法皇", atk: 480, mp: 500, critDmg: 60, reqFrags: 5 },
+    "死靈巫師": { nameZh: "冥府深淵·噬魂死神杖", slot: "weapon", job: "死靈巫師", atk: 380, hp: 500, mp: 300, reqFrags: 5 },
+    "追魂狙擊手": { nameZh: "貫星天罰·滅界神尊弩", slot: "weapon", job: "追魂狙擊手", atk: 520, critRate: 30, critDmg: 80, reqFrags: 5 },
+    "疾風游俠": { nameZh: "無雙風暴·追影天行弓", slot: "weapon", job: "疾風游俠", atk: 400, evasion: 25, critRate: 20, reqFrags: 5 }
+};
+
 const RANDOM_EVENTS_DATABASE = [
     {
         id: "wishing_well",
@@ -52,18 +60,72 @@ const RANDOM_EVENTS_DATABASE = [
 ];
 
 const JOB_ADVANCEMENTS = {
-    Warrior: [
-        { id: "BerserkerLord", nameZh: "🔥 狂暴領主", descZh: "專精高爆發與吸血戰鬥！", hp: 150, mp: 0, atk: 35, critRate: 10, critDmg: 30, evasion: 0 },
-        { id: "Paladin", nameZh: "🛡️ 聖騎士", descZh: "極致生存防禦與神聖護盾！", hp: 300, mp: 80, atk: 15, critRate: 0, critDmg: 0, evasion: 5 }
-    ],
-    Mage: [
-        { id: "ElementEmperor", nameZh: "🔮 元素法皇", descZh: "毀滅性的多元素極限魔攻！", hp: 80, mp: 200, atk: 40, critRate: 10, critDmg: 25, evasion: 0 },
-        { id: "Necromancer", nameZh: "☠️ 死靈巫師", descZh: "掌握持續毒傷與生命吸取！", hp: 180, mp: 120, atk: 25, critRate: 5, critDmg: 0, evasion: 5 }
-    ],
-    Archer: [
-        { id: "SoulSniper", nameZh: "🏹 追魂狙擊手", descZh: "遠距離致命暴擊一擊必殺！", hp: 100, mp: 40, atk: 45, critRate: 15, critDmg: 50, evasion: 5 },
-        { id: "GaleRanger", nameZh: "🌀 疾風游俠", descZh: "高閃避與極致連續射擊！", hp: 120, mp: 60, atk: 30, critRate: 5, critDmg: 15, evasion: 15 }
-    ]
+    Warrior: {
+        tier2: [
+            { id: "狂暴領主", nameZh: "狂暴領主", tier: 2, descZh: "專精高爆發與吸血戰鬥！", hp: 150, mp: 0, atk: 35, critRate: 10, critDmg: 30, evasion: 0 },
+            { id: "聖騎士", nameZh: "聖騎士", tier: 2, descZh: "極致生存防禦與神聖護盾！", hp: 300, mp: 80, atk: 15, critRate: 0, critDmg: 0, evasion: 5 }
+        ],
+        tier3: {
+            "狂暴領主": [
+                { id: "血狂魔皇", nameZh: "血狂魔皇", tier: 3, reqLvl: 50, reqStage: 50, descZh: "嗜血狂化，吸血成倍暴增！", hp: 250, mp: 30, atk: 65, critRate: 15, critDmg: 45, evasion: 0 },
+                { id: "雷霆戰狂", nameZh: "雷霆戰狂", tier: 3, reqLvl: 50, reqStage: 50, descZh: "雷霆附體，攻擊附帶強大暴擊打擊！", hp: 200, mp: 50, atk: 75, critRate: 20, critDmg: 30, evasion: 5 }
+            ],
+            "聖騎士": [
+                { id: "神聖裁決者", nameZh: "神聖裁決者", tier: 3, reqLvl: 50, reqStage: 50, descZh: "裁決惡魔，防禦轉化為高額固定傷害！", hp: 450, mp: 120, atk: 40, critRate: 5, critDmg: 15, evasion: 5 },
+                { id: "泰坦壁壘", nameZh: "泰坦壁壘", tier: 3, reqLvl: 50, reqStage: 50, descZh: "泰坦神軀，極致生存血量加成！", hp: 600, mp: 100, atk: 30, critRate: 0, critDmg: 0, evasion: 10 }
+            ]
+        },
+        tier4: {
+            "血狂魔皇": [{ id: "滅世修羅王", nameZh: "滅世修羅王", tier: 4, reqLvl: 70, reqStage: 80, descZh: "終極戰士！擁有毀天滅地的終極傷害！", hp: 600, mp: 100, atk: 150, critRate: 25, critDmg: 80, evasion: 10 }],
+            "雷霆戰狂": [{ id: "狂雷霸天神", nameZh: "狂雷霸天神", tier: 4, reqLvl: 70, reqStage: 80, descZh: "雷霆主宰！閃電暴擊毀擊一切敵人！", hp: 500, mp: 150, atk: 180, critRate: 35, critDmg: 60, evasion: 15 }],
+            "神聖裁決者": [{ id: "不朽光輝聖王", nameZh: "不朽光輝聖王", tier: 4, reqLvl: 70, reqStage: 80, descZh: "光輝護體！無法被擊倒的神聖之軀！", hp: 1000, mp: 250, atk: 90, critRate: 10, critDmg: 30, evasion: 15 }],
+            "泰坦壁壘": [{ id: "大地神剛尊", nameZh: "大地神剛尊", tier: 4, reqLvl: 70, reqStage: 80, descZh: "大地尊者！具備無可撼動的極致鋼鐵護盾！", hp: 1300, mp: 200, atk: 80, critRate: 5, critDmg: 20, evasion: 20 }]
+        }
+    },
+    Mage: {
+        tier2: [
+            { id: "元素法皇", nameZh: "元素法皇", tier: 2, descZh: "毀滅性的多元素極限魔攻！", hp: 80, mp: 200, atk: 40, critRate: 10, critDmg: 25, evasion: 0 },
+            { id: "死靈巫師", nameZh: "死靈巫師", tier: 2, descZh: "掌握持續毒傷與生命吸取！", hp: 180, mp: 120, atk: 25, critRate: 5, critDmg: 0, evasion: 5 }
+        ],
+        tier3: {
+            "元素法皇": [
+                { id: "天火大魔導", nameZh: "天火大魔導", tier: 3, reqLvl: 50, reqStage: 50, descZh: "烈焰天火，極限提升火焰傷害！", hp: 150, mp: 350, atk: 80, critRate: 15, critDmg: 40, evasion: 5 },
+                { id: "極寒法尊", nameZh: "極寒法尊", tier: 3, reqLvl: 50, reqStage: 50, descZh: "極寒凍結，控制與高爆發並存！", hp: 180, mp: 320, atk: 75, critRate: 15, critDmg: 30, evasion: 10 }
+            ],
+            "死靈巫師": [
+                { id: "暗影噬魂師", nameZh: "暗影噬魂師", tier: 3, reqLvl: 50, reqStage: 50, descZh: "吞噬靈魂，持續傷害大幅提升！", hp: 280, mp: 220, atk: 55, critRate: 10, critDmg: 20, evasion: 10 },
+                { id: "煉獄血巫", nameZh: "煉獄血巫", tier: 3, reqLvl: 50, reqStage: 50, descZh: "血祭詛咒，高吸血高生存魔導！", hp: 380, mp: 200, atk: 50, critRate: 5, critDmg: 15, evasion: 10 }
+            ]
+        },
+        tier4: {
+            "天火大魔導": [{ id: "創世焚天帝", nameZh: "創世焚天帝", tier: 4, reqLvl: 70, reqStage: 80, descZh: "毀滅之帝！天火焚盡世間萬物！", hp: 350, mp: 600, atk: 200, critRate: 30, critDmg: 70, evasion: 15 }],
+            "極寒法尊": [{ id: "絕對零度冰皇", nameZh: "絕對零度冰皇", tier: 4, reqLvl: 70, reqStage: 80, descZh: "冰封萬里！將世界冰凍於絕對零度！", hp: 400, mp: 550, atk: 180, critRate: 25, critDmg: 60, evasion: 20 }],
+            "暗影噬魂師": [{ id: "深淵永夜魔帝", nameZh: "深淵永夜魔帝", tier: 4, reqLvl: 70, reqStage: 80, descZh: "永夜君王！深淵詛咒無人可擋！", hp: 550, mp: 450, atk: 150, critRate: 20, critDmg: 50, evasion: 20 }],
+            "煉獄血巫": [{ id: "冥府死神天尊", nameZh: "冥府死神天尊", tier: 4, reqLvl: 70, reqStage: 80, descZh: "冥府之主！擁有近乎無限的生命汲取！", hp: 700, mp: 400, atk: 140, critRate: 15, critDmg: 40, evasion: 20 }]
+        }
+    },
+    Archer: {
+        tier2: [
+            { id: "追魂狙擊手", nameZh: "追魂狙擊手", tier: 2, descZh: "遠距離致命暴擊一擊必殺！", hp: 100, mp: 40, atk: 45, critRate: 15, critDmg: 50, evasion: 5 },
+            { id: "疾風游俠", nameZh: "疾風游俠", tier: 2, descZh: "高閃避與極致連續射擊！", hp: 120, mp: 60, atk: 30, critRate: 5, critDmg: 15, evasion: 15 }
+        ],
+        tier3: {
+            "追魂狙擊手": [
+                { id: "貫星神射手", nameZh: "貫星神射手", tier: 3, reqLvl: 50, reqStage: 50, descZh: "貫穿星辰，超高無視防禦暴擊！", hp: 180, mp: 80, atk: 85, critRate: 25, critDmg: 70, evasion: 10 },
+                { id: "萬毒追魂影", nameZh: "萬毒追魂影", tier: 3, reqLvl: 50, reqStage: 50, descZh: "劇毒箭矢，致命追魂毒傷打擊！", hp: 200, mp: 90, atk: 75, critRate: 20, critDmg: 50, evasion: 15 }
+            ],
+            "疾風游俠": [
+                { id: "風暴幻影手", nameZh: "風暴幻影手", tier: 3, reqLvl: 50, reqStage: 50, descZh: "風暴幻影，高額連擊與高閃避！", hp: 220, mp: 100, atk: 65, critRate: 15, critDmg: 35, evasion: 25 },
+                { id: "天堂光輝天羽", nameZh: "天堂光輝天羽", tier: 3, reqLvl: 50, reqStage: 50, descZh: "聖光賜福，具備高生存與敏捷打擊！", hp: 300, mp: 120, atk: 60, critRate: 10, critDmg: 30, evasion: 20 }
+            ]
+        },
+        tier4: {
+            "貫星神射手": [{ id: "滅界天罰神弩", nameZh: "滅界天罰神弩", tier: 4, reqLvl: 70, reqStage: 80, descZh: "天罰降世！貫穿宇宙萬物的終極弩尊！", hp: 380, mp: 150, atk: 210, critRate: 40, critDmg: 100, evasion: 20 }],
+            "萬毒追魂影": [{ id: "萬毒追魂影帝", nameZh: "萬毒追魂影帝", tier: 4, reqLvl: 70, reqStage: 80, descZh: "影帝毒尊！箭矢所至皆為絕命之地！", hp: 420, mp: 160, atk: 180, critRate: 35, critDmg: 80, evasion: 25 }],
+            "風暴幻影手": [{ id: "無雙天行風神", nameZh: "無雙天行風神", tier: 4, reqLvl: 70, reqStage: 80, descZh: "風神化身！具備近乎無敵的閃避姿態！", hp: 450, mp: 180, atk: 160, critRate: 25, critDmg: 60, evasion: 40 }],
+            "天堂光輝天羽": [{ id: "天堂天使至尊弓", nameZh: "天堂天使至尊弓", tier: 4, reqLvl: 70, reqStage: 80, descZh: "天使降臨！光輝庇佑與神聖萬箭射擊！", hp: 550, mp: 220, atk: 150, critRate: 20, critDmg: 50, evasion: 30 }]
+        }
+    }
 };
 
 const SKILLS = {
@@ -307,60 +369,60 @@ const WEAPON_ENCHANTS = [
 
 const ACHIEVEMENTS_DATABASE = [
     // ⚔️ 主線關卡 (15項)
-    { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 200, stones: 2 },
-    { category: "stage", id: "stage_20", titleZh: "🏆 冰雪勇將", descZh: "擊敗第 2 區 BOSS (2-10)", reqType: "stage", reqVal: 20, gold: 300, stones: 3 },
-    { category: "stage", id: "stage_30", titleZh: "🏆 沙漠霸主", descZh: "擊敗第 3 區 BOSS (3-10)", reqType: "stage", reqVal: 30, gold: 400, stones: 4 },
-    { category: "stage", id: "stage_40", titleZh: "🏆 熔岩屠龍者", descZh: "擊敗第 4 區 BOSS (4-10)", reqType: "stage", reqVal: 40, gold: 500, stones: 5 },
-    { category: "stage", id: "stage_50", titleZh: "🏆 地底破魔者", descZh: "擊敗第 5 區 BOSS (5-10)", reqType: "stage", reqVal: 50, gold: 600, stones: 6 },
-    { category: "stage", id: "stage_60", titleZh: "🏆 古城尋寶家", descZh: "擊敗第 6 區 BOSS (6-10)", reqType: "stage", reqVal: 60, gold: 700, stones: 7 },
-    { category: "stage", id: "stage_70", titleZh: "🏆 雷霆征服者", descZh: "擊敗第 7 區 BOSS (7-10)", reqType: "stage", reqVal: 70, gold: 800, stones: 8 },
-    { category: "stage", id: "stage_80", titleZh: "🏆 深海獵手", descZh: "擊敗第 8 區 BOSS (8-10)", reqType: "stage", reqVal: 80, gold: 900, stones: 9 },
-    { category: "stage", id: "stage_90", titleZh: "🏆 聖光洗禮者", descZh: "擊敗第 9 區 BOSS (9-10)", reqType: "stage", reqVal: 90, gold: 1000, stones: 10 },
-    { category: "stage", id: "stage_100", titleZh: "👑 滅世救世主", descZh: "通關 100 關擊敗滅世魔王", reqType: "stage", reqVal: 100, gold: 3000, stones: 20 },
-    { category: "stage", id: "stage_win_5", titleZh: "⚔️ 連戰連捷", descZh: "累積勝場達到 5 次", reqType: "stage", reqVal: 5, gold: 100, stones: 1 },
-    { category: "stage", id: "stage_win_15", titleZh: "⚔️ 戰場老兵", descZh: "累積勝場達到 15 次", reqType: "stage", reqVal: 15, gold: 200, stones: 2 },
-    { category: "stage", id: "stage_win_30", titleZh: "⚔️ 無敵勇者", descZh: "累積勝場達到 30 次", reqType: "stage", reqVal: 30, gold: 400, stones: 4 },
-    { category: "stage", id: "stage_win_60", titleZh: "⚔️ 戰神轉世", descZh: "累積勝場達到 60 次", reqType: "stage", reqVal: 60, gold: 800, stones: 8 },
-    { category: "stage", id: "stage_win_90", titleZh: "⚔️ 百戰不殆", descZh: "累積勝場達到 90 次", reqType: "stage", reqVal: 90, gold: 1200, stones: 12 },
+    { category: "stage", id: "stage_10", titleZh: "🏆 森林征服者", descZh: "擊敗第 1 區 BOSS (1-10)", reqType: "stage", reqVal: 10, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_20", titleZh: "🏆 冰雪勇將", descZh: "擊敗第 2 區 BOSS (2-10)", reqType: "stage", reqVal: 20, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_30", titleZh: "🏆 沙漠霸主", descZh: "擊敗第 3 區 BOSS (3-10)", reqType: "stage", reqVal: 30, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_40", titleZh: "🏆 熔岩屠龍者", descZh: "擊敗第 4 區 BOSS (4-10)", reqType: "stage", reqVal: 40, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_50", titleZh: "🏆 地底破魔者", descZh: "擊敗第 5 區 BOSS (5-10)", reqType: "stage", reqVal: 50, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_60", titleZh: "🏆 古城尋寶家", descZh: "擊敗第 6 區 BOSS (6-10)", reqType: "stage", reqVal: 60, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_70", titleZh: "🏆 雷霆征服者", descZh: "擊敗第 7 區 BOSS (7-10)", reqType: "stage", reqVal: 70, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_80", titleZh: "🏆 深海獵手", descZh: "擊敗第 8 區 BOSS (8-10)", reqType: "stage", reqVal: 80, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_90", titleZh: "🏆 聖光洗禮者", descZh: "擊敗第 9 區 BOSS (9-10)", reqType: "stage", reqVal: 90, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_100", titleZh: "👑 滅世救世主", descZh: "通關 100 關擊敗滅世魔王", reqType: "stage", reqVal: 100, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_win_5", titleZh: "⚔️ 連戰連捷", descZh: "累積勝場達到 5 次", reqType: "stage", reqVal: 5, gold: 100, stones: 0 },
+    { category: "stage", id: "stage_win_15", titleZh: "⚔️ 戰場老兵", descZh: "累積勝場達到 15 次", reqType: "stage", reqVal: 15, gold: 100, stones: 0 },
+    { category: "stage", id: "stage_win_30", titleZh: "⚔️ 無敵勇者", descZh: "累積勝場達到 30 次", reqType: "stage", reqVal: 30, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_win_60", titleZh: "⚔️ 戰神轉世", descZh: "累積勝場達到 60 次", reqType: "stage", reqVal: 60, gold: 100, stones: 1 },
+    { category: "stage", id: "stage_win_90", titleZh: "⚔️ 百戰不殆", descZh: "累積勝場達到 90 次", reqType: "stage", reqVal: 90, gold: 100, stones: 1 },
 
     // ⛏️ 採礦鍛造 (15項)
-    { category: "mine", id: "mine_1", titleZh: "⛏️ 採礦新手", descZh: "完成 1 次採礦", reqType: "mine", reqVal: 1, gold: 100, stones: 1 },
-    { category: "mine", id: "mine_5", titleZh: "⛏️ 礦坑勤務員", descZh: "完成 5 次採礦", reqType: "mine", reqVal: 5, gold: 150, stones: 2 },
-    { category: "mine", id: "mine_10", titleZh: "⛏️ 採礦大師", descZh: "完成 10 次採礦", reqType: "mine", reqVal: 10, gold: 250, stones: 3 },
-    { category: "mine", id: "mine_25", titleZh: "⛏️ 礦脈探險家", descZh: "完成 25 次採礦", reqType: "mine", reqVal: 25, gold: 500, stones: 5 },
-    { category: "mine", id: "mine_50", titleZh: "⛏️ 傳奇黃金礦工", descZh: "完成 50 次採礦", reqType: "mine", reqVal: 50, gold: 1000, stones: 10 },
-    { category: "mine", id: "mine_copper", titleZh: "🥉 銅礦愛好者", descZh: "擁有一顆銅礦石", reqType: "copper", reqVal: 1, gold: 80, stones: 1 },
-    { category: "mine", id: "mine_iron", titleZh: "🥈 鐵骨好手", descZh: "擁有一顆鐵礦石", reqType: "iron", reqVal: 1, gold: 120, stones: 1 },
-    { category: "mine", id: "mine_gold", titleZh: "🥇 黃金大亨", descZh: "擁有一顆金礦石", reqType: "goldOre", reqVal: 1, gold: 300, stones: 3 },
-    { category: "mine", id: "mine_diamond", titleZh: "💎 鑽石獵人", descZh: "擁有一顆鑽石", reqType: "diamond", reqVal: 1, gold: 800, stones: 5 },
-    { category: "mine", id: "craft_1", titleZh: "🔨 學徒打鐵師", descZh: "在鐵匠鋪打造 1 件裝備", reqType: "craft", reqVal: 1, gold: 200, stones: 2 },
-    { category: "mine", id: "craft_3", titleZh: "🔨 熟練鐵匠", descZh: "在鐵匠鋪打造 3 件裝備", reqType: "craft", reqVal: 3, gold: 400, stones: 4 },
-    { category: "mine", id: "craft_5", titleZh: "🔨 神兵鑄造師", descZh: "在鐵匠鋪打造 5 件裝備", reqType: "craft", reqVal: 5, gold: 800, stones: 8 },
-    { category: "mine", id: "craft_10", titleZh: "👑 鍛造宗師", descZh: "在鐵匠鋪打造 10 件裝備", reqType: "craft", reqVal: 10, gold: 1500, stones: 15 },
-    { category: "mine", id: "equip_basic", titleZh: "🛡️ 基礎武裝", descZh: "裝備至少 1 件初級裝備", reqType: "equipCount", reqVal: 1, gold: 100, stones: 1 },
-    { category: "mine", id: "equip_full", titleZh: "🛡️ 神裝加身", descZh: "裝備至少 5 件裝備", reqType: "equipCount", reqVal: 5, gold: 1000, stones: 10 },
+    { category: "mine", id: "mine_1", titleZh: "⛏️ 採礦新手", descZh: "完成 1 次採礦", reqType: "mine", reqVal: 1, gold: 100, stones: 0 },
+    { category: "mine", id: "mine_5", titleZh: "⛏️ 礦坑勤務員", descZh: "完成 5 次採礦", reqType: "mine", reqVal: 5, gold: 100, stones: 0 },
+    { category: "mine", id: "mine_10", titleZh: "⛏️ 採礦大師", descZh: "完成 10 次採礦", reqType: "mine", reqVal: 10, gold: 100, stones: 1 },
+    { category: "mine", id: "mine_25", titleZh: "⛏️ 礦脈探險家", descZh: "完成 25 次採礦", reqType: "mine", reqVal: 25, gold: 100, stones: 1 },
+    { category: "mine", id: "mine_50", titleZh: "⛏️ 傳奇黃金礦工", descZh: "完成 50 次採礦", reqType: "mine", reqVal: 50, gold: 100, stones: 1 },
+    { category: "mine", id: "mine_copper", titleZh: "🥉 銅礦愛好者", descZh: "擁有一顆銅礦石", reqType: "copper", reqVal: 1, gold: 100, stones: 0 },
+    { category: "mine", id: "mine_iron", titleZh: "🥈 鐵骨好手", descZh: "擁有一顆鐵礦石", reqType: "iron", reqVal: 1, gold: 100, stones: 0 },
+    { category: "mine", id: "mine_gold", titleZh: "🥇 黃金大亨", descZh: "擁有一顆金礦石", reqType: "goldOre", reqVal: 1, gold: 100, stones: 1 },
+    { category: "mine", id: "mine_diamond", titleZh: "💎 鑽石獵人", descZh: "擁有一顆鑽石", reqType: "diamond", reqVal: 1, gold: 100, stones: 1 },
+    { category: "mine", id: "craft_1", titleZh: "🔨 學徒打鐵師", descZh: "在鐵匠鋪打造 1 件裝備", reqType: "craft", reqVal: 1, gold: 100, stones: 0 },
+    { category: "mine", id: "craft_3", titleZh: "🔨 熟練鐵匠", descZh: "在鐵匠鋪打造 3 件裝備", reqType: "craft", reqVal: 3, gold: 100, stones: 0 },
+    { category: "mine", id: "craft_5", titleZh: "🔨 神兵鑄造師", descZh: "在鐵匠鋪打造 5 件裝備", reqType: "craft", reqVal: 5, gold: 100, stones: 1 },
+    { category: "mine", id: "craft_10", titleZh: "👑 鍛造宗師", descZh: "在鐵匠鋪打造 10 件裝備", reqType: "craft", reqVal: 10, gold: 100, stones: 1 },
+    { category: "mine", id: "equip_basic", titleZh: "🛡️ 基礎武裝", descZh: "裝備至少 1 件初級裝備", reqType: "equipCount", reqVal: 1, gold: 100, stones: 0 },
+    { category: "mine", id: "equip_full", titleZh: "🛡️ 神裝加身", descZh: "裝備至少 5 件裝備", reqType: "equipCount", reqVal: 5, gold: 100, stones: 1 },
 
     // 🔮 魔法附魔 (10項)
-    { category: "enchant", id: "enc_1", titleZh: "🔮 初次附魔", descZh: "完成 1 次武器魔法附魔", reqType: "enchantCount", reqVal: 1, gold: 300, stones: 3 },
-    { category: "enchant", id: "enc_2", titleZh: "🔮 元素親和", descZh: "完成 2 次武器魔法附魔", reqType: "enchantCount", reqVal: 2, gold: 500, stones: 5 },
-    { category: "enchant", id: "enc_3", titleZh: "🔮 附魔大師", descZh: "完成 3 次武器魔法附魔", reqType: "enchantCount", reqVal: 3, gold: 800, stones: 8 },
-    { category: "enchant", id: "enc_5", titleZh: "🔮 魔力滿溢", descZh: "完成 5 次武器魔法附魔", reqType: "enchantCount", reqVal: 5, gold: 1200, stones: 12 },
-    { category: "enchant", id: "enc_stone_10", titleZh: "💎 附魔石收藏家", descZh: "持有 10 顆附魔石", reqType: "stones", reqVal: 10, gold: 500, stones: 5 },
-    { category: "enchant", id: "enc_stone_20", titleZh: "💎 魔法寶石富豪", descZh: "持有 20 顆附魔石", reqType: "stones", reqVal: 20, gold: 1000, stones: 10 },
-    { category: "enchant", id: "enc_flame", titleZh: "🔥 熾熱火焰", descZh: "獲得烈焰附魔", reqType: "hasEnchant", reqVal: "烈焰", gold: 300, stones: 3 },
-    { category: "enchant", id: "enc_vampire", titleZh: "🩸 嗜血魔咒", descZh: "獲得吸血附魔", reqType: "hasEnchant", reqVal: "吸血", gold: 300, stones: 3 },
-    { category: "enchant", id: "enc_frost", titleZh: "❄️ 寒冰凍結", descZh: "獲得冰霜附魔", reqType: "hasEnchant", reqVal: "冰霜", gold: 300, stones: 3 },
-    { category: "enchant", id: "enc_fury", titleZh: "💥 暴怒狂之", descZh: "獲得暴怒附魔", reqType: "hasEnchant", reqVal: "暴怒", gold: 300, stones: 3 },
+    { category: "enchant", id: "enc_1", titleZh: "🔮 初次附魔", descZh: "完成 1 次武器魔法附魔", reqType: "enchantCount", reqVal: 1, gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_2", titleZh: "🔮 元素親和", descZh: "完成 2 次武器魔法附魔", reqType: "enchantCount", reqVal: 2, gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_3", titleZh: "🔮 附魔大師", descZh: "完成 3 次武器魔法附魔", reqType: "enchantCount", reqVal: 3, gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_5", titleZh: "🔮 魔力滿溢", descZh: "完成 5 次武器魔法附魔", reqType: "enchantCount", reqVal: 5, gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_stone_10", titleZh: "💎 附魔石收藏家", descZh: "持有 10 顆附魔石", reqType: "stones", reqVal: 10, gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_stone_20", titleZh: "💎 魔法寶石富豪", descZh: "持有 20 顆附魔石", reqType: "stones", reqVal: 20, gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_flame", titleZh: "🔥 熾熱火焰", descZh: "獲得烈焰附魔", reqType: "hasEnchant", reqVal: "烈焰", gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_vampire", titleZh: "🩸 嗜血魔咒", descZh: "獲得吸血附魔", reqType: "hasEnchant", reqVal: "吸血", gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_frost", titleZh: "❄️ 寒冰凍結", descZh: "獲得冰霜附魔", reqType: "hasEnchant", reqVal: "冰霜", gold: 100, stones: 1 },
+    { category: "enchant", id: "enc_fury", titleZh: "💥 暴怒狂之", descZh: "獲得暴怒附魔", reqType: "hasEnchant", reqVal: "暴怒", gold: 100, stones: 1 },
 
     // 💰 冒險財富 (10項)
-    { category: "wealth", id: "gold_500", titleZh: "💰 第一桶金", descZh: "持有金幣達到 500 G", reqType: "gold", reqVal: 500, gold: 200, stones: 2 },
-    { category: "wealth", id: "gold_2000", titleZh: "💰 村莊小富豪", descZh: "持有金幣達到 2,000 G", reqType: "gold", reqVal: 2000, gold: 500, stones: 5 },
-    { category: "wealth", id: "gold_5000", titleZh: "💰 富甲一方", descZh: "持有金幣達到 5,000 G", reqType: "gold", reqVal: 5000, gold: 1000, stones: 8 },
-    { category: "wealth", id: "gold_10000", titleZh: "💰 富可敵國", descZh: "持有金幣達到 10,000 G", reqType: "gold", reqVal: 10000, gold: 2000, stones: 15 },
-    { category: "wealth", id: "skill_2", titleZh: "📖 技能入門", descZh: "學會 2 招技能", reqType: "skillCount", reqVal: 2, gold: 200, stones: 2 },
-    { category: "wealth", id: "skill_4", titleZh: "📖 技能滿載", descZh: "學滿 4 招技能", reqType: "skillCount", reqVal: 4, gold: 500, stones: 5 },
-    { category: "wealth", id: "potion_hp", titleZh: "🧪 生命保障", descZh: "持有 5 瓶生命藥水", reqType: "potHp", reqVal: 5, gold: 200, stones: 2 },
-    { category: "wealth", id: "potion_mp", titleZh: "💧 魔力源泉", descZh: "持有 5 瓶魔力藥水", reqType: "potMp", reqVal: 5, gold: 200, stones: 2 },
-    { category: "wealth", id: "shop_refresh", titleZh: "🔄 購物狂人", descZh: "進行 1 次技能商店換一批", reqType: "shopRefreshCount", reqVal: 1, gold: 150, stones: 1 },
-    { category: "wealth", id: "action_rest", titleZh: "⛪ 充分休息", descZh: "在旅館完成休息恢復", reqType: "restCount", reqVal: 1, gold: 100, stones: 1 }
+    { category: "wealth", id: "gold_500", titleZh: "💰 第一桶金", descZh: "持有金幣達到 500 G", reqType: "gold", reqVal: 500, gold: 100, stones: 0 },
+    { category: "wealth", id: "gold_2000", titleZh: "💰 村莊小富豪", descZh: "持有金幣達到 2,000 G", reqType: "gold", reqVal: 2000, gold: 100, stones: 0 },
+    { category: "wealth", id: "gold_5000", titleZh: "💰 富甲一方", descZh: "持有金幣達到 5,000 G", reqType: "gold", reqVal: 5000, gold: 100, stones: 1 },
+    { category: "wealth", id: "gold_10000", titleZh: "💰 富可敵國", descZh: "持有金幣達到 10,000 G", reqType: "gold", reqVal: 100, stones: 1 },
+    { category: "wealth", id: "skill_2", titleZh: "📖 技能入門", descZh: "學會 2 招技能", reqType: "skillCount", reqVal: 2, gold: 100, stones: 0 },
+    { category: "wealth", id: "skill_4", titleZh: "📖 技能滿載", descZh: "學滿 4 招技能", reqType: "skillCount", reqVal: 4, gold: 100, stones: 1 },
+    { category: "wealth", id: "potion_hp", titleZh: "🧪 生命保障", descZh: "持有 5 瓶生命藥水", reqType: "potHp", reqVal: 5, gold: 100, stones: 0 },
+    { category: "wealth", id: "potion_mp", titleZh: "💧 魔力源泉", descZh: "持有 5 瓶魔力藥水", reqType: "potMp", reqVal: 5, gold: 100, stones: 0 },
+    { category: "wealth", id: "shop_refresh", titleZh: "🔄 購物狂人", descZh: "進行 1 次技能商店換一批", reqType: "shopRefreshCount", reqVal: 1, gold: 100, stones: 0 },
+    { category: "wealth", id: "action_rest", titleZh: "⛪ 充分休息", descZh: "在旅館完成休息恢復", reqType: "restCount", reqVal: 1, gold: 100, stones: 0 }
 ];

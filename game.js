@@ -13,6 +13,8 @@ let villageNpcMsg = "";
 let cardRefreshCount = 3;
 let pendingVictoryData = null;
 let isJobTrialBattle = false;
+let isTowerBattle = false;
+let currentTrialTier = 2;
 let currentRandomEvent = null;
 
 function getItemName(item) { return item.nameZh; }
@@ -46,12 +48,17 @@ function initGame(jobCode) {
     let c = CLASSES[jobCode];
     player = {
         jobCode: jobCode, jobName: c.nameZh, baseJobCode: jobCode,
-        level: 1, exp: 0, maxExp: getMaxExp(1), isAdvanced: false, advancedJobId: null,
+        level: 1, exp: 0, maxExp: getMaxExp(1),
+        jobTier: 1,
         hp: c.hp, maxHp: c.hp, mp: c.mp, maxMp: c.mp, shield: 0,
         atkMin: c.min, atkMax: c.max, weapon: c.weaponZh,
         gold: 100, enchantStones: 0, villageActions: 5, maxVillageActions: 5, skills: ["重擊"], cards: [], 
         equips: [], refines: {}, pickaxeLvl: 0, refineStones: 0, shopRefreshCount: 0, restCount: 0, 
         
+        towerFloor: 1,
+        artifactFrags: 0,
+        luciferFrags: 0,
+
         equipmentSlots: { helmet: null, chest: null, leggings: null, bracer1: null, bracer2: null, weapon: null },
         weaponEnchants: [], ores: { copper: 0, iron: 0, gold: 0, diamond: 0 },
         potions: { hp: 1, mp: 1 }, mineCount: 0, achieved: [],
@@ -66,12 +73,14 @@ function initGame(jobCode) {
     maxReachedStage = 1;
     currentSelectedStage = 1;
     isJobTrialBattle = false;
+    isTowerBattle = false;
     startNextBattle();
 }
 
 function startNextBattle() {
     hideAll(); 
     isJobTrialBattle = false;
+    isTowerBattle = false;
 
     if (currentSelectedStage % 10 !== 0 && Math.random() < 0.15) {
         triggerRandomEvent();
@@ -81,6 +90,38 @@ function startNextBattle() {
     document.getElementById('battle-screen').classList.remove('hidden');
     if (typeof setBattleBgm === "function") setBattleBgm(true);
     spawnMonster();
+}
+
+// 🏰 試煉塔挑戰戰鬥發起 (難度高於主線)
+function startTowerFloorChallenge() {
+    hideAll();
+    isJobTrialBattle = false;
+    isTowerBattle = true;
+    document.getElementById('battle-screen').classList.remove('hidden');
+    if (typeof setBattleBgm === "function") setBattleBgm(true);
+
+    let floor = player.towerFloor || 1;
+    let isFloorBoss = (floor % 5 === 0);
+
+    // 50 層過後陡峭提升難度
+    let towerHardMult = (floor >= 50) ? 2.5 : 1.5;
+
+    monster = {
+        name: isFloorBoss ? `👑 【試煉塔第 ${floor} 層守護 BOSS】` : `👹 【試煉塔第 ${floor} 層守衛】`,
+        hp: Math.floor((1500 + floor * 260) * towerHardMult), maxHp: Math.floor((1500 + floor * 260) * towerHardMult),
+        min: Math.floor((60 + floor * 15) * towerHardMult), max: Math.floor((90 + floor * 22) * towerHardMult),
+        reward: 400 + floor * 50, expReward: 220 + floor * 30,
+        isFinal: false, isBoss: isFloorBoss, mapId: Math.min(10, Math.floor(floor / 5) + 1),
+        debuffTurns: 0, isRaged: false
+    };
+
+    drawAvatarAndMonsterVisuals(monster.mapId, isFloorBoss);
+    document.getElementById('log-box').innerHTML = `🏰 進入試煉之塔第 ${floor} 層挑戰！\n`;
+    player.shield = 0;
+    player.skillCDs = {};
+    player.isDefending = false;
+    render4SkillButtons();
+    updateBattleUI();
 }
 
 function triggerRandomEvent() {
@@ -181,6 +222,7 @@ function enterBattleAfterEvent() {
     spawnMonster();
 }
 
+// **重點修改：主線第 6 章起難度陡升**
 function spawnMonster() {
     let stageNum = currentSelectedStage;
     let curMapId = Math.min(Math.floor((stageNum - 1) / 10) + 1, 10);
@@ -188,15 +230,18 @@ function spawnMonster() {
     let isFinal = (stageNum === 100);
     let mapData = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { nameZh: "微光森林", bossZh: "區域頭目", monstersZh: ["哥布林斥候"] };
 
+    // 第 6 章 (51小關) 起難度提升 1.8 倍
+    let chapterHardMult = (stageNum >= 51) ? 1.8 : 1.0;
+
     if (isFinal) { 
-        monster = { name: "👑 滅世魔王·路西法", hp: 6500, maxHp: 6500, min: 140, max: 220, reward: 3000, expReward: 1200, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
+        monster = { name: "👑 滅世魔王·路西法", hp: 12000, maxHp: 12000, min: 220, max: 320, reward: 5000, expReward: 2000, isFinal: true, mapId: 10, debuffTurns: 0, isRaged: false }; 
     } else if (isBoss) { 
         let reward = Math.floor(Math.random() * 31 + 80);
-        monster = { name: `👑 ${mapData.bossZh}`, hp: 900 + stageNum * 45, maxHp: 900 + stageNum * 45, min: 45 + curMapId * 12, max: 75 + curMapId * 15, reward: reward, expReward: 200 + stageNum * 15, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false, isBoss: true }; 
+        monster = { name: `👑 ${mapData.bossZh}`, hp: Math.floor((900 + stageNum * 55) * chapterHardMult), maxHp: Math.floor((900 + stageNum * 55) * chapterHardMult), min: Math.floor((45 + curMapId * 15) * chapterHardMult), max: Math.floor((75 + curMapId * 20) * chapterHardMult), reward: reward, expReward: 200 + stageNum * 15, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false, isBoss: true }; 
     } else { 
         let reward = Math.floor(Math.random() * 11 + 40);
         let mName = mapData.monstersZh[Math.floor(Math.random() * mapData.monstersZh.length)];
-        monster = { name: mName, hp: 220 + stageNum * 30, maxHp: 220 + stageNum * 30, min: 20 + stageNum * 5, max: 35 + stageNum * 7, reward: reward, expReward: 60 + stageNum * 8, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
+        monster = { name: mName, hp: Math.floor((220 + stageNum * 38) * chapterHardMult), maxHp: Math.floor((220 + stageNum * 38) * chapterHardMult), min: Math.floor((20 + stageNum * 6) * chapterHardMult), max: Math.floor((35 + stageNum * 9) * chapterHardMult), reward: reward, expReward: 60 + stageNum * 8, isFinal: false, mapId: curMapId, debuffTurns: 0, isRaged: false }; 
     }
 
     drawAvatarAndMonsterVisuals(curMapId, isBoss || isFinal);
@@ -213,17 +258,34 @@ function startJobAdvanceTrial() {
     document.getElementById('battle-screen').classList.remove('hidden');
     if (typeof setBattleBgm === "function") setBattleBgm(true);
 
+    let nextTier = (player.jobTier || 1) + 1;
+    currentTrialTier = nextTier;
+
+    let bossName = "";
+    let bossHpMult = 1.2;
+
+    if (nextTier === 2) {
+        bossName = `👑 【鏡像分身】${player.jobName}之影`;
+        bossHpMult = 1.2;
+    } else if (nextTier === 3) {
+        bossName = `👑 【古代守護者】試煉真身`;
+        bossHpMult = 1.8;
+    } else if (nextTier === 4) {
+        bossName = `👑 【路西法分身】終極魔尊`;
+        bossHpMult = 2.5;
+    }
+
     monster = {
-        name: `👑 【鏡像分身】${player.jobName}之影`,
-        hp: Math.floor(player.maxHp * 1.2), maxHp: Math.floor(player.maxHp * 1.2),
-        min: player.atkMin, max: player.atkMax,
+        name: bossName,
+        hp: Math.floor(player.maxHp * bossHpMult), maxHp: Math.floor(player.maxHp * bossHpMult),
+        min: Math.floor(player.atkMin * 1.1), max: Math.floor(player.atkMax * 1.1),
         critRate: player.critRate,
-        reward: 800, expReward: 500,
-        isFinal: false, isBoss: true, mapId: 5, debuffTurns: 0, isRaged: false
+        reward: 1000, expReward: 800,
+        isFinal: false, isBoss: true, mapId: nextTier * 2, debuffTurns: 0, isRaged: false
     };
 
-    drawAvatarAndMonsterVisuals(5, true);
-    document.getElementById('log-box').innerHTML = "⚔️ 進入一階轉職試煉！鏡像分身複製了你的全部實力與技能！戰勝自我！\n";
+    drawAvatarAndMonsterVisuals(nextTier * 2, true);
+    document.getElementById('log-box').innerHTML = `⚔️ 進入 ${nextTier} 階轉職試煉戰！擊敗【${bossName}】以完成超越突破！\n`;
     player.shield = 0;
     player.skillCDs = {};
     player.isDefending = false;
@@ -287,7 +349,11 @@ function updateBattleUI() {
     let mapObj = (typeof MAPS !== "undefined" && MAPS[monster.mapId]) ? MAPS[monster.mapId] : { nameZh: "荒野" };
     let weaknessZh = { flame: "🔥火", frost: "❄️冰", thunder: "⚡雷", gale: "🍃風" }[mapObj.weakness] || "無";
 
-    document.getElementById('map-info').innerText = isJobTrialBattle ? "👑 一階轉職試煉戰 (鏡像分身)" : `區域: ${getStageString(currentSelectedStage)} ${mapObj.nameZh} (弱點: ${weaknessZh})`;
+    let titleText = `區域: ${getStageString(currentSelectedStage)} ${mapObj.nameZh}`;
+    if (isJobTrialBattle) titleText = `👑 ${currentTrialTier} 階轉職試煉戰`;
+    else if (isTowerBattle) titleText = `🏰 試煉之塔第 ${player.towerFloor || 1} 層`;
+
+    document.getElementById('map-info').innerText = `${titleText} (弱點: ${weaknessZh})`;
     
     let buffStr = player.buffTurns > 0 ? `狂暴中 (${player.buffTurns}T)` : "無";
     if (player.isDefending) buffStr += " | 防禦防護中";
@@ -464,7 +530,7 @@ function executeTurn(skillKey, isDefendingAction) {
     if (monster.hp <= 0) {
         if (typeof playSound === "function") playSound('victory', player.jobCode);
         
-        let isOldStage = (currentSelectedStage < maxReachedStage);
+        let isOldStage = (!isTowerBattle && currentSelectedStage < maxReachedStage);
         let rewardMult = isOldStage ? 0.50 : 1.0;
 
         let expGained = Math.floor((monster.expReward || 50) * rewardMult);
@@ -473,19 +539,36 @@ function executeTurn(skillKey, isDefendingAction) {
         player.exp += expGained;
         player.gold += goldGained;
 
-        if (currentSelectedStage === maxReachedStage) {
+        let extraRewardMsg = "";
+
+        // **重點修改：試煉之塔 50 層起才掉落路西法碎片**
+        if (isTowerBattle) {
+            let curFloor = player.towerFloor || 1;
+            
+            if (curFloor >= 50 && Math.random() < 0.30) {
+                player.luciferFrags = (player.luciferFrags || 0) + 1;
+                extraRewardMsg += "<br><span style='color:#e74c3c;'>👑 幸運掉落了 1 顆【路西法碎片】！</span>";
+            }
+
+            if (curFloor % 5 === 0) {
+                player.artifactFrags = (player.artifactFrags || 0) + 1;
+                extraRewardMsg += "<br><span style='color:#a29bfe; font-weight:bold;'>🧩 突破第 " + curFloor + " 層！獲得 1 顆【神器碎片】！</span>";
+            }
+
+            player.towerFloor = curFloor + 1;
+        } else if (currentSelectedStage === maxReachedStage) {
             maxReachedStage++;
             currentSelectedStage = maxReachedStage;
         }
 
         let levelUpMsg = "";
-        while (player.exp >= player.maxExp && player.level < 50) {
+        while (player.exp >= player.maxExp && player.level < 100) {
             player.exp -= player.maxExp;
             player.level++;
             player.maxExp = getMaxExp(player.level);
-            player.maxHp += 20; player.hp = player.maxHp;
-            player.maxMp += 10; player.mp = player.maxMp;
-            player.atkMin += 4; player.atkMax += 6;
+            player.maxHp += 25; player.hp = player.maxHp;
+            player.maxMp += 12; player.mp = player.maxMp;
+            player.atkMin += 5; player.atkMax += 8;
             levelUpMsg += `<br><span style="color:#f1c40f; font-weight:bold;">🎉 等級提升至 Lv.${player.level}！基礎屬性大幅增加！</span>`;
         }
 
@@ -496,7 +579,7 @@ function executeTurn(skillKey, isDefendingAction) {
             showJobAdvanceSelectScreen();
         } else {
             let oldStageMsg = isOldStage ? " <span style='color:#e67e22;'>(舊關卡收益 50%)</span>" : "";
-            showVictoryModal(monster.name, goldGained, expGained, gotStone, levelUpMsg + oldStageMsg);
+            showVictoryModal(monster.name, goldGained, expGained, gotStone, levelUpMsg + oldStageMsg + extraRewardMsg);
         }
         return;
     }
@@ -517,7 +600,7 @@ function executeTurn(skillKey, isDefendingAction) {
         mDmg = Math.floor(randomAtk() * (sInfo.mult || 1.5));
         if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
         player.hp -= mDmg;
-        log(`⚡ 【鏡像分身】複製並施展了你的【${randSkillKey}】，造成 ${mDmg} 點鏡像傷害！`, "log-crit");
+        log(`⚡ 【試煉BOSS】複製並施展了你的【${randSkillKey}】，造成 ${mDmg} 點試煉傷害！`, "log-crit");
     } else {
         mDmg = Math.floor(Math.random() * (monster.max - monster.min + 1) + monster.min);
         if (player.isDefending) mDmg = Math.floor(mDmg * 0.5);
@@ -558,7 +641,18 @@ function showJobAdvanceSelectScreen() {
     let container = document.getElementById('job-advance-options');
     container.innerHTML = "";
 
-    let options = JOB_ADVANCEMENTS[player.baseJobCode] || [];
+    let jobTree = JOB_ADVANCEMENTS[player.baseJobCode] || {};
+    let targetTier = (player.jobTier || 1) + 1;
+    let options = [];
+
+    if (targetTier === 2) {
+        options = jobTree.tier2 || [];
+    } else if (targetTier === 3) {
+        options = (jobTree.tier3 || {})[player.jobName] || [];
+    } else if (targetTier === 4) {
+        options = (jobTree.tier4 || {})[player.jobName] || [];
+    }
+
     options.forEach(opt => {
         let btn = document.createElement('button');
         btn.className = "btn";
@@ -570,7 +664,7 @@ function showJobAdvanceSelectScreen() {
 }
 
 function selectJobAdvancement(advOption) {
-    player.isAdvanced = true;
+    player.jobTier = advOption.tier;
     player.advancedJobId = advOption.id;
     player.jobName = advOption.nameZh;
 
@@ -581,13 +675,13 @@ function selectJobAdvancement(advOption) {
     player.critDmg += advOption.critDmg;
     player.evasion += advOption.evasion;
 
-    alert(`🎉 轉職成功！恭喜成為【${advOption.nameZh}】！獲得極致二階屬性加成！`);
+    alert(`🎉 轉職成功！恭喜突破至 ${advOption.tier} 階職業【${advOption.nameZh}】！獲得極致屬性加成！`);
     enterVillage();
 }
 
 function confirmVictoryModal() {
     hideAll();
-    if (currentSelectedStage % 10 === 0) {
+    if (!isTowerBattle && currentSelectedStage % 10 === 0) {
         cardRefreshCount = 3;
         showCardSelect();
     } else {
@@ -595,7 +689,6 @@ function confirmVictoryModal() {
     }
 }
 
-// **修復重點：重傷復活恢復為當前最大 HP 與 MP 的 50%（非全滿也不會變回初始狀態）**
 function retryBattle() { 
     player.hp = Math.floor(player.maxHp * 0.50); 
     player.mp = Math.floor(player.maxMp * 0.50); 
@@ -716,10 +809,30 @@ function showVillage() {
     
     let trialBtn = document.getElementById('btn-job-trial');
     if (trialBtn) {
-        if (player.level >= 20 && !player.isAdvanced) {
+        let curTier = player.jobTier || 1;
+        let maxStg = maxReachedStage || 1;
+
+        if (curTier === 1 && player.level >= 20) {
             trialBtn.classList.remove('hidden');
+            trialBtn.innerText = "👑 挑戰【2階轉職試煉 BOSS (鏡像分身)】";
+        } else if (curTier === 2 && player.level >= 50 && maxStg >= 50) {
+            trialBtn.classList.remove('hidden');
+            trialBtn.innerText = "👑 挑戰【3階轉職試煉 BOSS (古代守護者)】";
+        } else if (curTier === 3 && player.level >= 70 && maxStg >= 80) {
+            trialBtn.classList.remove('hidden');
+            trialBtn.innerText = "👑 挑戰【4階轉職試煉 BOSS (路西法分身)】";
         } else {
             trialBtn.classList.add('hidden');
+        }
+    }
+
+    let towerBtn = document.getElementById('btn-tower-enter');
+    if (towerBtn) {
+        if ((maxReachedStage || 1) >= 50) {
+            towerBtn.classList.remove('hidden');
+            towerBtn.innerText = `🏰 進入【試煉之塔】(目前最高第 ${player.towerFloor || 1} 層)`;
+        } else {
+            towerBtn.classList.add('hidden');
         }
     }
 
@@ -732,7 +845,7 @@ function updateVillageUI() {
     let act = player.villageActions;
     let pLvl = player.pickaxeLvl || 0;
     
-    document.getElementById('village-status').innerText = `Lv.${player.level || 1} 【${player.jobName}】 | EXP: ${player.exp}/${player.maxExp}\n金幣: ${player.gold} G | 💎 附魔石: ${player.enchantStones} | 精煉石: ${player.refineStones || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ 行動力: ${act}/5\n⛏️ 採礦鎬子等級: +${pLvl}`;
+    document.getElementById('village-status').innerText = `Lv.${player.level || 1} 【${player.jobName}】 (${player.jobTier || 1}階) | EXP: ${player.exp}/${player.maxExp}\n金幣: ${player.gold} G | 💎 附魔石: ${player.enchantStones} | 精煉石: ${player.refineStones || 0}\n🧩 神器碎片: ${player.artifactFrags || 0} | 👑 路西法碎片: ${player.luciferFrags || 0}\nHP: ${player.hp}/${player.maxHp} | MP: ${player.mp}/${player.maxMp} | ⚡ 行動力: ${act}/5\n⛏️ 採礦鎬子等級: +${pLvl}`;
 
     document.getElementById('btn-v-rest').disabled = (player.gold < 30 || act <= 0);
     
@@ -751,13 +864,31 @@ function showJobTree() {
     document.getElementById('job-tree-screen').classList.remove('hidden');
     let container = document.getElementById('job-tree-content');
     
-    let html = "<b>🌳 全職業二階轉職天賦圖鑑 (Lv.20 可解鎖試煉)：</b><br><br>";
+    let html = "<b>🌳 全職業 2~4 階轉職天賦圖鑑：</b><br><br>";
     Object.keys(JOB_ADVANCEMENTS).forEach(jobKey => {
         let jobZh = CLASSES[jobKey].nameZh;
-        html += `<span style="color:#f1c40f; font-weight:bold;">▶ 【${jobZh}】轉職分支：</span><br>`;
-        JOB_ADVANCEMENTS[jobKey].forEach(adv => {
-            html += `• <b>${adv.nameZh}</b>：${adv.descZh}<br>`;
-            html += `<span style="color:#aaa; font-size:11px;">&nbsp;&nbsp;加成：HP+${adv.hp} | MP+${adv.mp} | 攻擊+${adv.atk} | 暴擊率+${adv.critRate}% | 閃避率+${adv.evasion}%</span><br>`;
+        let tree = JOB_ADVANCEMENTS[jobKey];
+        html += `<span style="color:#f1c40f; font-weight:bold; font-size:14px;">▶ 【${jobZh}】轉職體系：</span><br>`;
+        
+        html += `<span style="color:#e67e22;">[2階 - Lv.20 試煉]</span>：<br>`;
+        tree.tier2.forEach(adv => {
+            html += `• <b>${adv.nameZh}</b>: ${adv.descZh} (HP+${adv.hp}, 攻擊+${adv.atk})<br>`;
+            
+            let t3List = (tree.tier3 || {})[adv.nameZh] || [];
+            if (t3List.length > 0) {
+                html += `&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3498db;">└─ [3階 - Lv.50 + 通過第5章]</span>：<br>`;
+                t3List.forEach(adv3 => {
+                    html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <b>${adv3.nameZh}</b>: ${adv3.descZh}<br>`;
+
+                    let t4List = (tree.tier4 || {})[adv3.nameZh] || [];
+                    if (t4List.length > 0) {
+                        html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#9b59b6;">└─ [4階 - Lv.70 + 通過第8章]</span>：<br>`;
+                        t4List.forEach(adv4 => {
+                            html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <b>${adv4.nameZh}</b>: ${adv4.descZh}<br>`;
+                        });
+                    }
+                });
+            }
         });
         html += "<br>";
     });
@@ -774,8 +905,9 @@ function showPlayerStats() {
 
     let html = `
         <b>【等級: Lv.${p.level || 1}】</b> (EXP: ${p.exp} / ${p.maxExp})<br>
-        <b>【職業: ${p.jobName}】</b> ${p.isAdvanced ? '<span style="color:#2ecc71;">[二階轉職完成]</span>' : '<span style="color:#888;">[一階]</span>'}<br>
+        <b>【職業: ${p.jobName}】</b> <span style="color:#2ecc71;">[${p.jobTier || 1}階職業]</span><br>
         金幣: ${p.gold} G | 💎 附魔石: ${p.enchantStones} | 精煉石: ${p.refineStones || 0}<br>
+        🧩 神器碎片: <b>${p.artifactFrags || 0}</b> 顆 | 👑 路西法碎片: <b>${p.luciferFrags || 0}</b> 顆<br>
         ⛏️ 採礦鎬子強化等級: <b>+${p.pickaxeLvl || 0}</b><br>
         當前武器: <b>[${p.equipmentSlots.weapon || p.weapon}]</b> (${encStr})<br>
         當前頭盔: <b>[${p.equipmentSlots.helmet || '無'}]</b> | 當前胸甲: <b>[${p.equipmentSlots.chest || '無'}]</b><br>
@@ -843,7 +975,7 @@ function renderEquipmentBagList() {
 }
 
 function equipItemToSlot(eqName) {
-    let item = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName);
+    let item = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName) || CLASS_ARTIFACTS_DATABASE[player.jobName];
     if (!item) return;
 
     let targetSlot = item.slot || (item.type === 'armor' ? 'chest' : 'weapon');
@@ -880,7 +1012,7 @@ function unequipSlot(slotKey) {
     let eqName = player.equipmentSlots[slotKey];
     if (!eqName) return;
 
-    let item = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName);
+    let item = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName) || CLASS_ARTIFACTS_DATABASE[player.jobName];
     if (item) {
         let mult = 1 + (player.refines[eqName] || 0) * 0.15;
         if (item.atk) { player.atkMin = Math.max(10, player.atkMin - Math.floor(item.atk * mult)); player.atkMax = Math.max(15, player.atkMax - Math.floor(item.atk * mult)); }
@@ -1016,9 +1148,10 @@ function updateAchieveUI() {
 
         let canClaim = (curVal >= ach.reqVal) || (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal));
         let progressTxt = typeof ach.reqVal === 'number' ? ` [ ${Math.min(curVal, ach.reqVal)} / ${ach.reqVal} ]` : "";
+        let stoneTxt = ach.stones > 0 ? ` / ${ach.stones}💎` : "";
 
         let btn = document.createElement('button'); btn.className = "btn";
-        btn.innerText = `${ach.titleZh} - ${ach.descZh}${progressTxt} (獎勵: ${ach.gold}G / ${ach.stones}💎)`;
+        btn.innerText = `${ach.titleZh} - ${ach.descZh}${progressTxt} (獎勵: ${ach.gold}G${stoneTxt})`;
 
         if (isDone) {
             btn.innerText += " [已領取]";
@@ -1030,8 +1163,8 @@ function updateAchieveUI() {
             btn.onclick = () => {
                 player.achieved.push(ach.id);
                 player.gold += ach.gold;
-                player.enchantStones += ach.stones;
-                alert(`🏆 領取成就成功！獲得 ${ach.gold} 金幣 與 ${ach.stones} 顆附魔石！`);
+                if (ach.stones) player.enchantStones += ach.stones;
+                alert(`🏆 領取成就成功！獲得 ${ach.gold} 金幣${ach.stones ? " 與 " + ach.stones + " 顆附魔石" : ""}！`);
                 updateAchieveUI();
             };
         }
@@ -1062,7 +1195,7 @@ function claimAllAchievements() {
             if (canClaim) {
                 player.achieved.push(ach.id);
                 player.gold += ach.gold;
-                player.enchantStones += ach.stones;
+                if (ach.stones) player.enchantStones += ach.stones;
                 claimedCount++;
             }
         }
@@ -1077,7 +1210,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪高級神兵鍛造 & 精煉 & 升級鎬子
+// 🔨 鐵匠鋪高級神兵鍛造 & 神器合成/強化 & 精煉 & 升級鎬子
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -1104,7 +1237,7 @@ function switchForgeArmorTab(slot) {
 function updateForgeUI() {
     let p = player;
     let act = p.villageActions;
-    document.getElementById('ore-status').innerText = `武器: [${p.weapon}]\n礦石: 銅:${p.ores.copper} | 鐵:${p.ores.iron} | 金:${p.ores.gold} | 鑽石:${p.ores.diamond} | 精煉石:${p.refineStones || 0}\n⛏️ 鎬子等級: +${p.pickaxeLvl || 0} | ⚡ 行動力: ${act}/5`;
+    document.getElementById('ore-status').innerText = `武器: [${p.weapon}]\n礦石: 銅:${p.ores.copper} | 鐵:${p.ores.iron} | 金:${p.ores.gold} | 鑽石:${p.ores.diamond} | 精煉石:${p.refineStones || 0}\n🧩 神器碎片: ${p.artifactFrags || 0} | 👑 路西法碎片: ${p.luciferFrags || 0} | ⚡ 行動力: ${act}/5`;
     let forgeBox = document.getElementById('forge-items'); forgeBox.innerHTML = "";
     
     if (currentForgeTab === 'refine') {
@@ -1114,6 +1247,11 @@ function updateForgeUI() {
 
     if (currentForgeTab === 'pickaxe') {
         renderPickaxeUpgradeUI();
+        return;
+    }
+
+    if (currentForgeTab === 'artifact') {
+        renderArtifactCraftAndUpgradeUI();
         return;
     }
 
@@ -1150,6 +1288,73 @@ function updateForgeUI() {
         }
         forgeBox.appendChild(btn);
     });
+}
+
+function renderArtifactCraftAndUpgradeUI() {
+    let forgeBox = document.getElementById('forge-items');
+    forgeBox.innerHTML = "";
+
+    let curJobArt = CLASS_ARTIFACTS_DATABASE[player.jobName];
+    if (!curJobArt) {
+        forgeBox.innerHTML = "<p style='color:#888; text-align:center;'>請先完成 2 階或 3 階轉職以解鎖專屬職業神器打造！</p>";
+        return;
+    }
+
+    let artName = curJobArt.nameZh;
+    let hasArtifact = player.equips.includes(artName);
+    let curRefineLvl = player.refines[artName] || 0;
+
+    let craftBtn = document.createElement('button');
+    craftBtn.className = "btn";
+    craftBtn.style.margin = "6px 0";
+
+    if (hasArtifact) {
+        craftBtn.innerText = `🗡️ ${artName} [已合成]`;
+        craftBtn.disabled = true;
+    } else {
+        let canCraft = (player.artifactFrags || 0) >= 5 && player.villageActions > 0;
+        craftBtn.innerText = `🗡️ 打造專屬神器: ${artName} (需求: 🧩神器碎片 x5)`;
+        craftBtn.disabled = !canCraft;
+
+        craftBtn.onclick = () => {
+            player.villageActions--;
+            player.artifactFrags -= 5;
+            player.equips.push(artName);
+            alert(`🎉 成功打造職業專屬神器【${artName}】！請至裝備管理頁面穿戴！`);
+            updateForgeUI();
+        };
+    }
+    forgeBox.appendChild(craftBtn);
+
+    if (hasArtifact) {
+        let upgradeBtn = document.createElement('button');
+        upgradeBtn.className = "btn";
+        upgradeBtn.style.margin = "6px 0";
+
+        if (curRefineLvl >= 5) {
+            upgradeBtn.innerText = `✨ ${artName} (+5 滿級神器降臨)`;
+            upgradeBtn.disabled = true;
+        } else {
+            let luciferReqArr = [2, 4, 7, 11, 16];
+            let reqLucifer = luciferReqArr[curRefineLvl];
+            let reqFrags = 2;
+
+            let canUpgrade = (player.artifactFrags || 0) >= reqFrags && (player.luciferFrags || 0) >= reqLucifer && player.villageActions > 0;
+
+            upgradeBtn.innerText = `✨ 神器強化升級 (+${curRefineLvl} ➡️ +${curRefineLvl + 1}) (需求: 🧩神器碎片x${reqFrags}, 👑路西法碎片x${reqLucifer})`;
+            upgradeBtn.disabled = !canUpgrade;
+
+            upgradeBtn.onclick = () => {
+                player.villageActions--;
+                player.artifactFrags -= reqFrags;
+                player.luciferFrags -= reqLucifer;
+                player.refines[artName] = curRefineLvl + 1;
+                alert(`🎉 神器強化成功！【${artName}】提升至 +${curRefineLvl + 1}！（全屬性額外加成 25%）`);
+                updateForgeUI();
+            };
+        }
+        forgeBox.appendChild(upgradeBtn);
+    }
 }
 
 function renderPickaxeUpgradeUI() {
@@ -1387,6 +1592,10 @@ function loadGame() {
             if (!player.exp) player.exp = 0;
             if (!player.maxExp) player.maxExp = getMaxExp(1);
             if (!player.baseJobCode) player.baseJobCode = player.jobCode;
+            if (!player.jobTier) player.jobTier = 1;
+            if (!player.towerFloor) player.towerFloor = 1;
+            if (!player.artifactFrags) player.artifactFrags = 0;
+            if (!player.luciferFrags) player.luciferFrags = 0;
 
             if (!player.refines) player.refines = {};
             if (!player.pickaxeLvl) player.pickaxeLvl = 0;

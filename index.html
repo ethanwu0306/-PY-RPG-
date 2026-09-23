@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v3.7</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v5.1</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -61,23 +61,25 @@
         <h2>📖 勇者冒險指南 & 設施玩法介紹</h2>
         <div class="status-box" style="height: 380px; overflow-y: auto; text-align: left; font-size: 12px;">
             <div class="section-header">⚔️ 一、核心冒險機制</div>
-            • <b>關卡目標</b>：總共 10 大區域（100 小關），第 10 關為區域 BOSS，第 100 關為終極魔王路西法！<br>
+            • <b>關卡目標</b>：總共 10 大區域（100 小關），第 6 章起難度提升！第 100 關為終極魔王路西法！<br>
+            • <b>🏰 試煉之塔</b>：通關 50 關解鎖，難度高於主線！每 5 關掉神器碎片，<b>50 層後 30% 掉落路西法碎片</b>！<br>
+            • <b>🗡️ 專屬神器</b>：集滿 5 顆神器碎片可打造專屬神器，並可用路西法碎片強化至 +5！<br>
+            • <b>轉職條件</b>：2階(Lv.20)、3階(Lv.50+通過第5章)、4階(Lv.70+通過第8章)！<br>
             • <b>自由選關</b>：可在村莊進入「🗺️ 地圖選關」飛躍至已通關舊關卡農資源（收益減半 50%）！<br>
             • <b>突發奇遇</b>：征途途中有 15% 機率觸發許願池、寶箱、流浪商人等<b>冒險奇遇抉擇</b>！<br>
-            • <b>經驗升級</b>：戰鬥勝利獲得 EXP 升級！<b>達到 Lv.20 可解鎖轉職試練</b>！<br>
             • <b>屬性克制</b>：技能具備火、冰、雷、風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br>
             • <b>戰鬥防禦</b>：點擊「防禦」當回合受傷減半並恢復 15 MP！BOSS 低血量會發動<b>狂暴化</b>！<br><br>
 
             <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
             • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
             • ⚡ <b>礦坑採礦</b>：升級鎬子 (+1~+5) 可大幅提升挖礦量與高階礦石率！<b>+3 以上鎬子可挖到精煉石</b>！<br>
-            • 🔨 <b>鐵匠鋪</b>：<b>獨家專屬打造高級神裝、神兵與升級鎬子、裝備精煉</b>！<br>
+            • 🔨 <b>鐵匠鋪</b>：<b>獨家專屬打造高級神裝、神器專屬合成與強化、升級鎬子、裝備精煉</b>！<br>
             • 🔮 <b>魔法屋</b> (耗 1 行動力 / 10 附魔石)：為當前武器賦予 10 種魔法效果。<br><br>
 
             <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
             • 🛠️ <b>裝備商店</b>：出售初級與中級現成裝備，支援 100 G 換一批！<br>
             • 📖 <b>技能商店</b>：刷新所有職業技能。<br>
-            • 🌳 <b>職業分支圖</b>：可在村莊查看所有二階轉職分支與強大加成！<br>
+            • 🌳 <b>職業分支圖</b>：可在村莊查看所有 2~4 階轉職分支與強大加成！<br>
             • 🏆 <b>勇者成就</b>：50 項成就支援<b>一鍵領取與進度條顯示</b>！
         </div>
         <button class="btn btn-secondary" onclick="hideGameGuide()">⬅️ 我知道了，返回前一頁</button>
@@ -148,7 +150,7 @@
     <!-- 轉職分支選擇視窗 -->
     <div id="job-advance-screen" class="hidden">
         <h2 style="color:#f1c40f;">👑 恭喜通過試煉！請選擇轉職分支</h2>
-        <p style="text-align:center; color:#ccc; font-size:12px;">轉職後將解鎖專屬二階屬性與強大加成（不可更改）：</p>
+        <p style="text-align:center; color:#ccc; font-size:12px;">轉職後將解鎖專屬屬性與強大加成（不可更改）：</p>
         <div id="job-advance-options"></div>
     </div>
 
@@ -185,7 +187,7 @@
         <h2 id="village-title" style="margin-top:0;">🏡 歡迎來到村莊</h2>
         <div class="status-box" id="village-status"></div>
         
-        <button id="btn-job-trial" class="btn hidden" style="background: linear-gradient(180deg, #f39c12 0%, #965b00 100%); border-color:#f1c40f; margin-bottom:8px;" onclick="startJobAdvanceTrial()">👑 挑戰【鏡像分身轉職試煉 BOSS】 (Lv.20 解鎖)</button>
+        <button id="btn-job-trial" class="btn hidden" style="background: linear-gradient(180deg, #f39c12 0%, #965b00 100%); border-color:#f1c40f; margin-bottom:8px;" onclick="startJobAdvanceTrial()"></button>
 
         <div id="npc-event-box" style="display:none; background:#196f3d; border:1px solid #2ecc71; color:white; padding:8px; border-radius:6px; margin-bottom:10px; font-size:12px; text-align:center;"></div>
         
@@ -203,6 +205,7 @@
             <button class="btn btn-secondary" onclick="showForge()" id="btn-v-forge">🔨 鐵匠鋪</button>
             <button class="btn btn-secondary" onclick="showEnchantHouse()" id="btn-v-magic">🔮 魔法屋</button>
         </div>
+        <button id="btn-tower-enter" class="btn hidden" style="background: linear-gradient(180deg, #8e44ad 0%, #2c3e50 100%); border-color:#a29bfe; margin-bottom:8px;" onclick="startTowerFloorChallenge()">🏰 挑戰【試煉之塔】 (第 50 關解鎖)</button>
 
         <div class="section-header">🏪 冒險整備 (免行動力)</div>
         <div class="tab-grid">
@@ -259,11 +262,12 @@
     <div id="forge-screen" class="hidden">
         <h2>🔨 鐵匠鋪高級神裝與精煉</h2>
         <div class="status-box" id="ore-status"></div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1.1fr 1.1fr; gap: 3px; margin-bottom: 10px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr 1.1fr 1.1fr 1.1fr; gap: 3px; margin-bottom: 10px;">
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #c0392b 0%, #641e16 100%);" onclick="switchForgeTab('warrior')">⚔️戰士</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #8e44ad 0%, #4a235a 100%);" onclick="switchForgeTab('mage')">🔮法師</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #27ae60 0%, #145a32 100%);" onclick="switchForgeTab('archer')">🏹射手</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #2980b9 0%, #154360 100%);" onclick="switchForgeTab('armor')">🛡️防具</button>
+            <button class="btn btn-tab" style="background: linear-gradient(180deg, #8e44ad 0%, #2c3e50 100%); border-color:#e056fd;" onclick="switchForgeTab('artifact')">🗡️神器</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #d35400 0%, #7e3200 100%); border-color:#f1c40f;" onclick="switchForgeTab('refine')">✨精煉</button>
             <button class="btn btn-tab" style="background: linear-gradient(180deg, #7f8c8d 0%, #2c3e50 100%); border-color:#bdc3c7;" onclick="switchForgeTab('pickaxe')">⛏️鎬子</button>
         </div>
