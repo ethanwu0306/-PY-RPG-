@@ -39,7 +39,7 @@ body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(10, 8, 18, 0.92);
+    background: rgba(10, 8, 18, 0.94);
     display: flex;
     justify-content: center;
     align-items: center;

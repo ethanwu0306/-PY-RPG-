@@ -533,7 +533,7 @@ function executeTurn(skillKey, isDefendingAction) {
         let goldGained = Math.floor(monster.reward * rewardMult);
 
         player.exp += expGained;
-        player.gold += goldGained;
+        player.gold = (Number(player.gold) || 0) + goldGained;
 
         let extraRewardMsg = "";
 
@@ -787,7 +787,7 @@ function enterVillage() {
 
     if (Math.random() < 0.50) {
         let bonusGold = Math.floor(Math.random() * 21 + 80);
-        player.gold += bonusGold;
+        player.gold = (Number(player.gold) || 0) + bonusGold;
         villageNpcMsg = `🙋‍♂️ 遇到了熱心的村莊居民，獲得了 ${bonusGold} 金幣資助！`;
     } else villageNpcMsg = "";
 
@@ -840,7 +840,6 @@ function updateVillageUI() {
     let act = player.villageActions;
     let pLvl = player.pickaxeLvl || 0;
     
-    // **防護機制：若金幣為 NaN 則自動修復為數字 100**
     if (typeof player.gold !== "number" || isNaN(player.gold)) {
         player.gold = 100;
     }
@@ -1215,8 +1214,7 @@ function updateAchieveUI() {
         } else {
             btn.onclick = () => {
                 player.achieved.push(ach.id);
-                // 🔒 安全轉型相加，防止 NaN
-                player.gold += Number(ach.gold) || 100;
+                player.gold = (Number(player.gold) || 0) + (Number(ach.gold) || 100);
                 if (ach.stones) player.enchantStones += ach.stones;
                 alert(`🏆 領取成就成功！獲得 ${ach.gold} 金幣${ach.stones ? " 與 " + ach.stones + " 顆附魔石" : ""}！`);
                 updateAchieveUI();
@@ -1248,8 +1246,7 @@ function claimAllAchievements() {
             let canClaim = (curVal >= ach.reqVal) || (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal));
             if (canClaim) {
                 player.achieved.push(ach.id);
-                // 🔒 安全轉型相加
-                player.gold += Number(ach.gold) || 100;
+                player.gold = (Number(player.gold) || 0) + (Number(ach.gold) || 100);
                 if (ach.stones) player.enchantStones += ach.stones;
                 claimedCount++;
             }
@@ -1264,9 +1261,7 @@ function claimAllAchievements() {
     }
 }
 
-// -------------------------------------------------------------
-// 🔨 鐵匠鋪高級神兵鍛造 & 精煉 & 升級鎬子
-// -------------------------------------------------------------
+// 🔨 鐵匠鋪選單與裝備渲染 (職業完美比對)
 function showForge() { 
     hideAll(); 
     document.getElementById('forge-screen').classList.remove('hidden'); 
@@ -1317,9 +1312,18 @@ function updateForgeUI() {
         recipeList = FORGE_RECIPES_DATABASE.filter(r => r.category === currentForgeTab);
     }
 
+    // 映射按鈕頁籤至英文代碼
+    const tabMap = { warrior: 'Warrior', mage: 'Mage', archer: 'Archer' };
+
     recipeList.forEach(recipe => {
         let bought = p.equips.includes(getItemName(recipe));
-        let wrongJob = (recipe.job && recipe.job !== p.jobCode && recipe.job !== p.baseJobCode);
+        
+        // 🔒 精準匹配基礎職業
+        let isJobMatch = true;
+        if (recipe.job) {
+            isJobMatch = (recipe.job === p.baseJobCode) || (recipe.job === p.jobCode) || (tabMap[currentForgeTab] === recipe.job);
+        }
+
         let canCraft = allOresEnough(p, recipe.req);
         let hasAction = act > 0;
         let btn = document.createElement('button'); btn.className = "btn";
@@ -1332,7 +1336,7 @@ function updateForgeUI() {
         
         btn.innerText = `${getItemName(recipe)} (${reqArr.join(', ')})` + getStatDiffText(recipe);
         if (bought) { btn.innerText += ` [已打造]`; btn.disabled = true; }
-        else if (wrongJob) { btn.innerText += ` [職業不符]`; btn.disabled = true; }
+        else if (!isJobMatch) { btn.innerText += ` [職業不符]`; btn.disabled = true; }
         else if (!canCraft || !hasAction) { btn.disabled = true; }
         else {
             btn.onclick = () => {
@@ -1491,14 +1495,16 @@ function allOresEnough(p, req) {
     return ok;
 }
 
+// 🔮 魔法屋渲染與附魔選項修復
 function showEnchantHouse() { hideAll(); document.getElementById('enchant-screen').classList.remove('hidden'); updateEnchantHouseUI(); }
 function updateEnchantHouseUI() {
     let p = player;
     let act = p.villageActions;
     document.getElementById('magic-status').innerText = `武器: [${p.weapon}]\n💎 附魔石: ${p.enchantStones} 顆\n⚡ 行動力: ${act}/5`;
     let enchantBox = document.getElementById('magic-items'); enchantBox.innerHTML = "";
+    
     WEAPON_ENCHANTS.forEach(enc => {
-        let hasEnc = p.weaponEnchants.includes(enc.keyZh);
+        let hasEnc = p.weaponEnchants && p.weaponEnchants.includes(enc.keyZh);
         let enoughStone = p.enchantStones >= enc.stoneReq;
         let hasAction = act > 0;
         let btn = document.createElement('button'); btn.className = "btn btn-secondary";
@@ -1509,7 +1515,9 @@ function updateEnchantHouseUI() {
         else {
             btn.onclick = () => {
                 p.villageActions--;
-                p.enchantStones -= enc.stoneReq; p.weaponEnchants.push(enc.keyZh);
+                p.enchantStones -= enc.stoneReq;
+                if (!p.weaponEnchants) p.weaponEnchants = [];
+                p.weaponEnchants.push(enc.keyZh);
                 if (enc.id === "sharp") { p.atkMin += 25; p.atkMax += 25; }
                 alert(`消耗 10 顆附魔石與 1 行動力，成功完成【${enc.keyZh}附魔】！`); updateEnchantHouseUI();
             };
@@ -1643,7 +1651,6 @@ function loadGame() {
             if (data.shopEquips) shopEquips = data.shopEquips;
             if (data.shopSkills) shopSkills = data.shopSkills;
 
-            // 🔒 雙重防護：若載入後金幣為 NaN 則恢復為 100 G
             if (typeof player.gold !== "number" || isNaN(player.gold)) {
                 player.gold = 100;
             }
@@ -1681,7 +1688,7 @@ function loadGame() {
     }
 }
 
-// 📖 遊玩規則指南控制機制 (獨立彈窗模式)
+// 📖 遊玩規則指南控制機制 (獨立彈窗隔離模式)
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {
