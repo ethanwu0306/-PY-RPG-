@@ -16,7 +16,7 @@ let isJobTrialBattle = false;
 let isTowerBattle = false;
 let currentTrialTier = 2;
 let currentRandomEvent = null;
-let currentJobTreeTab = 'Warrior'; // 天賦圖預設戰士頁籤
+let currentJobTreeTab = 'Warrior';
 
 function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
@@ -26,7 +26,7 @@ function getMaxExp(lvl) {
 }
 
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen', 'event-screen', 'map-select-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -854,7 +854,7 @@ function updateVillageUI() {
     checkBloodDanger();
 }
 
-// **重製重點：職業天賦分支圖 (卡片式階梯 UI，分頁呈現)**
+// 🌳 職業天賦分支圖 (卡片式階梯 UI，獨立清爽)
 function showJobTree(jobKey) {
     hideAll();
     document.getElementById('job-tree-screen').classList.remove('hidden');
@@ -1674,6 +1674,7 @@ function loadGame() {
     }
 }
 
+// 📖 遊玩規則指南控制機制 (使用隔離重置模式)
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {
@@ -1687,12 +1688,16 @@ function showGameGuide() {
         }
     }
     
+    // 強制先將所有主畫面組件隱藏
     hideAll(); 
     document.getElementById('guide-screen').classList.remove('hidden'); 
 }
 
 function hideGameGuide() {
-    hideAll(); 
+    // 先把指南視窗本身隱藏
+    document.getElementById('guide-screen').classList.add('hidden');
+    
+    // 單獨還原上一個畫面的顯示
     let prevEl = document.getElementById(previousScreenBeforeGuide);
     if (prevEl) {
         prevEl.classList.remove('hidden'); 

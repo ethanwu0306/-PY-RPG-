@@ -1,4 +1,4 @@
-const SAVE_KEY = "pyrpg_save_github_v5.2_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v5.3_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const CLASS_ARTIFACTS_DATABASE = {
     "狂戰士": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂戰士", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
