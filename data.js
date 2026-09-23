@@ -1,9 +1,10 @@
-const SAVE_KEY = "pyrpg_save_github_v5.1_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v5.2_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
+// 專屬神器資料庫 (已更新新職業名稱對應)
 const CLASS_ARTIFACTS_DATABASE = {
-    "狂暴領主": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂暴領主", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
+    "狂戰士": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂戰士", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
     "聖騎士": { nameZh: "不朽聖光·泰坦天盾劍", slot: "weapon", job: "聖騎士", atk: 280, hp: 800, critRate: 10, reqFrags: 5 },
-    "元素法皇": { nameZh: "創世天火·極光混沌杖", slot: "weapon", job: "元素法皇", atk: 480, mp: 500, critDmg: 60, reqFrags: 5 },
+    "元素法師": { nameZh: "創世天火·極光混沌杖", slot: "weapon", job: "元素法師", atk: 480, mp: 500, critDmg: 60, reqFrags: 5 },
     "死靈巫師": { nameZh: "冥府深淵·噬魂死神杖", slot: "weapon", job: "死靈巫師", atk: 380, hp: 500, mp: 300, reqFrags: 5 },
     "追魂狙擊手": { nameZh: "貫星天罰·滅界神尊弩", slot: "weapon", job: "追魂狙擊手", atk: 520, critRate: 30, critDmg: 80, reqFrags: 5 },
     "疾風游俠": { nameZh: "無雙風暴·追影天行弓", slot: "weapon", job: "疾風游俠", atk: 400, evasion: 25, critRate: 20, reqFrags: 5 }
@@ -59,15 +60,16 @@ const RANDOM_EVENTS_DATABASE = [
     }
 ];
 
+// 2~4 階轉職樹資料庫 (新名稱實裝)
 const JOB_ADVANCEMENTS = {
     Warrior: {
         tier2: [
-            { id: "狂暴領主", nameZh: "狂暴領主", tier: 2, descZh: "專精高爆發與吸血戰鬥！", hp: 150, mp: 0, atk: 35, critRate: 10, critDmg: 30, evasion: 0 },
+            { id: "狂戰士", nameZh: "狂戰士", tier: 2, descZh: "專精高爆發與吸血戰鬥！", hp: 150, mp: 0, atk: 35, critRate: 10, critDmg: 30, evasion: 0 },
             { id: "聖騎士", nameZh: "聖騎士", tier: 2, descZh: "極致生存防禦與神聖護盾！", hp: 300, mp: 80, atk: 15, critRate: 0, critDmg: 0, evasion: 5 }
         ],
         tier3: {
-            "狂暴領主": [
-                { id: "血狂魔皇", nameZh: "血狂魔皇", tier: 3, reqLvl: 50, reqStage: 50, descZh: "嗜血狂化，吸血成倍暴增！", hp: 250, mp: 30, atk: 65, critRate: 15, critDmg: 45, evasion: 0 },
+            "狂戰士": [
+                { id: "嗜血劍魔", nameZh: "嗜血劍魔", tier: 3, reqLvl: 50, reqStage: 50, descZh: "嗜血狂化，吸血成倍暴增！", hp: 250, mp: 30, atk: 65, critRate: 15, critDmg: 45, evasion: 0 },
                 { id: "雷霆戰狂", nameZh: "雷霆戰狂", tier: 3, reqLvl: 50, reqStage: 50, descZh: "雷霆附體，攻擊附帶強大暴擊打擊！", hp: 200, mp: 50, atk: 75, critRate: 20, critDmg: 30, evasion: 5 }
             ],
             "聖騎士": [
@@ -76,7 +78,7 @@ const JOB_ADVANCEMENTS = {
             ]
         },
         tier4: {
-            "血狂魔皇": [{ id: "滅世修羅王", nameZh: "滅世修羅王", tier: 4, reqLvl: 70, reqStage: 80, descZh: "終極戰士！擁有毀天滅地的終極傷害！", hp: 600, mp: 100, atk: 150, critRate: 25, critDmg: 80, evasion: 10 }],
+            "嗜血劍魔": [{ id: "滅世修羅王", nameZh: "滅世修羅王", tier: 4, reqLvl: 70, reqStage: 80, descZh: "終極戰士！擁有毀天滅地的終極傷害！", hp: 600, mp: 100, atk: 150, critRate: 25, critDmg: 80, evasion: 10 }],
             "雷霆戰狂": [{ id: "狂雷霸天神", nameZh: "狂雷霸天神", tier: 4, reqLvl: 70, reqStage: 80, descZh: "雷霆主宰！閃電暴擊毀擊一切敵人！", hp: 500, mp: 150, atk: 180, critRate: 35, critDmg: 60, evasion: 15 }],
             "神聖裁決者": [{ id: "不朽光輝聖王", nameZh: "不朽光輝聖王", tier: 4, reqLvl: 70, reqStage: 80, descZh: "光輝護體！無法被擊倒的神聖之軀！", hp: 1000, mp: 250, atk: 90, critRate: 10, critDmg: 30, evasion: 15 }],
             "泰坦壁壘": [{ id: "大地神剛尊", nameZh: "大地神剛尊", tier: 4, reqLvl: 70, reqStage: 80, descZh: "大地尊者！具備無可撼動的極致鋼鐵護盾！", hp: 1300, mp: 200, atk: 80, critRate: 5, critDmg: 20, evasion: 20 }]
@@ -84,13 +86,13 @@ const JOB_ADVANCEMENTS = {
     },
     Mage: {
         tier2: [
-            { id: "元素法皇", nameZh: "元素法皇", tier: 2, descZh: "毀滅性的多元素極限魔攻！", hp: 80, mp: 200, atk: 40, critRate: 10, critDmg: 25, evasion: 0 },
+            { id: "元素法師", nameZh: "元素法師", tier: 2, descZh: "毀滅性的多元素極限魔攻！", hp: 80, mp: 200, atk: 40, critRate: 10, critDmg: 25, evasion: 0 },
             { id: "死靈巫師", nameZh: "死靈巫師", tier: 2, descZh: "掌握持續毒傷與生命吸取！", hp: 180, mp: 120, atk: 25, critRate: 5, critDmg: 0, evasion: 5 }
         ],
         tier3: {
-            "元素法皇": [
+            "元素法師": [
                 { id: "天火大魔導", nameZh: "天火大魔導", tier: 3, reqLvl: 50, reqStage: 50, descZh: "烈焰天火，極限提升火焰傷害！", hp: 150, mp: 350, atk: 80, critRate: 15, critDmg: 40, evasion: 5 },
-                { id: "極寒法尊", nameZh: "極寒法尊", tier: 3, reqLvl: 50, reqStage: 50, descZh: "極寒凍結，控制與高爆發並存！", hp: 180, mp: 320, atk: 75, critRate: 15, critDmg: 30, evasion: 10 }
+                { id: "極寒魔導", nameZh: "極寒魔導", tier: 3, reqLvl: 50, reqStage: 50, descZh: "極寒凍結，控制與高爆發並存！", hp: 180, mp: 320, atk: 75, critRate: 15, critDmg: 30, evasion: 10 }
             ],
             "死靈巫師": [
                 { id: "暗影噬魂師", nameZh: "暗影噬魂師", tier: 3, reqLvl: 50, reqStage: 50, descZh: "吞噬靈魂，持續傷害大幅提升！", hp: 280, mp: 220, atk: 55, critRate: 10, critDmg: 20, evasion: 10 },
@@ -98,8 +100,8 @@ const JOB_ADVANCEMENTS = {
             ]
         },
         tier4: {
-            "天火大魔導": [{ id: "創世焚天帝", nameZh: "創世焚天帝", tier: 4, reqLvl: 70, reqStage: 80, descZh: "毀滅之帝！天火焚盡世間萬物！", hp: 350, mp: 600, atk: 200, critRate: 30, critDmg: 70, evasion: 15 }],
-            "極寒法尊": [{ id: "絕對零度冰皇", nameZh: "絕對零度冰皇", tier: 4, reqLvl: 70, reqStage: 80, descZh: "冰封萬里！將世界冰凍於絕對零度！", hp: 400, mp: 550, atk: 180, critRate: 25, critDmg: 60, evasion: 20 }],
+            "天火大魔導": [{ id: "天焚天帝", nameZh: "天焚天帝", tier: 4, reqLvl: 70, reqStage: 80, descZh: "毀滅之帝！天火焚盡世間萬物！", hp: 350, mp: 600, atk: 200, critRate: 30, critDmg: 70, evasion: 15 }],
+            "極寒魔導": [{ id: "絕對零度冰皇", nameZh: "絕對零度冰皇", tier: 4, reqLvl: 70, reqStage: 80, descZh: "冰封萬里！將世界冰凍於絕對零度！", hp: 400, mp: 550, atk: 180, critRate: 25, critDmg: 60, evasion: 20 }],
             "暗影噬魂師": [{ id: "深淵永夜魔帝", nameZh: "深淵永夜魔帝", tier: 4, reqLvl: 70, reqStage: 80, descZh: "永夜君王！深淵詛咒無人可擋！", hp: 550, mp: 450, atk: 150, critRate: 20, critDmg: 50, evasion: 20 }],
             "煉獄血巫": [{ id: "冥府死神天尊", nameZh: "冥府死神天尊", tier: 4, reqLvl: 70, reqStage: 80, descZh: "冥府之主！擁有近乎無限的生命汲取！", hp: 700, mp: 400, atk: 140, critRate: 15, critDmg: 40, evasion: 20 }]
         }

@@ -92,7 +92,7 @@ function startNextBattle() {
     spawnMonster();
 }
 
-// 🏰 試煉塔挑戰戰鬥發起 (難度高於主線)
+// 🏰 試煉塔挑戰戰鬥發起
 function startTowerFloorChallenge() {
     hideAll();
     isJobTrialBattle = false;
@@ -103,7 +103,7 @@ function startTowerFloorChallenge() {
     let floor = player.towerFloor || 1;
     let isFloorBoss = (floor % 5 === 0);
 
-    // 50 層過後陡峭提升難度
+    // 50 層過後難度陡升
     let towerHardMult = (floor >= 50) ? 2.5 : 1.5;
 
     monster = {
@@ -222,7 +222,7 @@ function enterBattleAfterEvent() {
     spawnMonster();
 }
 
-// **重點修改：主線第 6 章起難度陡升**
+// 主線第 6 章起難度陡升
 function spawnMonster() {
     let stageNum = currentSelectedStage;
     let curMapId = Math.min(Math.floor((stageNum - 1) / 10) + 1, 10);
@@ -230,7 +230,7 @@ function spawnMonster() {
     let isFinal = (stageNum === 100);
     let mapData = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { nameZh: "微光森林", bossZh: "區域頭目", monstersZh: ["哥布林斥候"] };
 
-    // 第 6 章 (51小關) 起難度提升 1.8 倍
+    // 第 6 章 (51小關) 起難度調升 1.8 倍
     let chapterHardMult = (stageNum >= 51) ? 1.8 : 1.0;
 
     if (isFinal) { 
@@ -541,7 +541,7 @@ function executeTurn(skillKey, isDefendingAction) {
 
         let extraRewardMsg = "";
 
-        // **重點修改：試煉之塔 50 層起才掉落路西法碎片**
+        // 試煉之塔：到達第 50 層起才掉落路西法碎片，每 5 層必掉神器碎片
         if (isTowerBattle) {
             let curFloor = player.towerFloor || 1;
             
@@ -1210,7 +1210,7 @@ function claimAllAchievements() {
 }
 
 // -------------------------------------------------------------
-// 🔨 鐵匠鋪高級神兵鍛造 & 神器合成/強化 & 精煉 & 升級鎬子
+// 🔨 鐵匠鋪高級神兵鍛造 & 精煉 & 升級鎬子
 // -------------------------------------------------------------
 function showForge() { 
     hideAll(); 
@@ -1587,6 +1587,10 @@ function loadGame() {
             if (data.currentSelectedStage) currentSelectedStage = data.currentSelectedStage; else currentSelectedStage = maxReachedStage;
             if (data.shopEquips) shopEquips = data.shopEquips;
             if (data.shopSkills) shopSkills = data.shopSkills;
+
+            if (typeof player.gold !== "number" || isNaN(player.gold)) {
+                player.gold = 100;
+            }
 
             if (!player.level) player.level = 1;
             if (!player.exp) player.exp = 0;
