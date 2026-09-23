@@ -16,6 +16,7 @@ let isJobTrialBattle = false;
 let isTowerBattle = false;
 let currentTrialTier = 2;
 let currentRandomEvent = null;
+let currentJobTreeTab = 'Warrior'; // 天賦圖預設戰士頁籤
 
 function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
@@ -25,7 +26,7 @@ function getMaxExp(lvl) {
 }
 
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'guide-screen', 'transfer-save-screen', 'event-screen', 'map-select-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -92,7 +93,6 @@ function startNextBattle() {
     spawnMonster();
 }
 
-// 🏰 試煉塔挑戰戰鬥發起
 function startTowerFloorChallenge() {
     hideAll();
     isJobTrialBattle = false;
@@ -102,8 +102,6 @@ function startTowerFloorChallenge() {
 
     let floor = player.towerFloor || 1;
     let isFloorBoss = (floor % 5 === 0);
-
-    // 50 層過後難度陡升
     let towerHardMult = (floor >= 50) ? 2.5 : 1.5;
 
     monster = {
@@ -222,7 +220,6 @@ function enterBattleAfterEvent() {
     spawnMonster();
 }
 
-// 主線第 6 章起難度陡升
 function spawnMonster() {
     let stageNum = currentSelectedStage;
     let curMapId = Math.min(Math.floor((stageNum - 1) / 10) + 1, 10);
@@ -230,7 +227,6 @@ function spawnMonster() {
     let isFinal = (stageNum === 100);
     let mapData = (typeof MAPS !== "undefined" && MAPS[curMapId]) ? MAPS[curMapId] : { nameZh: "微光森林", bossZh: "區域頭目", monstersZh: ["哥布林斥候"] };
 
-    // 第 6 章 (51小關) 起難度調升 1.8 倍
     let chapterHardMult = (stageNum >= 51) ? 1.8 : 1.0;
 
     if (isFinal) { 
@@ -541,7 +537,6 @@ function executeTurn(skillKey, isDefendingAction) {
 
         let extraRewardMsg = "";
 
-        // 試煉之塔：到達第 50 層起才掉落路西法碎片，每 5 層必掉神器碎片
         if (isTowerBattle) {
             let curFloor = player.towerFloor || 1;
             
@@ -859,39 +854,93 @@ function updateVillageUI() {
     checkBloodDanger();
 }
 
-function showJobTree() {
+// **重製重點：職業天賦分支圖 (卡片式階梯 UI，分頁呈現)**
+function showJobTree(jobKey) {
     hideAll();
     document.getElementById('job-tree-screen').classList.remove('hidden');
-    let container = document.getElementById('job-tree-content');
-    
-    let html = "<b>🌳 全職業 2~4 階轉職天賦圖鑑：</b><br><br>";
-    Object.keys(JOB_ADVANCEMENTS).forEach(jobKey => {
-        let jobZh = CLASSES[jobKey].nameZh;
-        let tree = JOB_ADVANCEMENTS[jobKey];
-        html += `<span style="color:#f1c40f; font-weight:bold; font-size:14px;">▶ 【${jobZh}】轉職體系：</span><br>`;
-        
-        html += `<span style="color:#e67e22;">[2階 - Lv.20 試煉]</span>：<br>`;
-        tree.tier2.forEach(adv => {
-            html += `• <b>${adv.nameZh}</b>: ${adv.descZh} (HP+${adv.hp}, 攻擊+${adv.atk})<br>`;
-            
-            let t3List = (tree.tier3 || {})[adv.nameZh] || [];
-            if (t3List.length > 0) {
-                html += `&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#3498db;">└─ [3階 - Lv.50 + 通過第5章]</span>：<br>`;
-                t3List.forEach(adv3 => {
-                    html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <b>${adv3.nameZh}</b>: ${adv3.descZh}<br>`;
+    if (jobKey) currentJobTreeTab = jobKey;
+    renderJobTreeUI();
+}
 
-                    let t4List = (tree.tier4 || {})[adv3.nameZh] || [];
-                    if (t4List.length > 0) {
-                        html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#9b59b6;">└─ [4階 - Lv.70 + 通過第8章]</span>：<br>`;
-                        t4List.forEach(adv4 => {
-                            html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;• <b>${adv4.nameZh}</b>: ${adv4.descZh}<br>`;
-                        });
-                    }
-                });
-            }
+function switchJobTreeTab(jobKey) {
+    currentJobTreeTab = jobKey;
+    renderJobTreeUI();
+}
+
+function renderJobTreeUI() {
+    let container = document.getElementById('job-tree-content');
+    let tree = JOB_ADVANCEMENTS[currentJobTreeTab];
+    let baseClass = CLASSES[currentJobTreeTab];
+
+    if (!tree || !baseClass) return;
+
+    let html = `
+        <div style="display:flex; gap:4px; margin-bottom:12px;">
+            <button class="btn btn-tab" style="${currentJobTreeTab==='Warrior'?'background:#c0392b; border-color:#f1c40f;':''}" onclick="switchJobTreeTab('Warrior')">⚔️ 戰士體系</button>
+            <button class="btn btn-tab" style="${currentJobTreeTab==='Mage'?'background:#8e44ad; border-color:#f1c40f;':''}" onclick="switchJobTreeTab('Mage')">🔮 法師體系</button>
+            <button class="btn btn-tab" style="${currentJobTreeTab==='Archer'?'background:#27ae60; border-color:#f1c40f;':''}" onclick="switchJobTreeTab('Archer')">🏹 射手體系</button>
+        </div>
+
+        <div style="background:#161224; border:1px solid #d4af37; border-radius:8px; padding:10px; margin-bottom:10px;">
+            <div style="color:#f1c40f; font-weight:bold; font-size:14px; border-bottom:1px solid #33270d; padding-bottom:4px; margin-bottom:8px;">
+                1階初始職業：【${baseClass.nameZh}】
+            </div>
+            <div style="font-size:11px; color:#aaa;">
+                初始屬性：HP ${baseClass.hp} | MP ${baseClass.mp} | 攻擊 ${baseClass.min}~${baseClass.max} | 暴擊 ${baseClass.critRate}%
+            </div>
+        </div>
+    `;
+
+    tree.tier2.forEach(adv2 => {
+        html += `
+        <div style="background:#231a10; border:1px solid #e67e22; border-radius:8px; padding:10px; margin-bottom:12px;">
+            <div style="color:#e67e22; font-weight:bold; font-size:13px;">
+                ➔ 2階轉職：【${adv2.nameZh}】 <span style="font-size:10px; color:#f1c40f;">(Lv.20 解鎖試煉)</span>
+            </div>
+            <div style="font-size:11px; color:#ccc; margin:3px 0;">${adv2.descZh}</div>
+            <div style="font-size:10px; color:#2ecc71;">加成：HP+${adv2.hp} | MP+${adv2.mp} | 攻擊+${adv2.atk} | 暴擊+${adv2.critRate}% | 暴傷+${adv2.critDmg}%</div>
+            
+            <div style="margin-top:8px; padding-left:10px; border-left:2px solid #3498db;">
+        `;
+
+        let t3List = (tree.tier3 || {})[adv2.nameZh] || [];
+        t3List.forEach(adv3 => {
+            html += `
+                <div style="background:#0f2232; border:1px solid #3498db; border-radius:6px; padding:8px; margin:6px 0;">
+                    <div style="color:#3498db; font-weight:bold; font-size:12px;">
+                        ➔ 3階進階：【${adv3.nameZh}】 <span style="font-size:10px; color:#aaa;">(Lv.50 + 通過第5章)</span>
+                    </div>
+                    <div style="font-size:11px; color:#ccc; margin:2px 0;">${adv3.descZh}</div>
+                    <div style="font-size:10px; color:#2ecc71;">加成：HP+${adv3.hp} | MP+${adv3.mp} | 攻擊+${adv3.atk} | 暴擊+${adv3.critRate}%</div>
+
+                    <div style="margin-top:6px; padding-left:10px; border-left:2px solid #9b59b6;">
+            `;
+
+            let t4List = (tree.tier4 || {})[adv3.nameZh] || [];
+            t4List.forEach(adv4 => {
+                html += `
+                        <div style="background:#220e2e; border:1px solid #9b59b6; border-radius:6px; padding:6px; margin:4px 0;">
+                            <div style="color:#9b59b6; font-weight:bold; font-size:12px;">
+                                👑 4階終極：【${adv4.nameZh}】 <span style="font-size:10px; color:#f1c40f;">(Lv.70 + 通過第8章)</span>
+                            </div>
+                            <div style="font-size:11px; color:#ccc; margin:2px 0;">${adv4.descZh}</div>
+                            <div style="font-size:10px; color:#2ecc71;">加成：HP+${adv4.hp} | MP+${adv4.mp} | 攻擊+${adv4.atk} | 暴擊+${adv4.critRate}% | 暴傷+${adv4.critDmg}%</div>
+                        </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
         });
-        html += "<br>";
+
+        html += `
+            </div>
+        </div>
+        `;
     });
+
     container.innerHTML = html;
 }
 

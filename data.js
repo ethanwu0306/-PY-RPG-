@@ -1,6 +1,5 @@
 const SAVE_KEY = "pyrpg_save_github_v5.2_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
-// 專屬神器資料庫 (已更新新職業名稱對應)
 const CLASS_ARTIFACTS_DATABASE = {
     "狂戰士": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂戰士", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
     "聖騎士": { nameZh: "不朽聖光·泰坦天盾劍", slot: "weapon", job: "聖騎士", atk: 280, hp: 800, critRate: 10, reqFrags: 5 },
@@ -60,7 +59,6 @@ const RANDOM_EVENTS_DATABASE = [
     }
 ];
 
-// 2~4 階轉職樹資料庫 (新名稱實裝)
 const JOB_ADVANCEMENTS = {
     Warrior: {
         tier2: [
