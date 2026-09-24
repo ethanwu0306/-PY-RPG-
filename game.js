@@ -26,7 +26,7 @@ function getMaxExp(lvl) {
 }
 
 function hideAll() { 
-    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen', 'guide-screen'].forEach(id => {
+    ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen', 'guide-screen', 'transfer-save-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
     }); 
@@ -1181,116 +1181,6 @@ function getStatDiffText(item) {
     return diffs.length > 0 ? ` [${diffs.join(' | ')}]` : '';
 }
 
-function showPotionShop() {
-    hideAll(); 
-    document.getElementById('shop-screen').classList.remove('hidden');
-    document.getElementById('btn-refresh').style.display = "none";
-    document.getElementById('btn-refresh-equip').style.display = "none";
-    let container = document.getElementById('shop-items'); container.innerHTML = "";
-    document.getElementById('shop-status').innerText = `目前金幣: ${player.gold} G | 🧪 生命藥水: ${player.potions.hp} 瓶 | 魔力藥水: ${player.potions.mp} 瓶`;
-
-    let hpBtn = document.createElement('button'); hpBtn.className = "btn";
-    hpBtn.innerText = "❤️ 生命藥水 (50 G) - 恢復 100 HP";
-    hpBtn.disabled = (player.gold < 50);
-    hpBtn.onclick = () => { player.gold -= 50; player.potions.hp++; alert("🎉 購買了 1 瓶生命藥水！"); showPotionShop(); };
-    container.appendChild(hpBtn);
-
-    let mpBtn = document.createElement('button'); mpBtn.className = "btn";
-    mpBtn.innerText = "💧 魔力藥水 (40 G) - 恢復 50 MP";
-    mpBtn.disabled = (player.gold < 40);
-    mpBtn.onclick = () => { player.gold -= 40; player.potions.mp++; alert("🎉 購買了 1 瓶魔力藥水！"); showPotionShop(); };
-    container.appendChild(mpBtn);
-}
-
-function showAchievements() { hideAll(); document.getElementById('achieve-screen').classList.remove('hidden'); updateAchieveUI(); }
-function switchAchieveTab(tab) { currentAchieveTab = tab; updateAchieveUI(); }
-
-function updateAchieveUI() {
-    let container = document.getElementById('achieve-items'); container.innerHTML = "";
-    let achList = ACHIEVEMENTS_DATABASE.filter(a => a.category === currentAchieveTab);
-
-    achList.forEach(ach => {
-        let isDone = player.achieved.includes(ach.id);
-        let curVal = 0;
-
-        if (ach.reqType === "stage") curVal = defeatedCount;
-        if (ach.reqType === "mine") curVal = player.mineCount || 0;
-        if (ach.reqType === "copper") curVal = player.ores.copper || 0;
-        if (ach.reqType === "iron") curVal = player.ores.iron || 0;
-        if (ach.reqType === "goldOre") curVal = player.ores.gold || 0;
-        if (ach.reqType === "diamond") curVal = player.ores.diamond || 0;
-        if (ach.reqType === "gold") curVal = player.gold || 0;
-        if (ach.reqType === "enchantCount") curVal = player.weaponEnchants.length || 0;
-        if (ach.reqType === "stones") curVal = player.enchantStones || 0;
-        if (ach.reqType === "skillCount") curVal = player.skills.length || 0;
-        if (ach.reqType === "equipCount") curVal = player.equips.length || 0;
-        if (ach.reqType === "shopRefreshCount") curVal = player.shopRefreshCount || 0;
-        if (ach.reqType === "restCount") curVal = player.restCount || 0;
-
-        let canClaim = (curVal >= ach.reqVal) || (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal));
-        let progressTxt = typeof ach.reqVal === 'number' ? ` [ ${Math.min(curVal, ach.reqVal)} / ${ach.reqVal} ]` : "";
-        let stoneTxt = ach.stones > 0 ? ` / ${ach.stones}💎` : "";
-
-        let btn = document.createElement('button'); btn.className = "btn";
-        btn.innerText = `${ach.titleZh} - ${ach.descZh}${progressTxt} (獎勵: ${ach.gold}G${stoneTxt})`;
-
-        if (isDone) {
-            btn.innerText += " [已領取]";
-            btn.disabled = true;
-        } else if (!canClaim) {
-            btn.innerText += " [未達成]";
-            btn.disabled = true;
-        } else {
-            btn.onclick = () => {
-                player.achieved.push(ach.id);
-                player.gold = (Number(player.gold) || 0) + (Number(ach.gold) || 100);
-                if (ach.stones) player.enchantStones += ach.stones;
-                alert(`🏆 領取成就成功！獲得 ${ach.gold} 金幣${ach.stones ? " 與 " + ach.stones + " 顆附魔石" : ""}！`);
-                updateAchieveUI();
-            };
-        }
-        container.appendChild(btn);
-    });
-}
-
-function claimAllAchievements() {
-    let claimedCount = 0;
-    ACHIEVEMENTS_DATABASE.forEach(ach => {
-        if (!player.achieved.includes(ach.id)) {
-            let curVal = 0;
-            if (ach.reqType === "stage") curVal = defeatedCount;
-            if (ach.reqType === "mine") curVal = player.mineCount || 0;
-            if (ach.reqType === "copper") curVal = player.ores.copper || 0;
-            if (ach.reqType === "iron") curVal = player.ores.iron || 0;
-            if (ach.reqType === "goldOre") curVal = player.ores.gold || 0;
-            if (ach.reqType === "diamond") curVal = player.ores.diamond || 0;
-            if (ach.reqType === "gold") curVal = player.gold || 0;
-            if (ach.reqType === "enchantCount") curVal = player.weaponEnchants.length || 0;
-            if (ach.reqType === "stones") curVal = player.enchantStones || 0;
-            if (ach.reqType === "skillCount") curVal = player.skills.length || 0;
-            if (ach.reqType === "equipCount") curVal = player.equips.length || 0;
-            if (ach.reqType === "shopRefreshCount") curVal = player.shopRefreshCount || 0;
-            if (ach.reqType === "restCount") curVal = player.restCount || 0;
-
-            let canClaim = (curVal >= ach.reqVal) || (ach.reqType === "hasEnchant" && player.weaponEnchants.includes(ach.reqVal));
-            if (canClaim) {
-                player.achieved.push(ach.id);
-                player.gold = (Number(player.gold) || 0) + (Number(ach.gold) || 100);
-                if (ach.stones) player.enchantStones += ach.stones;
-                claimedCount++;
-            }
-        }
-    });
-
-    if (claimedCount > 0) {
-        alert(`🎉 一鍵領取成功！共領取了 ${claimedCount} 項成就獎勵！`);
-        updateAchieveUI();
-    } else {
-        alert("⚠️ 目前沒有可領取的達成成就。");
-    }
-}
-
-// 🔨 鐵匠鋪選單與裝備渲染 (職業完美比對)
 function showForge() { 
     hideAll(); 
     document.getElementById('forge-screen').classList.remove('hidden'); 
@@ -1522,7 +1412,6 @@ function allOresEnough(p, req) {
     return ok;
 }
 
-// 🔮 魔法屋渲染與附魔選項修復
 function showEnchantHouse() { hideAll(); document.getElementById('enchant-screen').classList.remove('hidden'); updateEnchantHouseUI(); }
 function updateEnchantHouseUI() {
     let p = player;
@@ -1666,8 +1555,10 @@ function saveGame() {
     }
 }
 
+// **修復重點：載入與匯入存檔前強制清空全場 UI 畫面，徹底消除重疊**
 function loadGame() { 
     try {
+        hideAll(); // 強制隱藏所有視窗
         let saved = localStorage.getItem(SAVE_KEY); 
         if (saved) { 
             let data = JSON.parse(saved); 
@@ -1709,13 +1600,14 @@ function loadGame() {
             showVillage(); 
         } else {
             alert("⚠️ 找不到本地存檔，請確認您已在本頁面存檔過，或使用【跨裝置代碼匯入】進度。");
+            showMainMenu();
         }
     } catch(e) {
         alert("❌ 讀取存檔時發生錯誤，存檔資料可能已被損壞。");
+        showMainMenu();
     }
 }
 
-// 📖 遊玩規則指南控制機制 (獨立彈窗隔離模式)
 let previousScreenBeforeGuide = 'main-menu';
 
 function showGameGuide() {

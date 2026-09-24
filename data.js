@@ -208,16 +208,16 @@ const ALL_EQUIPS_POOL = [
 ];
 
 const MAPS = {
-    1: { nameZh: "🌲 微光森林", weakness: "flame", villageZh: "樹梢村", monstersZh: ["哥布林斥候", "史萊姆", "狂暴野狼"], bossZh: "哥布林千人將" },
-    2: { nameZh: "❄️ 寒霜雪原", weakness: "flame", villageZh: "冰晶鎮", monstersZh: ["霜狼", "雪原獵手", "冰晶石傀儡"], bossZh: "雪原暴熊王" },
-    3: { nameZh: "🏜️ 熾熱荒漠", weakness: "frost", villageZh: "烈日綠洲", monstersZh: ["沙漠毒蠍", "狂沙蛇衛", "石雕巨像"], bossZh: "狂沙法老王" },
-    4: { nameZh: "🌋 烈焰火山", weakness: "frost", villageZh: "火環前哨站", monstersZh: ["熔岩蜥蜴", "烈焰元素", "火焰惡魔"], bossZh: "熔岩巨龍" },
-    5: { nameZh: "☠️ 幽暗地底迷宮", weakness: "thunder", villageZh: "暗影黑市", monstersZh: ["幽暗蜘蛛", "噬魂骷髏", "黑暗騎士"], bossZh: "暗影領主·卡爾巨影" },
-    6: { nameZh: "🏛️ 失落古城", weakness: "thunder", villageZh: "海底驛站", monstersZh: ["遺跡守衛", "沉淪亡靈", "符文石像"], bossZh: "古代遠古守護者" },
-    7: { nameZh: "⚡ 雷霆山峰", weakness: "gale", villageZh: "雲頂高地", monstersZh: ["雷霆獅鷲", "風暴元素", "閃電巨鷹"], bossZh: "風暴泰坦" },
-    8: { nameZh: "🌊 深海幽谷", weakness: "thunder", villageZh: "海螺港口", monstersZh: ["潮汐海妖", "巨鉗蟹王", "深海怪魚"], bossZh: "深淵巨獸·克拉肯" },
-    9: { nameZh: "☁️ 天空神殿", weakness: "gale", villageZh: "聖光高塔", monstersZh: ["神殿石像鬼", "光明聖衛", "天空巨鷹"], bossZh: "天使長·米迦勒幻影" },
-    10: { nameZh: "👑 魔王城城堡", weakness: "flame", villageZh: "終極前線", monstersZh: ["煉獄夜魔", "漆黑騎士", "亡靈巨龍"], bossZh: "滅世魔王·路西法" }
+    1: { nameZh: "🌲 微光森林", weakness: "flame", villageZh: "樹梢村", monstersZh: ["小精靈", "史萊姆", "狗頭人"], bossZh: "淘氣小鬼·哥布林" },
+    2: { nameZh: "❄️ 寒霜雪原", weakness: "flame", villageZh: "冰晶鎮", monstersZh: ["布朗尼", "樹精", "皮克西"], bossZh: "霜原怨靈·班西" },
+    3: { nameZh: "🏜️ 熾熱荒漠", weakness: "frost", villageZh: "烈日綠洲", monstersZh: ["石化蜥蜴", "獅身人面", "雞蛇"], bossZh: "蛇髮女妖·戈崗" },
+    4: { nameZh: "🌋 烈焰火山", weakness: "frost", villageZh: "火環前哨站", monstersZh: ["火蜥蜴", "夢魘黑馬", "喀邁拉"], bossZh: "噴火巨獸·喀邁拉" },
+    5: { nameZh: "☠️ 幽暗地底迷宮", weakness: "thunder", villageZh: "暗影黑市", monstersZh: ["食屍鬼", "無頭騎士", "木乃伊"], bossZh: "不死巫師·巫妖" },
+    6: { nameZh: "🏛️ 失落古城", weakness: "thunder", villageZh: "海底驛站", monstersZh: ["青銅魔像", "石像鬼", "獨眼巨人"], bossZh: "古代巨魔·巨獸" },
+    7: { nameZh: "⚡ 雷霆山峰", weakness: "gale", villageZh: "雲頂高地", monstersZh: ["鳥身女妖", "獅鷲獸", "阿特拉斯巨人"], bossZh: "風暴泰坦·泰坦" },
+    8: { nameZh: "🌊 深海幽谷", weakness: "thunder", villageZh: "海螺港口", monstersZh: ["女水妖", "水鬼", "巨型海蛇"], bossZh: "深淵海妖·克拉肯" },
+    9: { nameZh: "☁️ 天空神殿", weakness: "gale", villageZh: "聖光高塔", monstersZh: ["飛馬", "半人馬", "元素精靈"], bossZh: "不死聖獸·鳳凰" },
+    10: { nameZh: "👑 魔王城城堡", weakness: "flame", villageZh: "終極前線", monstersZh: ["夜魔", "魅魔", "生靈變形怪"], bossZh: "滅世魔王·路西法" }
 };
 
 const CARDS_DATABASE = [
