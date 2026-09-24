@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v6.3 (UI隔離終極修復版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v7.0 (AUTO與特效升級版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -43,7 +43,7 @@
         <h2>🗺️ 冒險地圖關卡選擇</h2>
         <div class="status-box" style="font-size:12px;">
             可自由選擇飛躍至已通關關卡刷經驗與金幣！<br>
-            <span style="color:#e67e22;">⚠️ 注意：重複挑戰已通關的舊關卡，收益 (G/EXP) 減半 50%！</span>
+            <span style="color:#e67e22;">⚠️ 重複挑戰已通關舊關卡，收益減半 50%，但可啟用【AUTO掛機刷寶】！</span>
         </div>
         <div id="map-stages-list" style="max-height: 240px; overflow-y: auto;"></div>
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;">⬅️ 返回村莊</button>
@@ -62,14 +62,12 @@
             <h2>📖 勇者冒險指南 & 設施玩法介紹</h2>
             <div class="status-box" style="height: 360px; overflow-y: auto; text-align: left; font-size: 12px;">
                 <div class="section-header">⚔️ 一、核心冒險機制</div>
-                • <b>關卡目標</b>：總共 10 大區域（100 小關），全數取材自《怪物大百科》！第 100 關為終極魔王路西法！<br>
+                • <b>關卡目標</b>：總共 10 大區域（100 小關），第 100 關為終極魔王路西法！<br>
+                • <b>⚡ AUTO掛機</b>：已通關的舊關卡支援<b>自動戰鬥與無限自動續戰</b>！<br>
                 • <b>🏰 試煉之塔</b>：通關 50 關解鎖，難度高於主線！每 5 關掉神器碎片，<b>50 層後 30% 掉落路西法碎片</b>！<br>
                 • <b>🗡️ 專屬神器</b>：集滿 5 顆神器碎片可打造專屬神器，並可用路西法碎片強化至 +5！<br>
                 • <b>轉職條件</b>：2階(Lv.20)、3階(Lv.50+通過第5章)、4階(Lv.70+通過第8章)！<br>
-                • <b>自由選關</b>：可在村莊進入「🗺️ 地圖選關」飛躍至已通關舊關卡農資源（收益減半 50%）！<br>
-                • <b>突發奇遇</b>：征途途中有 15% 機率觸發許願池、寶箱、流浪商人等<b>冒險奇遇抉擇</b>！<br>
-                • <b>屬性克制</b>：技能具備火、冰、雷、風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br>
-                • <b>戰鬥防禦</b>：點擊「防禦」當回合受傷減半並恢復 15 MP！BOSS 低血量會發動<b>狂暴化</b>！<br><br>
+                • <b>屬性克制</b>：技能具備火、冰、雷、風四大元素！對應弱點敵人可造成 <b>1.5倍克制傷害</b>！<br><br>
 
                 <div class="section-header">🏰 二、城鎮設施介紹 (每次進村重置 5 點行動力)</div>
                 • ⛪ <b>旅館休息</b> (耗 1 行動力 / 30 G)：將 HP 與 MP 全部補滿。<br>
@@ -79,8 +77,8 @@
 
                 <div class="section-header">🏪 三、冒險整備 (免費不扣行動力)</div>
                 • 🛠️ <b>裝備商店</b>：出售初級與中級現成裝備，支援 100 G 換一批！<br>
+                • 🎒 <b>一鍵回收</b>：可以在裝備管理頁面<b>一鍵出售初級/中級/高級備用裝備</b>！<br>
                 • 📖 <b>技能商店</b>：刷新所有職業技能。<br>
-                • 🌳 <b>職業分支圖</b>：可在村莊查看所有 2~4 階轉職分支與強大加成！<br>
                 • 🏆 <b>勇者成就</b>：50 項成就支援<b>一鍵領取與進度條顯示</b>！
             </div>
             <button class="btn btn-secondary" onclick="hideGameGuide()" style="margin-top:10px;">⬅️ 我知道了，返回前一頁</button>
@@ -130,6 +128,10 @@
         <div class="status-box" style="margin-top:8px;">
             <div id="buff-status" style="color:#f1c40f; font-size:12px;">玩家 BUFF: 無</div>
             <div id="monster-debuff-status" style="color:#e67e22; font-size:11px;">敵方 DEBUFF: 無</div>
+        </div>
+
+        <div id="auto-battle-container" style="margin-bottom:6px;">
+            <button id="btn-toggle-auto" class="btn" style="background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%); border-color:#2ecc71; font-size:13px; padding:8px;" onclick="toggleAutoBattle()">⚡ 開啟 AUTO 自動戰鬥與續戰</button>
         </div>
 
         <div id="log-box"></div>
@@ -227,12 +229,20 @@
         <button class="btn btn-action" style="margin-top:8px;" onclick="startNextBattle()" id="btn-v-next">⚔️ 踏上征途 (下一戰)</button>
     </div>
 
-    <!-- 獨立部位裝備管理 UI -->
+    <!-- 獨立部位裝備管理 UI (新增一鍵回收清單) -->
     <div id="equipment-screen" class="hidden">
         <h2>🛡️ 勇者裝備穿脫管理</h2>
         <div class="status-box" id="equipped-slots-summary"></div>
+
+        <div class="section-header">🗑️ 一鍵回收備用裝備 (變賣金幣)</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; margin-bottom: 10px;">
+            <button class="btn" style="font-size:11px; padding:6px; background:#27ae60;" onclick="autoSellEquipsByTier('basic')">回收初級 (+50G/件)</button>
+            <button class="btn" style="font-size:11px; padding:6px; background:#2980b9;" onclick="autoSellEquipsByTier('mid')">回收中級 (+150G/件)</button>
+            <button class="btn" style="font-size:11px; padding:6px; background:#8e44ad;" onclick="autoSellEquipsByTier('adv')">回收高級 (+400G/件)</button>
+        </div>
+
         <div class="section-header">🎒 背包中的裝備 (需空出位置才能穿上)</div>
-        <div id="equipment-bag-list" style="max-height: 220px; overflow-y: auto;"></div>
+        <div id="equipment-bag-list" style="max-height: 180px; overflow-y: auto;"></div>
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:15px;">⬅️ 返回村莊</button>
     </div>
 

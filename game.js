@@ -18,6 +18,10 @@ let currentTrialTier = 2;
 let currentRandomEvent = null;
 let currentJobTreeTab = 'Warrior';
 
+// ⚡ AUTO 自動戰鬥變數
+let isAutoBattle = false;
+let autoTimer = null;
+
 function getItemName(item) { return item.nameZh; }
 function getStageString(count) { return `${Math.min(Math.floor((count - 1) / 10) + 1, 10)}-${((count - 1) % 10) + 1}`; }
 
@@ -26,6 +30,7 @@ function getMaxExp(lvl) {
 }
 
 function hideAll() { 
+    stopAutoBattle();
     ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen', 'guide-screen', 'transfer-save-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -243,8 +248,80 @@ function spawnMonster() {
     player.isDefending = false;
     player.buffTurns = 0;
     player.playerDebuffTurns = 0;
+
+    // 是否顯示 AUTO 按鈕（舊關卡顯示）
+    let autoBox = document.getElementById('auto-battle-container');
+    let isOldStage = (!isTowerBattle && !isJobTrialBattle && currentSelectedStage < maxReachedStage);
+    if (autoBox) {
+        if (isOldStage) autoBox.style.display = "block";
+        else autoBox.style.display = "none";
+    }
+
     render4SkillButtons();
     updateBattleUI();
+
+    // 若 AUTO 開啟中，啟動計時器自動戰鬥
+    if (isAutoBattle && isOldStage) {
+        startAutoTimer();
+    }
+}
+
+// ⚡ AUTO 自動戰鬥邏輯
+function toggleAutoBattle() {
+    isAutoBattle = !isAutoBattle;
+    let btn = document.getElementById('btn-toggle-auto');
+    if (isAutoBattle) {
+        btn.innerText = "⏸️ 取消 AUTO 自動戰鬥";
+        btn.style.background = "linear-gradient(180deg, #e67e22 0%, #d35400 100%)";
+        startAutoTimer();
+    } else {
+        stopAutoBattle();
+        btn.innerText = "⚡ 開啟 AUTO 自動戰鬥與續戰";
+        btn.style.background = "linear-gradient(180deg, #27ae60 0%, #1e8449 100%)";
+    }
+}
+
+function startAutoTimer() {
+    stopAutoBattleTimer();
+    autoTimer = setInterval(performAutoTurn, 600);
+}
+
+function stopAutoBattleTimer() {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+}
+
+function stopAutoBattle() {
+    isAutoBattle = false;
+    stopAutoBattleTimer();
+    let btn = document.getElementById('btn-toggle-auto');
+    if (btn) {
+        btn.innerText = "⚡ 開啟 AUTO 自動戰鬥與續戰";
+        btn.style.background = "linear-gradient(180deg, #27ae60 0%, #1e8449 100%)";
+    }
+}
+
+function performAutoTurn() {
+    if (player.hp <= 0 || monster.hp <= 0) {
+        stopAutoBattleTimer();
+        return;
+    }
+
+    // 尋找可以使用的技能，優先使用未在 CD 且 MP 足夠的招式
+    let usableSkill = null;
+    for (let sKey of player.skills) {
+        let sInfo = SKILLS[sKey];
+        let cdRem = player.skillCDs[sKey] || 0;
+        if (sInfo && cdRem === 0 && player.mp >= sInfo.mp) {
+            usableSkill = sKey;
+            break;
+        }
+    }
+
+    if (usableSkill) {
+        useSpecificSkill(usableSkill);
+    } else {
+        playerAttack();
+    }
 }
 
 function startJobAdvanceTrial() {
@@ -340,6 +417,14 @@ function triggerScreenShake() {
     setTimeout(() => container.classList.remove('shake-anim'), 250);
 }
 
+// 🎨 動態打擊特效發動（暴擊與克制）
+function triggerVfx(targetCanvasId, vfxClass) {
+    let canvas = document.getElementById(targetCanvasId);
+    if (!canvas) return;
+    canvas.classList.add(vfxClass);
+    setTimeout(() => canvas.classList.remove(vfxClass), 350);
+}
+
 function updateBattleUI() {
     let mapObj = (typeof MAPS !== "undefined" && MAPS[monster.mapId]) ? MAPS[monster.mapId] : { nameZh: "荒野" };
     let weaknessZh = { flame: "🔥火", frost: "❄️冰", thunder: "⚡雷", gale: "🍃風" }[mapObj.weakness] || "無";
@@ -417,6 +502,7 @@ function playerDefend() { executeTurn(null, true); }
 function useSpecificSkill(sKey) { executeTurn(sKey, false); }
 
 function showInBattlePotions() {
+    stopAutoBattle();
     hideAll();
     document.getElementById('potion-select-screen').classList.remove('hidden');
     document.getElementById('potion-select-status').innerText = `🧪 生命藥水: ${player.potions.hp} 瓶\n🧪 魔力藥水: ${player.potions.mp} 瓶`;
@@ -501,8 +587,12 @@ function executeTurn(skillKey, isDefendingAction) {
 
         monster.hp -= dealtDmg;
         if (typeof playSound === "function") playSound('skill', player.jobCode);
-        triggerScreenShake();
         
+        // 特效連動
+        triggerScreenShake();
+        if (isCrit) triggerVfx('monster-canvas', 'crit-vfx');
+        if (isCounter) triggerVfx('monster-canvas', 'counter-vfx');
+
         let tag = isCounter ? "克制 " : (isCrit ? "💥 " : "");
         spawnFloatingText(tag + dealtDmg, isCrit ? "crit" : "normal");
 
@@ -515,7 +605,10 @@ function executeTurn(skillKey, isDefendingAction) {
         
         monster.hp -= dealtDmg;
         if (typeof playSound === "function") playSound('hit', player.jobCode);
+        
         triggerScreenShake();
+        if (isCrit) triggerVfx('monster-canvas', 'crit-vfx');
+
         spawnFloatingText((isCrit ? "💥 " : "") + dealtDmg, isCrit ? "crit" : "normal");
         log((isCrit ? "⚡【暴擊！】" : "") + `使用 [${player.weapon}] 攻擊，造成 ${dealtDmg} 點傷害！`, isCrit ? "log-crit" : "");
     }
@@ -588,6 +681,16 @@ function executeTurn(skillKey, isDefendingAction) {
 
         if (isJobTrialBattle) {
             showJobAdvanceSelectScreen();
+        } else if (isAutoBattle && isOldStage) {
+            // ⚡ AUTO 自動戰鬥續戰機制
+            setTimeout(() => {
+                if (isAutoBattle && player.hp > 0) {
+                    startNextBattle();
+                } else {
+                    let oldStageMsg = isOldStage ? " <span style='color:#e67e22;'>(舊關卡收益 50%)</span>" : "";
+                    showVictoryModal(monster.name, goldGained, expGained, gotStone, levelUpMsg + oldStageMsg + extraRewardMsg);
+                }
+            }, 600);
         } else {
             let oldStageMsg = isOldStage ? " <span style='color:#e67e22;'>(舊關卡收益 50%)</span>" : "";
             showVictoryModal(monster.name, goldGained, expGained, gotStone, levelUpMsg + oldStageMsg + extraRewardMsg);
@@ -642,6 +745,7 @@ function executeTurn(skillKey, isDefendingAction) {
 
     if (player.hp <= 0) {
         player.hp = 0;
+        stopAutoBattle();
         updateBattleUI();
         hideAll();
         document.getElementById('defeat-screen').classList.remove('hidden');
@@ -651,6 +755,7 @@ function executeTurn(skillKey, isDefendingAction) {
 }
 
 function showVictoryModal(mName, rewardGold, expGained, gotStone, levelUpMsg) {
+    stopAutoBattle();
     hideAll();
     pendingVictoryData = { gotStone: gotStone };
     let content = document.getElementById('victory-modal-content');
@@ -660,6 +765,7 @@ function showVictoryModal(mName, rewardGold, expGained, gotStone, levelUpMsg) {
 }
 
 function showJobAdvanceSelectScreen() {
+    stopAutoBattle();
     hideAll();
     document.getElementById('job-advance-screen').classList.remove('hidden');
     let container = document.getElementById('job-advance-options');
@@ -764,6 +870,7 @@ function showMapSelectScreen() {
 }
 
 function showCardSelect() {
+    stopAutoBattle();
     hideAll(); 
     if (typeof setBattleBgm === "function") setBattleBgm(false);
     document.getElementById('card-screen').classList.remove('hidden'); 
@@ -1053,6 +1160,43 @@ function renderEquipmentBagList() {
         }
         container.appendChild(btn);
     });
+}
+
+// 🎒 背包一鍵分級售出
+function autoSellEquipsByTier(tier) {
+    if (!player.equips || player.equips.length === 0) {
+        alert("⚠️ 背包目前沒有可回收的裝備！");
+        return;
+    }
+
+    let prices = { basic: 50, mid: 150, adv: 400 };
+    let pricePerItem = prices[tier] || 50;
+
+    let soldCount = 0;
+    let earnedGold = 0;
+    let equippedNames = Object.values(player.equipmentSlots);
+
+    let remainingEquips = [];
+    player.equips.forEach(eqName => {
+        let item = FORGE_RECIPES_DATABASE.find(r => getItemName(r) === eqName) || ALL_EQUIPS_POOL.find(r => getItemName(r) === eqName);
+        let isEquipped = equippedNames.includes(eqName);
+
+        if (item && item.tier === tier && !isEquipped) {
+            soldCount++;
+            earnedGold += pricePerItem;
+        } else {
+            remainingEquips.push(eqName);
+        }
+    });
+
+    if (soldCount > 0) {
+        player.equips = remainingEquips;
+        player.gold = (Number(player.gold) || 0) + earnedGold;
+        alert(`🗑️ 成功回收了 ${soldCount} 件【${tier === 'basic' ? '初級' : (tier === 'mid' ? '中級' : '高級')}】裝備！獲得 +${earnedGold} G！`);
+        updateEquipmentUI();
+    } else {
+        alert(`⚠️ 背包內沒有可回收的非使用中【${tier === 'basic' ? '初級' : (tier === 'mid' ? '中級' : '高級')}】裝備！`);
+    }
 }
 
 function equipItemToSlot(eqName) {
@@ -1555,10 +1699,9 @@ function saveGame() {
     }
 }
 
-// **修復重點：載入與匯入存檔前強制清空全場 UI 畫面，徹底消除重疊**
 function loadGame() { 
     try {
-        hideAll(); // 強制隱藏所有視窗
+        hideAll();
         let saved = localStorage.getItem(SAVE_KEY); 
         if (saved) { 
             let data = JSON.parse(saved); 

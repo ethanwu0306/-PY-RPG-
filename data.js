@@ -1,4 +1,4 @@
-const SAVE_KEY = "pyrpg_save_github_v5.5_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v7.0_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const CLASS_ARTIFACTS_DATABASE = {
     "狂戰士": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂戰士", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
@@ -128,55 +128,56 @@ const JOB_ADVANCEMENTS = {
     }
 };
 
+// **精確戰術 CD 時間分配**
 const SKILLS = {
-    // 通用技能
-    "重擊": { type: "universal", elem: "none", cost: 50, mp: 5, mult: 1.5, cd: 0, descZh: "1.5倍物理打擊" },
-    "治癒術": { type: "universal", elem: "none", cost: 80, mp: 10, heal: 50, cd: 1, descZh: "恢復 50 HP" },
-    "神聖護盾": { type: "universal", elem: "none", cost: 90, mp: 12, shield: 40, cd: 2, descZh: "獲得 40 點護盾" },
-    "強擊": { type: "universal", elem: "none", cost: 110, mp: 10, mult: 1.8, cd: 1, descZh: "1.8倍物理打擊" },
-    "高級治癒": { type: "universal", elem: "none", cost: 150, mp: 20, heal: 120, cd: 2, descZh: "恢復 120 HP" },
-    "戰意高昂": { type: "universal", elem: "none", cost: 140, mp: 15, mult: 2.0, cd: 2, buffZh: "戰意高昂", buffName: "戰意 (攻擊+25%)", buffTurn: 2, descZh: "2.0倍打擊並獲得【戰意(攻擊+25%) 2回合】" },
-    "破甲一擊": { type: "universal", elem: "none", cost: 160, mp: 18, mult: 1.7, cd: 2, debuffZh: "破甲", debuffName: "破甲 (受到傷害增加)", debuffTurn: 2, descZh: "1.7倍打擊並賦予敵方【破甲 2回合】" },
-    "精靈賜福": { type: "universal", elem: "none", cost: 200, mp: 25, shield: 150, cd: 3, descZh: "獲得 150 點高額護盾" },
-    "虛弱詛咒": { type: "universal", elem: "none", cost: 170, mp: 16, mult: 1.9, cd: 2, debuffZh: "虛弱", debuffName: "虛弱 (攻擊降低25%)", debuffTurn: 2, descZh: "1.9倍打擊並賦予敵方【虛弱(攻擊-25%) 2回合】" },
-    "聖光復甦": { type: "universal", elem: "none", cost: 220, mp: 28, heal: 200, cd: 3, descZh: "恢復 200 HP" },
-    "生命分流": { type: "universal", elem: "none", cost: 160, mp: 5, mult: 2.3, cd: 1, descZh: "2.3倍強烈物理打擊" },
+    // 通用技能 (小招 CD:0~1 | 輔助 CD:2~3)
+    "重擊": { type: "universal", elem: "none", cost: 50, mp: 5, mult: 1.5, cd: 0, descZh: "1.5倍物理打擊 (CD: 0T)" },
+    "治癒術": { type: "universal", elem: "none", cost: 80, mp: 10, heal: 50, cd: 1, descZh: "恢復 50 HP (CD: 1T)" },
+    "神聖護盾": { type: "universal", elem: "none", cost: 90, mp: 12, shield: 40, cd: 2, descZh: "獲得 40 點護盾 (CD: 2T)" },
+    "強擊": { type: "universal", elem: "none", cost: 110, mp: 10, mult: 1.8, cd: 1, descZh: "1.8倍物理打擊 (CD: 1T)" },
+    "高級治癒": { type: "universal", elem: "none", cost: 150, mp: 20, heal: 120, cd: 2, descZh: "恢復 120 HP (CD: 2T)" },
+    "戰意高昂": { type: "universal", elem: "none", cost: 140, mp: 15, mult: 2.0, cd: 2, buffZh: "戰意高昂", buffName: "戰意 (攻擊+25%)", buffTurn: 2, descZh: "2.0倍打擊並獲得【戰意(攻擊+25%) 2T】(CD: 2T)" },
+    "破甲一擊": { type: "universal", elem: "none", cost: 160, mp: 18, mult: 1.7, cd: 2, debuffZh: "破甲", debuffName: "破甲 (受到傷害增加)", debuffTurn: 2, descZh: "1.7倍打擊並賦予敵方【破甲 2T】(CD: 2T)" },
+    "精靈賜福": { type: "universal", elem: "none", cost: 200, mp: 25, shield: 150, cd: 3, descZh: "獲得 150 點高額護盾 (CD: 3T)" },
+    "虛弱詛咒": { type: "universal", elem: "none", cost: 170, mp: 16, mult: 1.9, cd: 2, debuffZh: "虛弱", debuffName: "虛弱 (攻擊降低25%)", debuffTurn: 2, descZh: "1.9倍打擊並賦予敵方【虛弱(攻擊-25%) 2T】(CD: 2T)" },
+    "聖光復甦": { type: "universal", elem: "none", cost: 220, mp: 28, heal: 200, cd: 3, descZh: "恢復 200 HP (CD: 3T)" },
+    "生命分流": { type: "universal", elem: "none", cost: 160, mp: 5, mult: 2.3, cd: 1, descZh: "2.3倍強烈物理打擊 (CD: 1T)" },
 
     // 戰士專屬技能
-    "旋風斬": { type: "Warrior", elem: "gale", cost: 150, mp: 8, mult: 2.0, cd: 1, descZh: "風屬：2.0倍橫掃傷害" },
-    "怒火狂暴": { type: "Warrior", elem: "flame", cost: 190, mp: 12, mult: 2.4, cd: 2, buffZh: "狂暴", buffName: "狂暴 (攻擊+30%)", buffTurn: 2, descZh: "火屬：2.4倍打擊並獲得【狂暴(攻擊+30%) 2回合】" },
-    "威壓咆哮": { type: "Warrior", elem: "none", cost: 210, mp: 15, mult: 2.2, cd: 2, debuffZh: "威壓", debuffName: "威壓 (敵攻擊降低30%)", debuffTurn: 2, descZh: "2.2倍打擊並賦予敵方【威壓(攻擊-30%) 2回合】" },
-    "狂暴打擊": { type: "Warrior", elem: "flame", cost: 220, mp: 14, mult: 2.8, cd: 1, descZh: "火屬：2.8倍致命強打" },
-    "裂地重斬": { type: "Warrior", elem: "none", cost: 280, mp: 18, mult: 3.3, cd: 2, descZh: "3.3倍崩裂重擊" },
-    "泰坦重踏": { type: "Warrior", elem: "thunder", cost: 350, mp: 24, mult: 4.0, cd: 3, descZh: "雷屬：4.0倍泰坦打擊" },
-    "不屈怒吼": { type: "Warrior", elem: "none", cost: 200, mp: 15, shield: 120, buffZh: "不屈", buffName: "不屈 (減傷20%)", buffTurn: 2, descZh: "獲得 120 護盾與【不屈(減傷20%) 2回合】" },
-    "盾牆壁壘": { type: "Warrior", elem: "none", cost: 260, mp: 20, shield: 220, buffZh: "鐵壁", buffName: "鐵壁 (減傷35%)", buffTurn: 3, descZh: "獲得 220 護盾與【鐵壁(減傷35%) 3回合】" },
-    "重傷揮砍": { type: "Warrior", elem: "none", cost: 270, mp: 19, mult: 3.1, cd: 2, debuffZh: "流血", debuffName: "流血 (每回合扣除 25 HP)", debuffTurn: 2, descZh: "3.1倍打擊並賦予敵方【流血 2回合】" },
-    "血氣爆發": { type: "Warrior", elem: "flame", cost: 300, mp: 20, mult: 3.6, cd: 2, descZh: "火屬：3.6倍血氣傷害" },
+    "旋風斬": { type: "Warrior", elem: "gale", cost: 150, mp: 8, mult: 2.0, cd: 1, descZh: "風屬：2.0倍橫掃傷害 (CD: 1T)" },
+    "怒火狂暴": { type: "Warrior", elem: "flame", cost: 190, mp: 12, mult: 2.4, cd: 2, buffZh: "狂暴", buffName: "狂暴 (攻擊+30%)", buffTurn: 2, descZh: "火屬：2.4倍打擊並獲得【狂暴(攻擊+30%) 2T】(CD: 2T)" },
+    "威壓咆哮": { type: "Warrior", elem: "none", cost: 210, mp: 15, mult: 2.2, cd: 2, debuffZh: "威壓", debuffName: "威壓 (敵攻擊降低30%)", debuffTurn: 2, descZh: "2.2倍打擊並賦予敵方【威壓(攻擊-30%) 2T】(CD: 2T)" },
+    "狂暴打擊": { type: "Warrior", elem: "flame", cost: 220, mp: 14, mult: 2.8, cd: 1, descZh: "火屬：2.8倍致命強打 (CD: 1T)" },
+    "裂地重斬": { type: "Warrior", elem: "none", cost: 280, mp: 18, mult: 3.3, cd: 2, descZh: "3.3倍崩裂重擊 (CD: 2T)" },
+    "泰坦重踏": { type: "Warrior", elem: "thunder", cost: 350, mp: 24, mult: 4.0, cd: 3, descZh: "雷屬：4.0倍泰坦打擊 (CD: 3T)" },
+    "不屈怒吼": { type: "Warrior", elem: "none", cost: 200, mp: 15, shield: 120, buffZh: "不屈", buffName: "不屈 (減傷20%)", buffTurn: 2, cd: 2, descZh: "獲得 120 護盾與【不屈(減傷20%) 2T】(CD: 2T)" },
+    "盾牆壁壘": { type: "Warrior", elem: "none", cost: 260, mp: 20, shield: 220, buffZh: "鐵壁", buffName: "鐵壁 (減傷35%)", buffTurn: 3, cd: 3, descZh: "獲得 220 護盾與【鐵壁(減傷35%) 3T】(CD: 3T)" },
+    "重傷揮砍": { type: "Warrior", elem: "none", cost: 270, mp: 19, mult: 3.1, cd: 2, debuffZh: "流血", debuffName: "流血 (每回合扣除 25 HP)", debuffTurn: 2, descZh: "3.1倍打擊並賦予敵方【流血 2T】(CD: 2T)" },
+    "血氣爆發": { type: "Warrior", elem: "flame", cost: 300, mp: 20, mult: 3.6, cd: 2, descZh: "火屬：3.6倍血氣傷害 (CD: 2T)" },
 
     // 法師專屬技能
-    "火球術": { type: "Mage", elem: "flame", cost: 180, mp: 15, mult: 2.5, cd: 0, descZh: "火屬：2.5倍高額魔攻" },
-    "魔力激流": { type: "Mage", elem: "none", cost: 210, mp: 16, mult: 2.7, cd: 2, buffZh: "魔激", buffName: "魔激 (魔攻+30%)", buffTurn: 2, descZh: "2.7倍魔攻並獲得【魔激(魔攻+30%) 2回合】" },
-    "凍結星塵": { type: "Mage", elem: "frost", cost: 230, mp: 18, mult: 2.6, cd: 2, debuffZh: "凍結", debuffName: "凍結 (敵無法行動)", debuffTurn: 2, descZh: "冰屬：2.6倍打擊並賦予敵方【凍結 2回合】" },
-    "雷霆一擊": { type: "Mage", elem: "thunder", cost: 250, mp: 20, mult: 3.2, cd: 1, descZh: "雷屬：3.2倍毀滅電擊" },
-    "冰霜星爆": { type: "Mage", elem: "frost", cost: 260, mp: 22, mult: 2.3, cd: 2, debuffZh: "凍傷", debuffName: "凍傷 (每回合扣除 25 HP)", debuffTurn: 2, descZh: "冰屬：2.3倍打擊並賦予敵方【凍傷 2回合】" },
-    "秘銀奧術": { type: "Mage", elem: "none", cost: 210, mp: 18, mult: 2.9, cd: 1, descZh: "2.9倍奧術衝擊" },
-    "虛空衰弱": { type: "Mage", elem: "none", cost: 280, mp: 21, mult: 3.1, cd: 2, debuffZh: "衰弱", debuffName: "衰弱 (敵防禦降低30%)", debuffTurn: 2, descZh: "3.1倍打擊並賦予敵方【衰弱 2回合】" },
-    "閃電鏈": { type: "Mage", elem: "thunder", cost: 290, mp: 24, mult: 3.5, cd: 2, descZh: "雷屬：3.5倍連環閃電" },
-    "烈焰風暴": { type: "Mage", elem: "flame", cost: 310, mp: 25, mult: 3.7, cd: 2, debuffZh: "灼燒", debuffName: "灼燒 (每回合扣除 30 HP)", debuffTurn: 2, descZh: "火屬：3.7倍打擊並賦予敵方【灼燒 2回合】" },
-    "絕對零度": { type: "Mage", elem: "frost", cost: 330, mp: 28, mult: 3.9, cd: 3, descZh: "冰屬：3.9倍極寒凍結" },
+    "火球術": { type: "Mage", elem: "flame", cost: 180, mp: 15, mult: 2.5, cd: 0, descZh: "火屬：2.5倍高額魔攻 (CD: 0T)" },
+    "魔力激流": { type: "Mage", elem: "none", cost: 210, mp: 16, mult: 2.7, cd: 2, buffZh: "魔激", buffName: "魔激 (魔攻+30%)", buffTurn: 2, descZh: "2.7倍魔攻並獲得【魔激(魔攻+30%) 2T】(CD: 2T)" },
+    "凍結星塵": { type: "Mage", elem: "frost", cost: 230, mp: 18, mult: 2.6, cd: 2, debuffZh: "凍結", debuffName: "凍結 (敵無法行動)", debuffTurn: 2, descZh: "冰屬：2.6倍打擊並賦予敵方【凍結 2T】(CD: 2T)" },
+    "雷霆一擊": { type: "Mage", elem: "thunder", cost: 250, mp: 20, mult: 3.2, cd: 1, descZh: "雷屬：3.2倍毀滅電擊 (CD: 1T)" },
+    "冰霜星爆": { type: "Mage", elem: "frost", cost: 260, mp: 22, mult: 2.3, cd: 2, debuffZh: "凍傷", debuffName: "凍傷 (每回合扣除 25 HP)", debuffTurn: 2, descZh: "冰屬：2.3倍打擊並賦予敵方【凍傷 2T】(CD: 2T)" },
+    "秘銀奧術": { type: "Mage", elem: "none", cost: 210, mp: 18, mult: 2.9, cd: 1, descZh: "2.9倍奧術衝擊 (CD: 1T)" },
+    "虛空衰弱": { type: "Mage", elem: "none", cost: 280, mp: 21, mult: 3.1, cd: 2, debuffZh: "衰弱", debuffName: "衰弱 (敵防禦降低30%)", debuffTurn: 2, descZh: "3.1倍打擊並賦予敵方【衰弱 2T】(CD: 2T)" },
+    "閃電鏈": { type: "Mage", elem: "thunder", cost: 290, mp: 24, mult: 3.5, cd: 2, descZh: "雷屬：3.5倍連環閃電 (CD: 2T)" },
+    "烈焰風暴": { type: "Mage", elem: "flame", cost: 310, mp: 25, mult: 3.7, cd: 2, debuffZh: "灼燒", debuffName: "灼燒 (每回合扣除 30 HP)", debuffTurn: 2, descZh: "火屬：3.7倍打擊並賦予敵方【灼燒 2T】(CD: 2T)" },
+    "絕對零度": { type: "Mage", elem: "frost", cost: 330, mp: 28, mult: 3.9, cd: 3, descZh: "冰屬：3.9倍極寒凍結 (CD: 3T)" },
 
     // 射手專屬技能
-    "狙擊": { type: "Archer", elem: "none", cost: 160, mp: 12, mult: 2.2, cd: 0, descZh: "2.2倍精準打擊" },
-    "鷹眼專注": { type: "Archer", elem: "none", cost: 190, mp: 14, mult: 2.5, cd: 2, buffZh: "鷹眼", buffName: "鷹眼 (暴擊率+20%)", buffTurn: 2, descZh: "2.5倍打擊並獲得【鷹眼(暴擊+20%) 2回合】" },
-    "影縫箭": { type: "Archer", elem: "none", cost: 210, mp: 16, mult: 2.6, cd: 2, debuffZh: "影縫", debuffName: "影縫 (敵閃避無效)", debuffTurn: 2, descZh: "2.6倍打擊並賦予敵方【影縫(封鎖閃避) 2回合】" },
-    "致命毒箭": { type: "Archer", elem: "none", cost: 210, mp: 15, mult: 2.4, cd: 2, debuffZh: "劇毒", debuffName: "劇毒 (每回合扣除 25 HP)", debuffTurn: 2, descZh: "2.4倍打擊並賦予敵方【劇毒 2回合】" },
-    "疾風步": { type: "Archer", elem: "gale", cost: 220, mp: 15, mult: 2.8, cd: 2, buffZh: "疾風", buffName: "疾風 (閃避率+25%)", buffTurn: 2, descZh: "風屬：2.8倍打擊並獲得【疾風(閃避+25%) 2回合】" },
-    "萬箭齊發": { type: "Archer", elem: "gale", cost: 240, mp: 18, mult: 2.7, cd: 1, descZh: "風屬：2.7倍高暴擊" },
-    "幻影連射": { type: "Archer", elem: "none", cost: 270, mp: 20, mult: 3.1, cd: 2, descZh: "3.1倍連發射擊" },
-    "鷹眼重弩": { type: "Archer", elem: "none", cost: 310, mp: 22, mult: 3.6, cd: 2, descZh: "3.6倍精準狙殺" },
-    "爆裂矢": { type: "Archer", elem: "flame", cost: 330, mp: 24, mult: 3.8, cd: 2, descZh: "火屬：3.8倍爆破傷害" },
-    "貫星神箭": { type: "Archer", elem: "thunder", cost: 360, mp: 26, mult: 4.1, cd: 3, descZh: "雷屬：4.1倍貫星致命打擊" }
+    "狙擊": { type: "Archer", elem: "none", cost: 160, mp: 12, mult: 2.2, cd: 0, descZh: "2.2倍精準打擊 (CD: 0T)" },
+    "鷹眼專注": { type: "Archer", elem: "none", cost: 190, mp: 14, mult: 2.5, cd: 2, buffZh: "鷹眼", buffName: "鷹眼 (暴擊率+20%)", buffTurn: 2, descZh: "2.5倍打擊並獲得【鷹眼(暴擊+20%) 2T】(CD: 2T)" },
+    "影縫箭": { type: "Archer", elem: "none", cost: 210, mp: 16, mult: 2.6, cd: 2, debuffZh: "影縫", debuffName: "影縫 (敵閃避無效)", debuffTurn: 2, descZh: "2.6倍打擊並賦予敵方【影縫(封鎖閃避) 2T】(CD: 2T)" },
+    "致命毒箭": { type: "Archer", elem: "none", cost: 210, mp: 15, mult: 2.4, cd: 2, debuffZh: "劇毒", debuffName: "劇毒 (每回合扣除 25 HP)", debuffTurn: 2, descZh: "2.4倍打擊並賦予敵方【劇毒 2T】(CD: 2T)" },
+    "疾風步": { type: "Archer", elem: "gale", cost: 220, mp: 15, mult: 2.8, cd: 2, buffZh: "疾風", buffName: "疾風 (閃避率+25%)", buffTurn: 2, descZh: "風屬：2.8倍打擊並獲得【疾風(閃避+25%) 2T】(CD: 2T)" },
+    "萬箭齊發": { type: "Archer", elem: "gale", cost: 240, mp: 18, mult: 2.7, cd: 1, descZh: "風屬：2.7倍高暴擊 (CD: 1T)" },
+    "幻影連射": { type: "Archer", elem: "none", cost: 270, mp: 20, mult: 3.1, cd: 2, descZh: "3.1倍連發射擊 (CD: 2T)" },
+    "鷹眼重弩": { type: "Archer", elem: "none", cost: 310, mp: 22, mult: 3.6, cd: 2, descZh: "3.6倍精準狙殺 (CD: 2T)" },
+    "爆裂矢": { type: "Archer", elem: "flame", cost: 330, mp: 24, mult: 3.8, cd: 2, descZh: "火屬：3.8倍爆破傷害 (CD: 2T)" },
+    "貫星神箭": { type: "Archer", elem: "thunder", cost: 360, mp: 26, mult: 4.1, cd: 3, descZh: "雷屬：4.1倍貫星致命打擊 (CD: 3T)" }
 };
 
 const CLASSES = {
