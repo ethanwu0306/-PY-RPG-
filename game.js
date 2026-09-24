@@ -18,7 +18,6 @@ let currentTrialTier = 2;
 let currentRandomEvent = null;
 let currentJobTreeTab = 'Warrior';
 
-// ⚡ AUTO 自動戰鬥變數
 let isAutoBattle = false;
 let autoTimer = null;
 
@@ -30,7 +29,7 @@ function getMaxExp(lvl) {
 }
 
 function hideAll() { 
-    stopAutoBattle();
+    stopAutoBattleTimer();
     ['main-menu', 'class-select', 'card-screen', 'battle-screen', 'defeat-screen', 'village-screen', 'stats-screen', 'forge-screen', 'enchant-screen', 'shop-screen', 'replace-skill-screen', 'achieve-screen', 'potion-select-screen', 'victory-modal-screen', 'equipment-screen', 'job-advance-screen', 'job-tree-screen', 'event-screen', 'map-select-screen', 'guide-screen', 'transfer-save-screen'].forEach(id => {
         let el = document.getElementById(id);
         if (el) el.classList.add('hidden');
@@ -40,6 +39,7 @@ function hideAll() {
 }
 
 function showMainMenu() { 
+    stopAutoBattle();
     hideAll(); 
     if (typeof setBattleBgm === "function") setBattleBgm(false);
     document.getElementById('main-menu').classList.remove('hidden'); 
@@ -51,6 +51,7 @@ function showMainMenu() {
 function showClassSelect() { hideAll(); document.getElementById('class-select').classList.remove('hidden'); }
 
 function initGame(jobCode) {
+    stopAutoBattle();
     let c = CLASSES[jobCode];
     player = {
         jobCode: jobCode, jobName: c.nameZh, baseJobCode: jobCode,
@@ -85,7 +86,13 @@ function startNextBattle() {
     isJobTrialBattle = false;
     isTowerBattle = false;
 
-    if (currentSelectedStage % 10 !== 0 && Math.random() < 0.15) {
+    // 🔒 只有已通關舊關卡允許使用 AUTO
+    let isOldStage = (currentSelectedStage < maxReachedStage);
+    if (!isOldStage) {
+        stopAutoBattle();
+    }
+
+    if (currentSelectedStage % 10 !== 0 && Math.random() < 0.15 && !isAutoBattle) {
         triggerRandomEvent();
         return;
     }
@@ -95,7 +102,9 @@ function startNextBattle() {
     spawnMonster();
 }
 
+// 🏰 試煉之塔（不允許 AUTO）
 function startTowerFloorChallenge() {
+    stopAutoBattle();
     hideAll();
     isJobTrialBattle = false;
     isTowerBattle = true;
@@ -249,41 +258,58 @@ function spawnMonster() {
     player.buffTurns = 0;
     player.playerDebuffTurns = 0;
 
-    // 是否顯示 AUTO 按鈕（舊關卡顯示）
+    // 🔒 只有已通關舊關卡顯示 AUTO 按鈕
     let autoBox = document.getElementById('auto-battle-container');
     let isOldStage = (!isTowerBattle && !isJobTrialBattle && currentSelectedStage < maxReachedStage);
     if (autoBox) {
         if (isOldStage) autoBox.style.display = "block";
-        else autoBox.style.display = "none";
+        else {
+            autoBox.style.display = "none";
+            stopAutoBattle(); // 若進入非舊關卡，自動終止 AUTO
+        }
     }
 
     render4SkillButtons();
     updateBattleUI();
+    updateAutoButtonUI();
 
-    // 若 AUTO 開啟中，啟動計時器自動戰鬥
     if (isAutoBattle && isOldStage) {
         startAutoTimer();
     }
 }
 
-// ⚡ AUTO 自動戰鬥邏輯
 function toggleAutoBattle() {
+    let isOldStage = (!isTowerBattle && !isJobTrialBattle && currentSelectedStage < maxReachedStage);
+    if (!isOldStage) {
+        alert("⚠️ AUTO 自動戰鬥僅限於【已通關的舊關卡】掛機使用！新關卡與試煉塔請手動挑戰。");
+        stopAutoBattle();
+        return;
+    }
+
     isAutoBattle = !isAutoBattle;
-    let btn = document.getElementById('btn-toggle-auto');
+    updateAutoButtonUI();
     if (isAutoBattle) {
-        btn.innerText = "⏸️ 取消 AUTO 自動戰鬥";
-        btn.style.background = "linear-gradient(180deg, #e67e22 0%, #d35400 100%)";
         startAutoTimer();
     } else {
-        stopAutoBattle();
-        btn.innerText = "⚡ 開啟 AUTO 自動戰鬥與續戰";
+        stopAutoBattleTimer();
+    }
+}
+
+function updateAutoButtonUI() {
+    let btn = document.getElementById('btn-toggle-auto');
+    if (!btn) return;
+    if (isAutoBattle) {
+        btn.innerText = "⏸️ 取消 AUTO 自動戰鬥 (同一關無限續戰中)";
+        btn.style.background = "linear-gradient(180deg, #e67e22 0%, #d35400 100%)";
+    } else {
+        btn.innerText = "⚡ 開啟 AUTO 自動戰鬥 (同一關無限續戰)";
         btn.style.background = "linear-gradient(180deg, #27ae60 0%, #1e8449 100%)";
     }
 }
 
 function startAutoTimer() {
     stopAutoBattleTimer();
-    autoTimer = setInterval(performAutoTurn, 600);
+    autoTimer = setInterval(performAutoTurn, 500);
 }
 
 function stopAutoBattleTimer() {
@@ -293,11 +319,7 @@ function stopAutoBattleTimer() {
 function stopAutoBattle() {
     isAutoBattle = false;
     stopAutoBattleTimer();
-    let btn = document.getElementById('btn-toggle-auto');
-    if (btn) {
-        btn.innerText = "⚡ 開啟 AUTO 自動戰鬥與續戰";
-        btn.style.background = "linear-gradient(180deg, #27ae60 0%, #1e8449 100%)";
-    }
+    updateAutoButtonUI();
 }
 
 function performAutoTurn() {
@@ -306,7 +328,6 @@ function performAutoTurn() {
         return;
     }
 
-    // 尋找可以使用的技能，優先使用未在 CD 且 MP 足夠的招式
     let usableSkill = null;
     for (let sKey of player.skills) {
         let sInfo = SKILLS[sKey];
@@ -325,6 +346,7 @@ function performAutoTurn() {
 }
 
 function startJobAdvanceTrial() {
+    stopAutoBattle();
     hideAll();
     isJobTrialBattle = true;
     document.getElementById('battle-screen').classList.remove('hidden');
@@ -417,7 +439,6 @@ function triggerScreenShake() {
     setTimeout(() => container.classList.remove('shake-anim'), 250);
 }
 
-// 🎨 動態打擊特效發動（暴擊與克制）
 function triggerVfx(targetCanvasId, vfxClass) {
     let canvas = document.getElementById(targetCanvasId);
     if (!canvas) return;
@@ -502,7 +523,7 @@ function playerDefend() { executeTurn(null, true); }
 function useSpecificSkill(sKey) { executeTurn(sKey, false); }
 
 function showInBattlePotions() {
-    stopAutoBattle();
+    stopAutoBattleTimer();
     hideAll();
     document.getElementById('potion-select-screen').classList.remove('hidden');
     document.getElementById('potion-select-status').innerText = `🧪 生命藥水: ${player.potions.hp} 瓶\n🧪 魔力藥水: ${player.potions.mp} 瓶`;
@@ -513,6 +534,8 @@ function showInBattlePotions() {
 function cancelPotionSelect() {
     hideAll();
     document.getElementById('battle-screen').classList.remove('hidden');
+    let isOldStage = (!isTowerBattle && !isJobTrialBattle && currentSelectedStage < maxReachedStage);
+    if (isAutoBattle && isOldStage) startAutoTimer();
 }
 
 function useBattlePotion(type) {
@@ -588,7 +611,6 @@ function executeTurn(skillKey, isDefendingAction) {
         monster.hp -= dealtDmg;
         if (typeof playSound === "function") playSound('skill', player.jobCode);
         
-        // 特效連動
         triggerScreenShake();
         if (isCrit) triggerVfx('monster-canvas', 'crit-vfx');
         if (isCounter) triggerVfx('monster-canvas', 'counter-vfx');
@@ -633,6 +655,7 @@ function executeTurn(skillKey, isDefendingAction) {
     updateBattleUI();
 
     if (monster.hp <= 0) {
+        stopAutoBattleTimer();
         if (typeof playSound === "function") playSound('victory', player.jobCode);
         
         let isOldStage = (!isTowerBattle && currentSelectedStage < maxReachedStage);
@@ -680,18 +703,20 @@ function executeTurn(skillKey, isDefendingAction) {
         if (gotStone) player.enchantStones++;
 
         if (isJobTrialBattle) {
+            stopAutoBattle();
             showJobAdvanceSelectScreen();
         } else if (isAutoBattle && isOldStage) {
-            // ⚡ AUTO 自動戰鬥續戰機制
+            // ⚡ AUTO 自動續戰：僅在已通關舊關卡自動打同一關
             setTimeout(() => {
                 if (isAutoBattle && player.hp > 0) {
-                    startNextBattle();
+                    startNextBattle(); // 自動發起同一關卡下一戰
                 } else {
                     let oldStageMsg = isOldStage ? " <span style='color:#e67e22;'>(舊關卡收益 50%)</span>" : "";
                     showVictoryModal(monster.name, goldGained, expGained, gotStone, levelUpMsg + oldStageMsg + extraRewardMsg);
                 }
-            }, 600);
+            }, 500);
         } else {
+            stopAutoBattle(); // 首通關卡或試煉關卡勝利後停止 AUTO
             let oldStageMsg = isOldStage ? " <span style='color:#e67e22;'>(舊關卡收益 50%)</span>" : "";
             showVictoryModal(monster.name, goldGained, expGained, gotStone, levelUpMsg + oldStageMsg + extraRewardMsg);
         }
@@ -917,6 +942,7 @@ function rollRandomEquipShop() {
 }
 
 function enterVillage() {
+    stopAutoBattle();
     player.villageActions = 5;
     rollRandomEquipShop();
     rollRandomSkills();
@@ -931,6 +957,7 @@ function enterVillage() {
 }
 
 function showVillage() {
+    stopAutoBattle();
     hideAll(); 
     if (typeof setBattleBgm === "function") setBattleBgm(false);
     document.getElementById('village-screen').classList.remove('hidden');
@@ -1133,36 +1160,6 @@ function updateEquipmentUI() {
     renderEquipmentBagList();
 }
 
-function renderEquipmentBagList() {
-    let container = document.getElementById('equipment-bag-list');
-    container.innerHTML = "";
-
-    if (!player.equips || player.equips.length === 0) {
-        container.innerHTML = "<p style='color:#888; text-align:center;'>背包目前沒有備用裝備</p>";
-        return;
-    }
-
-    player.equips.forEach((eqName) => {
-        let isEquipped = Object.values(player.equipmentSlots).includes(eqName);
-        let refineLvl = player.refines[eqName] || 0;
-        let refineTag = refineLvl > 0 ? ` (+${refineLvl})` : "";
-        let btn = document.createElement('button');
-        btn.className = "btn";
-        btn.style.fontSize = "12px";
-        btn.style.margin = "4px 0";
-
-        if (isEquipped) {
-            btn.innerText = `✔ [使用中] ${eqName}${refineTag}`;
-            btn.disabled = true;
-        } else {
-            btn.innerText = `✨ [裝備] ${eqName}${refineTag}`;
-            btn.onclick = () => equipItemToSlot(eqName);
-        }
-        container.appendChild(btn);
-    });
-}
-
-// 🎒 背包一鍵分級售出
 function autoSellEquipsByTier(tier) {
     if (!player.equips || player.equips.length === 0) {
         alert("⚠️ 背包目前沒有可回收的裝備！");

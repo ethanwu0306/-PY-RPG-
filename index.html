@@ -14,7 +14,7 @@
     <!-- 主選單畫面 -->
     <div id="main-menu">
         <h1>⚔️ Py RPG ⚔️</h1>
-        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v7.0 (AUTO與特效升級版)</p>
+        <p style="text-align:center; color:#aaa; font-size: 13px;" id="menu-sub">版本 v7.2 (AUTO規則修訂版)</p>
         
         <div style="max-width: 340px; margin: 20px auto;">
             <button class="btn" onclick="startBGM(); showClassSelect();" id="btn-start">🎮 開始新遊戲</button>
@@ -43,7 +43,7 @@
         <h2>🗺️ 冒險地圖關卡選擇</h2>
         <div class="status-box" style="font-size:12px;">
             可自由選擇飛躍至已通關關卡刷經驗與金幣！<br>
-            <span style="color:#e67e22;">⚠️ 重複挑戰已通關舊關卡，收益減半 50%，但可啟用【AUTO掛機刷寶】！</span>
+            <span style="color:#e67e22;">⚠️ 重複挑戰已通關舊關卡，收益減半 50%，但可啟用【AUTO同一關無限掛機】！</span>
         </div>
         <div id="map-stages-list" style="max-height: 240px; overflow-y: auto;"></div>
         <button class="btn btn-secondary" onclick="returnToVillage()" style="margin-top:10px;">⬅️ 返回村莊</button>
@@ -63,7 +63,7 @@
             <div class="status-box" style="height: 360px; overflow-y: auto; text-align: left; font-size: 12px;">
                 <div class="section-header">⚔️ 一、核心冒險機制</div>
                 • <b>關卡目標</b>：總共 10 大區域（100 小關），第 100 關為終極魔王路西法！<br>
-                • <b>⚡ AUTO掛機</b>：已通關的舊關卡支援<b>自動戰鬥與無限自動續戰</b>！<br>
+                • <b>⚡ AUTO 戰鬥</b>：<b>僅限已通關舊關卡開放</b>！開啟後會無限自動續戰同一關，直到死亡或手動結束！新關卡、轉職戰與試煉塔一律強制手動！<br>
                 • <b>🏰 試煉之塔</b>：通關 50 關解鎖，難度高於主線！每 5 關掉神器碎片，<b>50 層後 30% 掉落路西法碎片</b>！<br>
                 • <b>🗡️ 專屬神器</b>：集滿 5 顆神器碎片可打造專屬神器，並可用路西法碎片強化至 +5！<br>
                 • <b>轉職條件</b>：2階(Lv.20)、3階(Lv.50+通過第5章)、4階(Lv.70+通過第8章)！<br>
@@ -130,8 +130,8 @@
             <div id="monster-debuff-status" style="color:#e67e22; font-size:11px;">敵方 DEBUFF: 無</div>
         </div>
 
-        <div id="auto-battle-container" style="margin-bottom:6px;">
-            <button id="btn-toggle-auto" class="btn" style="background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%); border-color:#2ecc71; font-size:13px; padding:8px;" onclick="toggleAutoBattle()">⚡ 開啟 AUTO 自動戰鬥與續戰</button>
+        <div id="auto-battle-container" style="margin-bottom:6px; display:none;">
+            <button id="btn-toggle-auto" class="btn" style="background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%); border-color:#2ecc71; font-size:13px; padding:8px;" onclick="toggleAutoBattle()">⚡ 開啟 AUTO 自動戰鬥 (同一關無限續戰)</button>
         </div>
 
         <div id="log-box"></div>
@@ -229,7 +229,7 @@
         <button class="btn btn-action" style="margin-top:8px;" onclick="startNextBattle()" id="btn-v-next">⚔️ 踏上征途 (下一戰)</button>
     </div>
 
-    <!-- 獨立部位裝備管理 UI (新增一鍵回收清單) -->
+    <!-- 獨立部位裝備管理 UI -->
     <div id="equipment-screen" class="hidden">
         <h2>🛡️ 勇者裝備穿脫管理</h2>
         <div class="status-box" id="equipped-slots-summary"></div>

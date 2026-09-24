@@ -32,7 +32,6 @@ body { font-family: 'PingFang TC', 'Microsoft JhengHei', serif; background: #0d0
     40%, 60% { transform: translate3d(7px, 0, 0); }
 }
 
-/* 暴擊特效與克制抖動打擊動畫 */
 .crit-vfx { animation: critFlash 0.35s ease-out; }
 @keyframes critFlash {
     0% { filter: brightness(2.5) drop-shadow(0 0 15px #f1c40f); transform: scale(1.1); }

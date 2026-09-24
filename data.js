@@ -1,4 +1,4 @@
-const SAVE_KEY = "pyrpg_save_github_v7.0_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
+const SAVE_KEY = "pyrpg_save_github_v5.5_" + window.location.pathname.replace(/[^a-zA-Z0-9]/g, "_");
 
 const CLASS_ARTIFACTS_DATABASE = {
     "狂戰士": { nameZh: "滅世修羅·血海魔煞刃", slot: "weapon", job: "狂戰士", atk: 450, critRate: 20, critDmg: 50, reqFrags: 5 },
@@ -128,9 +128,8 @@ const JOB_ADVANCEMENTS = {
     }
 };
 
-// **精確戰術 CD 時間分配**
 const SKILLS = {
-    // 通用技能 (小招 CD:0~1 | 輔助 CD:2~3)
+    // 通用技能
     "重擊": { type: "universal", elem: "none", cost: 50, mp: 5, mult: 1.5, cd: 0, descZh: "1.5倍物理打擊 (CD: 0T)" },
     "治癒術": { type: "universal", elem: "none", cost: 80, mp: 10, heal: 50, cd: 1, descZh: "恢復 50 HP (CD: 1T)" },
     "神聖護盾": { type: "universal", elem: "none", cost: 90, mp: 12, shield: 40, cd: 2, descZh: "獲得 40 點護盾 (CD: 2T)" },
